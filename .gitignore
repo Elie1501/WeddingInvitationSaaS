@@ -1,0 +1,9 @@
+# Environnements virtuels (spécifiques à chaque PC)
+backend/venv/
+__pycache__/
+
+# Fichiers IDE
+.idea/
+
+# Docker
+.docker/
