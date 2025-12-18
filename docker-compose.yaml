@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # La base de données PostgreSQL demandée dans ton cahier des charges
+  # La base de données PostgreSQL
   db:
     image: postgres:15
     container_name: wedding_db
@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
 
-  # Ton backend FastAPI que tu viens de préparer
+  # Ton backend FastAPI
   backend:
     build: ./backend
     container_name: wedding_api
