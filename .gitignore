@@ -16,7 +16,10 @@ dist-ssr
 # Frontend Node/Vite/Tailwind
 frontend/node_modules/
 frontend/dist/
+.env*
+.env.local
 frontend/.env
+backend/.env
 
 # Editor directories and files
 .vscode/*
