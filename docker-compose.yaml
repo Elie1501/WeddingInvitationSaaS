@@ -22,3 +22,13 @@ services:
       - "8000:8000"
     depends_on:
       - db
+
+  # Interface graphique Web pour la BDD
+  adminer:
+    image: adminer
+    container_name: wedding_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
