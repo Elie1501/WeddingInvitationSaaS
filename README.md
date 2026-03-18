@@ -18,17 +18,41 @@ MariageManager est un SaaS clé en main pour la **création et gestion de cartes
 
 ## Prérequis
 
-- Python 3.11+
-- pip
 - Docker & Docker Compose
+- Node.js (pour le frontend)
 - Git
 
 ---
 
-## Installation
+## Lancement du projet
 
-### 1️⃣ Cloner le projet
-
+### 1️⃣ Backend et Base de données (via Docker)
+Lancer les services conteneurisés (FastAPI, PostgreSQL et Adminer) :
 ```bash
-git clone <URL_DU_REPO>
-cd WeddindInvitationSaas
+docker compose up -d
+```
+
+### 2️⃣ Frontend (Vue.js)
+Installer les dépendances et lancer le serveur de développement :
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## Accès aux services
+
+| Service | URL | Description |
+| :--- | :--- | :--- |
+| **Frontend** | [http://localhost:5173](http://localhost:5173) | Interface utilisateur (Vue 3 + Vite) |
+| **Backend API** | [http://localhost:8000](http://localhost:8000) | API FastAPI (Documentation : [/docs](http://localhost:8000/docs)) |
+| **Adminer** | [http://localhost:8080](http://localhost:8080) | Interface graphique pour la BDD |
+
+### Connexion à Adminer :
+- **Système :** `PostgreSQL`
+- **Serveur :** `wedding_db`
+- **Utilisateur :** `user`
+- **Mot de passe :** `password`
+- **Base de données :** `wedding_db`
