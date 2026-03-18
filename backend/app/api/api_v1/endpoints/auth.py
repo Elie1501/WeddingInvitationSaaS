@@ -11,6 +11,7 @@ router = APIRouter()
 
 @router.post("/register", response_model=UserResponse)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
+
     # Vérifier si l'utilisateur existe déjà
     user = db.query(User).filter(User.email == user_in.email).first()
     if user:
@@ -30,6 +31,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
     # Vérifier l'utilisateur
     user = db.query(User).filter(User.email == form_data.username).first()
+
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 

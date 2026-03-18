@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from app.db.session import Base
 import datetime
 
+
 #table placement
 guest_table_association = Table(
     "guest_table",
