@@ -18,6 +18,11 @@ services:
     container_name: wedding_api
     volumes:
       - ./backend:/app
+      - /app/.venv  # Astuce : Crée un volume anonyme pour éviter que le .venv Windows n'écrase celui du conteneur
+    environment:
+      - PYTHONPATH=/app
+    # On force la commande de démarrage ici pour être sûr du chemin
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     depends_on:
