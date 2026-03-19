@@ -25,6 +25,7 @@ backend/.env
 .vscode/*
 !.vscode/extensions.json
 .idea/
+*iml
 .DS_Store
 *.suo
 *.ntvs*
