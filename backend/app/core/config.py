@@ -8,7 +8,6 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     DATABASE_URL: str
 
-    # Configuration S3
     S3_BUCKET: str = "wedding-invitations-media"
     S3_REGION: str = "eu-west-3"
     S3_ACCESS_KEY: str = ""

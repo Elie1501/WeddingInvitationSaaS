@@ -9,11 +9,21 @@ const events = ref([]);
 const loading = ref(true);
 const auth = useAuthStore();
 const router = useRouter();
+const baseUrl = window.location.origin;
 
 const planInfo = computed(() => getPlanInfo(auth.user?.plan || 'classic'));
 const showApiModal = ref(false);
 const showPlanModal = ref(false);
 const planUpdateLoading = ref(false);
+
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Lien copié dans le presse-papier !");
+  } catch (err) {
+    console.error("Erreur lors de la copie :", err);
+  }
+};
 
 const handleLogout = () => {
   auth.logout();
@@ -169,14 +179,38 @@ onMounted(async () => {
              <button 
                 @click="handleDeleteEvent(event.id)"
                 class="w-full py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium transition-colors border border-red-100 flex items-center justify-center"
-             >
+              >
                Supprimer l'événement
              </button>
-             <a v-if="event.card?.is_published" :href="'/cards/' + event.card.slug" target="_blank" class="text-center text-xs text-primary-600 hover:text-primary-800 underline mt-2">
-               Voir la carte publique
-             </a>
-          </div>
 
+             <!-- Share Section -->
+             <div v-if="event.card?.is_published" class="pt-4 mt-2 border-t border-gray-50">
+               <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Partager l'invitation</p>
+               <div class="flex items-center space-x-2">
+                 <div class="flex-grow bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono text-gray-500 truncate">
+                   {{ baseUrl }}/cards/{{ event.card.slug }}
+                 </div>
+                 <button 
+                  @click="copyToClipboard(baseUrl + '/cards/' + event.card.slug)"
+                  class="p-2 bg-white border border-gray-200 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors shadow-sm"
+                  title="Copier le lien"
+                 >
+                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                 </button>
+                 <a 
+                  :href="'https://wa.me/?text=' + encodeURIComponent('Découvrez notre invitation de mariage : ' + baseUrl + '/cards/' + event.card.slug)"
+                  target="_blank"
+                  class="p-2 bg-white border border-gray-200 rounded-lg text-green-600 hover:bg-green-50 transition-colors shadow-sm"
+                  title="Partager sur WhatsApp"
+                 >
+                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                 </a>
+               </div>
+             </div>
+             <div v-else class="pt-2 text-center">
+               <span class="text-[10px] text-gray-400 italic">Publiez votre invitation pour obtenir le lien de partage</span>
+             </div>
+             </div>
         </div>
       </div>
 

@@ -45,7 +45,6 @@ const componentsMap = {
   itinerary: CardSectionItinerary
 };
 
-// Sur le site public (!isEditor), on montre la couverture au début si elle est activée
 const showSplash = ref(props.showSplash !== null ? props.showSplash : (props.config?.has_cover_page && !props.isEditor));
 const currentPageIndex = ref(props.activePageIndex); 
 
@@ -55,15 +54,6 @@ watch(() => props.showSplash, (newVal) => {
 
 watch(() => props.activePageIndex, (newVal) => {
   currentPageIndex.value = newVal;
-});
-
-watch(() => props.forceSplash, (newVal) => {
-  if (newVal) showSplash.value = true;
-  else if (props.isEditor) showSplash.value = false;
-});
-
-watch(() => props.config.has_cover_page, (newVal) => {
-  if (!props.isEditor) showSplash.value = newVal;
 });
 
 const activePageConfig = computed(() => {
@@ -94,7 +84,6 @@ const activeSections = computed(() => {
       { type: 'details', id: 'default-details' }
     ])];
     
-    // Auto-ajouter l'itinéraire s'il existe et n'est pas déjà dans les sections
     if (props.config?.itinerary?.length > 0 && !sections.find(s => s.type === 'itinerary')) {
       sections.push({ type: 'itinerary', id: 'auto-itinerary' });
     }
@@ -104,23 +93,38 @@ const activeSections = computed(() => {
   return sections;
 });
 
-const layoutClass = computed(() => `layout-${props.templateId}`);
-
 const templateStyles = computed(() => {
   const base = {
-    fontFamily: props.config?.typography?.body || 'sans-serif',
+    fontFamily: props.config?.typography?.body || 'Inter, sans-serif',
     backgroundColor: activePageConfig.value.background_color,
     color: activePageConfig.value.text_color,
     transition: 'all 0.5s ease'
   };
 
-  if (props.templateId === 'romantic-pink') {
+  if (props.templateId === 'royal-gold') {
     return {
       ...base,
-      fontFamily: "'Great Vibes', cursive",
-      backgroundColor: '#fff1f2', 
-      color: '#881337', 
-      backgroundImage: 'linear-gradient(135deg, #ffe4e6 0%, #fff1f2 100%)',
+      fontFamily: "'Cormorant Garamond', serif",
+      backgroundColor: '#0c0a09',
+      color: '#f5f5f4',
+      border: '1px solid #d4af37'
+    };
+  }
+  if (props.templateId === 'bohemian-dream') {
+    return {
+      ...base,
+      fontFamily: "'Montserrat', sans-serif",
+      backgroundColor: '#fdf8f3',
+      color: '#4a3728',
+      backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")'
+    };
+  }
+  if (props.templateId === 'midnight-glamour') {
+    return {
+      ...base,
+      fontFamily: "'Cormorant Garamond', serif",
+      backgroundColor: '#020617',
+      color: '#f8fafc',
     };
   }
   if (props.templateId === 'classic-elegance') {
@@ -132,25 +136,19 @@ const templateStyles = computed(() => {
       backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")',
     };
   }
-  if (props.templateId === 'luxury-minimal') {
-    return {
-      ...base,
-      fontFamily: "'Montserrat', sans-serif",
-      backgroundColor: '#000000',
-      color: '#ffffff',
-      border: '20px solid #ffffff',
-      letterSpacing: '0.2em'
-    };
-  }
   return base;
 });
 </script>
 
 <template>
   <div :class="['relative w-full overflow-hidden min-h-[700px] flex flex-col', 'layout-' + templateId]" :style="templateStyles">
-    <!-- Overlay Floral pour le thème jardin -->
-    <div v-if="templateId === 'romantic-pink'" class="absolute inset-0 pointer-events-none opacity-20 z-0 bg-[url('https://www.transparenttextures.com/patterns/vintage-speckle.png')]"></div>
     
+    <!-- Éléments décoratifs PREMIUM -->
+    <div v-if="templateId === 'royal-gold'" class="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+       <div class="absolute -top-24 -left-24 w-64 h-64 border border-[#d4af37]/20 rounded-full"></div>
+       <div class="absolute -bottom-24 -right-24 w-64 h-64 border border-[#d4af37]/20 rounded-full"></div>
+    </div>
+
     <CardSplashScreen 
       v-if="forceSplash || (showSplash && config.has_cover_page)" 
       :event="event" 
@@ -161,7 +159,6 @@ const templateStyles = computed(() => {
       @play-music="$emit('play-music')"
     />
 
-    <!-- Navigation Inter-pages améliorée -->
     <nav v-if="config.pages && config.pages.length > 0" class="flex border-b border-black/5 bg-white/60 backdrop-blur-md sticky top-0 z-30 overflow-x-auto no-scrollbar">
       <button 
         @click="currentPageIndex = 0"
@@ -190,19 +187,16 @@ const templateStyles = computed(() => {
           :config="{...config, colors: {...config.colors, accent: activePageConfig.accent_color}, activePageIndex: currentPageIndex, templateId: templateId}"
           class="w-full"
         />
-        <!-- Compte à rebours dynamique -->
         <div v-if="section.type === 'banner' && currentPageIndex === 0 && config?.show_countdown_invitation" class="py-16 px-4 flex justify-center w-full">
-          <CardCountdown :targetDate="event.date" :themeColor="templateId === 'luxury-minimal' ? '#ffffff' : activePageConfig.accent_color" :templateId="templateId" />
+          <CardCountdown :targetDate="event.date" :themeColor="templateId === 'royal-gold' ? '#d4af37' : activePageConfig.accent_color" :templateId="templateId" />
         </div>
       </div>
     </div>
 
-    <!-- Petit bouton flottant pour revoir la couverture -->
     <button 
       v-if="config.has_cover_page && !showSplash" 
       @click="showSplash = true" 
       class="fixed bottom-6 right-6 w-12 h-12 bg-white/90 shadow-2xl rounded-full flex items-center justify-center text-gray-400 hover:text-primary-600 transition-all z-40 border border-gray-100"
-      title="Voir la page de garde"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
     </button>
@@ -212,40 +206,27 @@ const templateStyles = computed(() => {
 <style scoped>
 @reference "tailwindcss";
 
-/* Template Romantic Pink */
-.layout-romantic-pink {
-  @apply text-rose-900;
-}
-.layout-romantic-pink :deep(h1) {
+/* Royal Gold */
+.layout-royal-gold :deep(h1) {
   font-family: 'Great Vibes', cursive !important;
-  @apply text-rose-600 text-6xl drop-shadow-sm;
+  @apply text-[#d4af37] text-7xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)];
 }
-.layout-romantic-pink :deep(.bg-primary-50\/50) {
-  @apply bg-rose-100/50 border-rose-200;
-}
-.layout-romantic-pink :deep(button) {
-  @apply bg-rose-600 text-white shadow-rose-200;
+.layout-royal-gold :deep(.bg-neutral-50) {
+  @apply bg-stone-900/50 border-stone-800 text-stone-200;
 }
 
-/* Template Classic Elegance */
-.layout-classic-elegance :deep(h1) {
+/* Bohemian Dream */
+.layout-bohemian-dream :deep(h1) {
   font-family: 'Playfair Display', serif !important;
-  @apply text-stone-800 text-5xl italic;
+  @apply text-[#c46647] text-6xl italic;
 }
-.layout-classic-elegance :deep(.bg-primary-50\/50) {
-  @apply bg-stone-100 border-stone-200;
-}
-
-/* Template Modern Chic (Default) */
-.layout-modern-chic :deep(h1) {
-  @apply uppercase tracking-[0.3em] font-light text-3xl text-gray-900;
+.layout-bohemian-dream :deep(.bg-neutral-50) {
+  @apply bg-[#fdf8f3] border-[#e6dcd3] text-[#4a3728];
 }
 
-/* Template Luxury Minimal */
-.layout-luxury-minimal :deep(h1) {
-  @apply uppercase tracking-[0.5em] font-bold text-2xl text-black;
-}
-.layout-luxury-minimal :deep(.bg-primary-50\/50) {
-  @apply bg-gray-50 border-gray-100 rounded-none;
+/* Midnight Glamour */
+.layout-midnight-glamour :deep(h1) {
+  font-family: 'Cormorant Garamond', serif !important;
+  @apply text-white text-6xl font-light tracking-widest;
 }
 </style>

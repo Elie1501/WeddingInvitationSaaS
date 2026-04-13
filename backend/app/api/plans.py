@@ -14,7 +14,8 @@ PLAN_LIMITS: Dict[PlanType, Dict[str, Any]] = {
         "has_rsvp_form": True,
         "can_use_tables": True,
         "can_customize_extensively": True,
-        "can_import_export": False
+        "can_import_export": False,
+        "can_upload_music": False
     },
     PlanType.PREMIUM: {
         "max_guests": 1000,
@@ -24,7 +25,8 @@ PLAN_LIMITS: Dict[PlanType, Dict[str, Any]] = {
         "has_rsvp_form": True,
         "can_use_tables": True,
         "can_customize_extensively": True,
-        "can_import_export": True
+        "can_import_export": True,
+        "can_upload_music": True
     }
 }
 
