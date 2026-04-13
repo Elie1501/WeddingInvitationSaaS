@@ -1,0 +1,67 @@
+import { defineStore } from 'pinia';
+import api from '../service/api';
+
+export const useAuthStore = defineStore('auth', {
+    state: () => ({
+        user: null,
+        token: localStorage.getItem('token') || null,
+        refreshToken: localStorage.getItem('refresh_token') || null,
+    }),
+    actions: {
+        async login(email, password) {
+            const params = new URLSearchParams();
+            params.append('username', email);
+            params.append('password', password);
+
+            const response = await api.post('/auth/login', params, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+            this.token = response.data.access_token;
+            this.refreshToken = response.data.refresh_token;
+            localStorage.setItem('token', this.token);
+            localStorage.setItem('refresh_token', this.refreshToken);
+            await this.fetchMe();
+        },
+        async register(email, password, plan = 'classic') {
+            await api.post('/auth/signup', {
+                email,
+                password,
+                plan
+            });
+            await this.login(email, password);
+        },
+        async updatePlan(plan) {
+            const response = await api.patch('/users/me/plan', { plan });
+            this.user = response.data;
+        },
+        async fetchMe() {
+            try {
+                const response = await api.get('/auth/me');
+                this.user = response.data;
+            } catch (error) {
+                this.logout();
+            }
+        },
+        async refreshAccessToken() {
+            if (!this.refreshToken) return;
+            try {
+                const response = await api.post(`/auth/refresh-token?refresh_token=${this.refreshToken}`);
+                this.token = response.data.access_token;
+                this.refreshToken = response.data.refresh_token;
+                localStorage.setItem('token', this.token);
+                localStorage.setItem('refresh_token', this.refreshToken);
+            } catch (error) {
+                this.logout();
+            }
+        },
+        logout() {
+            this.token = null;
+            this.refreshToken = null;
+            this.user = null;
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+        }
+    }
+});

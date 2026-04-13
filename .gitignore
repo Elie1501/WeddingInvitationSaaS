@@ -35,7 +35,11 @@ backend/.env
 
 # Python virtual env
 backend/venv/
+backend/.venv/
 __pycache__/
+
+# JSON test/log files
+login*.json
 
 # Docker
 .docker/

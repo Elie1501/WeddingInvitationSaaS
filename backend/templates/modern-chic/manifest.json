@@ -1,0 +1,23 @@
+{
+  "id": "modern-chic",
+  "name": "Modern Chic",
+  "required_plan": "premium",
+  "description": "Un design épuré et moderne avec une typographie serif élégante.",
+  "thumbnail_url": "https://placehold.co/400x300?text=Modern+Chic",
+  "default_config": {
+    "colors": {
+      "primary": "#1a1a1a",
+      "accent": "#d4af37",
+      "text": "#333333"
+    },
+    "typography": {
+      "headings": "serif",
+      "body": "sans-serif"
+    },
+    "sections": [
+      { "type": "banner", "id": "banner-1" },
+      { "type": "text", "id": "intro-1" },
+      { "type": "details", "id": "details-1" }
+    ]
+  }
+}
