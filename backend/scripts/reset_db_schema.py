@@ -7,7 +7,7 @@ def reset_db_schema():
     Base.metadata.drop_all(bind=engine)
     print("Creating all tables...")
     Base.metadata.create_all(bind=engine)
-    print("Database schema reset successfully!")
+    print("Database schema reset successfully! C'est bon tt est ok")
 
 if __name__ == "__main__":
     reset_db_schema()

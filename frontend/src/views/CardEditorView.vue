@@ -368,13 +368,17 @@ onMounted(fetchCard);
 
           <div class="pt-1">
             <button 
-              @click="$refs.fileInputMusic.click()"
-              class="w-full py-3 bg-white border-2 border-dashed border-gray-100 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:border-primary-300 hover:text-primary-500 transition-all flex items-center justify-center"
+              @click="planInfo.can_upload_music ? $refs.fileInputMusic.click() : null"
+              :class="planInfo.can_upload_music ? 'hover:border-primary-300 hover:text-primary-500 cursor-pointer' : 'opacity-50 cursor-not-allowed bg-gray-50'"
+              class="w-full py-3 border-2 border-dashed border-gray-100 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex flex-col items-center justify-center gap-1"
             >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-              Upload ton MP3
+              <div class="flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Upload ton MP3
+              </div>
+              <span v-if="!planInfo.can_upload_music" class="text-[8px] text-amber-600 lowercase tracking-normal italic">(Réservé aux membres Premium)</span>
             </button>
-            <input type="file" ref="fileInputMusic" class="hidden" accept="audio/*" @change="e => handleFileUpload(e, 'music')">
+            <input v-if="planInfo.can_upload_music" type="file" ref="fileInputMusic" class="hidden" accept="audio/*" @change="e => handleFileUpload(e, 'music')">
           </div>
         </section>
 
@@ -611,7 +615,20 @@ onMounted(fetchCard);
     </aside>
 
     <!-- Aperçu Central -->
-    <main class="flex-1 overflow-y-auto bg-gray-100 p-12 flex justify-center items-start custom-scrollbar">
+    <main class="flex-1 overflow-y-auto bg-gray-100 p-12 flex justify-center items-start custom-scrollbar relative">
+      <!-- Bouton Retour Dashboard (Fixe à droite) -->
+      <div class="fixed top-8 right-8 z-30">
+        <button 
+          @click="router.push('/dashboard')" 
+          class="group flex items-center bg-white/90 backdrop-blur-md px-5 py-3 rounded-2xl border border-gray-200 shadow-xl shadow-black/5 text-gray-700 hover:text-primary-600 transition-all transform hover:-translate-x-1"
+        >
+          <div class="w-8 h-8 bg-primary-50 rounded-xl flex items-center justify-center mr-3 group-hover:bg-primary-100 transition-colors">
+            <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-widest">Tableau de bord</span>
+        </button>
+      </div>
+
       <div v-if="loading" class="flex flex-col items-center py-20">
         <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-primary-600 mb-4"></div>
         <span class="text-xs text-gray-400 uppercase font-medium">Chargement...</span>

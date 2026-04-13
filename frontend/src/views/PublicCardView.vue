@@ -151,18 +151,18 @@ const handleRSVP = async () => {
           <form v-else @submit.prevent="handleRSVP" class="space-y-8">
             <!-- Choice Buttons -->
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-              <button 
-                type="button" 
-                @click="rsvpForm.presence = true" 
-                :class="rsvpForm.presence ? 'bg-primary-900 text-white shadow-xl scale-105' : 'bg-neutral-50 text-neutral-400 hover:bg-neutral-100'" 
+              <button
+                type="button"
+                @click="rsvpForm.presence = true"
+                :class="rsvpForm.presence ? 'bg-green-600 text-white shadow-xl scale-105 shadow-green-600/20' : 'bg-neutral-50 text-neutral-400 hover:bg-neutral-100'"
                 class="flex-1 px-8 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border border-transparent"
               >
                 Je serai présent(e)
               </button>
-              <button 
-                type="button" 
-                @click="rsvpForm.presence = false" 
-                :class="!rsvpForm.presence ? 'bg-neutral-900 text-white shadow-xl scale-105' : 'bg-neutral-50 text-neutral-400 hover:bg-neutral-100'" 
+              <button
+                type="button"
+                @click="rsvpForm.presence = false"
+                :class="!rsvpForm.presence ? 'bg-red-600 text-white shadow-xl scale-105 shadow-red-600/20' : 'bg-neutral-50 text-neutral-400 hover:bg-neutral-100'"
                 class="flex-1 px-8 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border border-transparent"
               >
                 Je serai absent(e)
