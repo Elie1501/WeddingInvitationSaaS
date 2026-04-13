@@ -7,7 +7,8 @@ WORKDIR /app
 # Copie le fichier de dépendances
 COPY requirements.txt .
 
-# Installe les outils listés dans ton requirements.txt
+# Installe les outils listés dans ton requirements.txt et libmagic pour python-magic
+RUN apt-get update && apt-get install -y libmagic1 && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copie tout le reste du code du dossier backend

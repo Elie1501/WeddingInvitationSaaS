@@ -1,64 +1,114 @@
-# WeddingInvitationSaaS 💍
+# Saas Wedding 💍
 
-MariageManager est une plateforme SaaS permettant de créer et gérer des invitations de mariage numériques. Elle inclut une gestion des invités, des RSVP et des plans de table.
+Saas Wedding est une plateforme SaaS permettant de créer et gérer des invitations de mariage numériques. Elle inclut une gestion des invités, des RSVP et des plans de table.
 
 ---
 
-## 🚀 Lancement rapide
+## 🚀 Installation & Lancement rapide
 
-### 1️⃣ Prérequis
-Assurez-vous d'avoir installé :
-- [Docker & Docker Compose](https://docs.docker.com/get-docker/)
-- [Node.js](https://nodejs.org/) (version 18+)
+### 🐳 Option A : Via Docker (Recommandé)
 
-### 2️⃣ Installation & Lancement du Backend (Docker)
-Le backend utilise FastAPI, PostgreSQL et Adminer pour la gestion de la base de données.
+Docker compose s'occupe de tout : Base de données, API, Adminer et Frontend.
 
 ```bash
-# Lancer les services (Base de données, API, Adminer)
+# Lancer tous les services
 docker compose up -d --build
 ```
 
-*Note : Le premier lancement peut prendre quelques minutes pour construire l'image Python.*
+- **Frontend** : [http://localhost:5173](http://localhost:5173)
+- **API Swagger** : [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Adminer (BDD)** : [http://localhost:8080](http://localhost:8080)
 
-### 3️⃣ Lancement du Frontend (Vue.js)
-Dans un nouveau terminal :
+---
 
+### 🐍 Option B : Lancement Manuel (Sans Docker)
+
+#### 🛠 Pré-requis
+- **Python 3.10+**
+- **Node.js 18+**
+- **PostgreSQL 14+**
+- **libmagic** (Analyse de fichiers) :
+  - macOS : `brew install libmagic`
+  - Linux : `sudo apt-get install libmagic1`
+
+#### 1. Base de données (PostgreSQL)
+1. Créez la BDD : `createdb wedding_db`
+2. Configurez `backend/.env` : `DATABASE_URL=postgresql:///wedding_db`
+
+#### 2. Backend (FastAPI)
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt
+
+# Init BDD & Test Users
+python -m scripts.reset_db_schema
+python -m scripts.seed_users
+
+uvicorn app.main:app --reload --port 8000
+```
+
+#### 3. Frontend (Vue.js)
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev -- --port 5173
 ```
 
 ---
 
-## 🛠 Accès aux services
+## 🔑 Identifiants & Comptes de test
 
-| Service | URL | Identifiants / Notes |
+### 👤 Comptes Utilisateurs
+Tous les comptes utilisent le mot de passe : **`password123`**
+
+| Email | Plan | Rôle suggéré |
 | :--- | :--- | :--- |
-| **Frontend** | [http://localhost:5173](http://localhost:5173) | Interface Vue 3 |
-| **API Swagger** | [http://localhost:8000/docs](http://localhost:8000/docs) | Pour tester les endpoints (Auth, etc.) |
-| **Adminer (BDD)** | [http://localhost:8080](http://localhost:8080) | Voir ci-dessous pour la connexion |
+| `admin@wedding.com` | `premium` | Administrateur / Test Complet |
+| `test@test.com` | `premium` | Compte de test rapide |
+| `marie@classic.com` | `classic` | Test plan classique |
+| `thomas@premium.com` | `premium` | Test plan premium |
 
-### 🔑 Connexion à la Base de Données (Adminer)
-Pour voir les données (utilisateurs, invitations...) :
-- **Système :** `PostgreSQL`
-- **Serveur :** `db`
-- **Utilisateur :** `user`
-- **Mot de passe :** `password`
-- **Base de données :** `wedding_db`
-
----
-
-## 📖 Structure du projet
-
-- `/backend` : API FastAPI (Python 3.10)
-  - `/app/models` : Modèles SQLAlchemy (Base de données)
-  - `/app/api` : Points d'accès (Endpoints)
-- `/frontend` : Application Vue.js 3 + Vite + TailwindCSS
+### 🗄️ Base de données (PostgreSQL)
+- **Adminer** : [http://localhost:8080](http://localhost:8080)
+- **Host** : `db` (Docker) ou `localhost` (Manuel)
+- **User** : `user` (Docker) ou votre utilisateur OS (Manuel)
+- **Password** : `password` (Docker) ou vide (Manuel par défaut)
+- **DB** : `wedding_db`
 
 ---
 
-## 🆘 Dépannage
-- **Port 8000 déjà utilisé** : Si vous avez un autre serveur lancé sur le port 8000, le backend Docker ne pourra pas démarrer. Arrêtez le processus local ou changez le port dans `docker-compose.yaml`.
-- **Erreur de connexion BDD** : Si l'API affiche une erreur de connexion au premier lancement, redémarrez le conteneur backend : `docker compose restart backend`.
+## ⚙️ Configuration (.env)
+
+Le fichier `.env` se trouve dans `backend/`.
+
+| Variable | Description | Exemple |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | Connexion BDD | `postgresql:///wedding_db` |
+| `SECRET_KEY` | Clé JWT | `votre_cle_secrete` |
+| `S3_BUCKET` | Bucket Media | `wedding-invitations-media` |
+
+*Note : Si S3 n'est pas configuré, les fichiers sont stockés dans `backend/uploads/`.*
+
+---
+
+## 🧪 Scripts de maintenance (Dossier backend)
+
+```bash
+# Réinitialiser complètement la BDD (Tables + Data)
+python -m scripts.reset_db_schema
+# Ajouter/Restaurer les utilisateurs de test
+python -m scripts.seed_users
+# Forcer la création du compte test@test.com
+python -m scripts.force_seed
+```
+
+---
+
+## 🛠 Guide d'utilisation de l'API (Swagger UI)
+
+1.  **URL** : [http://localhost:8000/docs](http://localhost:8000/docs)
+2.  **S'authentifier** : `POST /auth/login` avec vos identifiants.
+3.  **Authorize** : Cliquez sur le bouton "Authorize" en haut à droite et entrez vos accès.
