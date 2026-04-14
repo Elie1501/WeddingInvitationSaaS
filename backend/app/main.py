@@ -4,138 +4,117 @@ from fastapi.staticfiles import StaticFiles
 import json
 import os
 from app.db.session import engine, Base, SessionLocal
-from app.api.api_v1.api import api_router # Import du routeur global
-from app.models.wedding import CardTemplate, User # Force le chargement des modèles pour SQLAlchemy
+from app.api.api_v1.api import api_router
+from app.models.wedding import CardTemplate, User
 from app.core import security
 
-# Création des tables au démarrage (pour le dev)
 Base.metadata.create_all(bind=engine)
 
 def seed_data():
     db = SessionLocal()
-    # 1. Seed Templates
+    
+    # On garde les templates actifs
     templates = [
+        {
+            "id": "arche-royale",
+            "name": "L'Arche Royale",
+            "description": "Une photo majestueuse découpée en arche dorée.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=600",
+            "required_plan": "classic",
+            "default_config": {
+                "canvas": {"width": 1080, "height": 1920, "background_color": "#FDFBF7"},
+                "theme": {"primaryColor": "#C5A059", "secondaryColor": "#FDFBF7", "fontFamily": "serif"},
+                "elements": [
+                    {"id": "hero_image", "type": "image", "x": 140, "y": 150, "width": 800, "height": 1100, "content": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1000", "style": {"borderRadius": "400px 400px 0 0", "mask": "arch", "outline": "gold"}},
+                    {"id": "names", "type": "text", "x": 0, "y": 1350, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "100px", "fontFamily": "serif", "color": "#1A1A1A", "fontStyle": "italic"}},
+                    {"id": "date", "type": "text", "x": 0, "y": 1600, "width": 1080, "height": 100, "content": "{date}", "style": {"fontSize": "40px", "letterSpacing": "0.3em", "color": "#C5A059"}}
+                ]
+            }
+        },
+        {
+            "id": "coeur-passion",
+            "name": "Cœur Romantique",
+            "description": "Votre amour au centre d'un cœur élégant.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?w=600",
+            "required_plan": "classic",
+            "default_config": {
+                "canvas": {"width": 1080, "height": 1920, "background_color": "#FFF5F5"},
+                "theme": {"primaryColor": "#E53E3E", "secondaryColor": "#FFF5F5", "fontFamily": "serif"},
+                "elements": [
+                    {"id": "hero_image", "type": "image", "x": 140, "y": 300, "width": 800, "height": 800, "content": "https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?w=1000", "style": {"borderRadius": "50%"}},
+                    {"id": "c2", "type": "text", "x": 0, "y": 1200, "width": 1080, "height": 150, "content": "OUI POUR LA VIE", "style": {"fontSize": "30px", "letterSpacing": "0.5em", "color": "#E53E3E", "fontWeight": "bold"}},
+                    {"id": "names", "type": "text", "x": 0, "y": 1350, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "90px", "fontFamily": "serif", "color": "#1A1A1A"}}
+                ]
+            }
+        },
         {
             "id": "modern-chic",
             "name": "Modern Chic",
-            "description": "Design minimaliste et typographie audacieuse.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Modern+Chic",
-            "required_plan": "free",
-            "default_config": {
-                "colors": {"primary": "#000000", "accent": "#6366f1", "background": "#ffffff", "text": "#111827"},
-                "typography": {"headings": "Inter", "body": "Inter"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
-            }
-        },
-        {
-            "id": "classic-elegance",
-            "name": "Élégance Classique",
-            "description": "Traditionnel et raffiné, tons crème.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Classic+Elegance",
+            "description": "Épuré, minimaliste et résolument moderne.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=600",
             "required_plan": "classic",
             "default_config": {
-                "colors": {"primary": "#451a03", "accent": "#92400e", "background": "#fef3c7", "text": "#451a03"},
-                "typography": {"headings": "Playfair Display", "body": "Playfair Display"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
+                "canvas": {"width": 1080, "height": 1920, "background_color": "#FFFFFF"},
+                "theme": {"primaryColor": "#111827", "secondaryColor": "#FFFFFF", "fontFamily": "Montserrat"},
+                "elements": [
+                    {"id": "hero_image", "type": "image", "x": 0, "y": 0, "width": 1080, "height": 1200, "content": "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200", "style": {"objectFit": "cover"}},
+                    {"id": "names", "type": "text", "x": 80, "y": 1300, "width": 920, "height": 200, "content": "{groom_name}\n&\n{bride_name}", "style": {"fontSize": "80px", "textAlign": "left", "fontWeight": "900", "textTransform": "uppercase"}}
+                ]
             }
         },
         {
-            "id": "royal-gold",
-            "name": "Royal Gold",
-            "description": "Luxe absolu, noir et or avec ornements majestueux.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Royal+Gold",
-            "required_plan": "premium",
-            "default_config": {
-                "colors": {"primary": "#d4af37", "accent": "#d4af37", "background": "#0c0a09", "text": "#f5f5f4"},
-                "typography": {"headings": "Great Vibes", "body": "Cormorant Garamond"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
-            }
-        },
-        {
-            "id": "bohemian-dream",
-            "name": "Bohemian Dream",
-            "description": "Esprit champêtre, tons terreux et fleurs séchées.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Bohemian+Dream",
+            "id": "floral-romance",
+            "name": "Floral Romance",
+            "description": "Douceur florale et teintes poudrées.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=600",
             "required_plan": "classic",
             "default_config": {
-                "colors": {"primary": "#c46647", "accent": "#c46647", "background": "#fdf8f3", "text": "#4a3728"},
-                "typography": {"headings": "Playfair Display", "body": "Montserrat"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
-            }
-        },
-        {
-            "id": "midnight-glamour",
-            "name": "Midnight Glamour",
-            "description": "Ambiance nocturne, dégradés profonds et chic urbain.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Midnight+Glamour",
-            "required_plan": "premium",
-            "default_config": {
-                "colors": {"primary": "#ffffff", "accent": "#818cf8", "background": "#020617", "text": "#f8fafc"},
-                "typography": {"headings": "Cormorant Garamond", "body": "Cormorant Garamond"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
+                "canvas": {"width": 1080, "height": 1920, "background_color": "#FFF5F7"},
+                "theme": {"primaryColor": "#4D2C2C", "secondaryColor": "#FFF5F7", "fontFamily": "Cormorant Garamond"},
+                "elements": [
+                    {"id": "hero_image", "type": "image", "x": 100, "y": 200, "width": 880, "height": 1000, "content": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=1000", "style": {"borderRadius": "20px"}},
+                    {"id": "names", "type": "text", "x": 0, "y": 1300, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "110px", "fontFamily": "'Playfair Display'"}}
+                ]
             }
         }
     ]
     
-    for t in templates:
-        existing = db.query(CardTemplate).filter(CardTemplate.id == t["id"]).first()
-        if not existing:
+    # Désactiver les anciens
+    db.query(CardTemplate).update({CardTemplate.is_active: False})
+
+    for t_data in templates:
+        existing = db.query(CardTemplate).filter(CardTemplate.id == t_data["id"]).first()
+        manifest_json = json.dumps(t_data)
+        if existing:
+            existing.name = t_data["name"]
+            existing.description = t_data["description"]
+            existing.thumbnail_url = t_data["thumbnail_url"]
+            existing.required_plan = t_data.get("required_plan", "classic")
+            existing.manifest_json = manifest_json
+            existing.is_active = True
+        else:
             new_tpl = CardTemplate(
-                id=t["id"],
-                name=t["name"],
-                description=t["description"],
-                thumbnail_url=t["thumbnail_url"],
-                required_plan=t.get("required_plan", "classic"),
-                manifest_json=json.dumps(t)
+                id=t_data["id"],
+                name=t_data["name"],
+                description=t_data["description"],
+                thumbnail_url=t_data["thumbnail_url"],
+                required_plan=t_data.get("required_plan", "classic"),
+                manifest_json=manifest_json,
+                is_active=True
             )
             db.add(new_tpl)
-
-    # 2. Seed Test Users
-    users_to_create = [
-        {"email": "test@test.com", "password": "password123", "plan": "premium"},
-        {"email": "admin@wedding.com", "password": "password123", "plan": "premium"},
-        {"email": "marie@classic.com", "password": "password123", "plan": "classic"},
-        {"email": "thomas@premium.com", "password": "password123", "plan": "premium"},
-    ]
-    for u_data in users_to_create:
-        existing_user = db.query(User).filter(User.email == u_data["email"]).first()
-        if not existing_user:
-            new_user = User(
-                email=u_data["email"],
-                hashed_password=security.get_password_hash(u_data["password"]),
-                plan=u_data["plan"]
-            )
-            db.add(new_user)
-            print(f"Utilisateur de test créé : {u_data['email']}")
 
     db.commit()
     db.close()
 
 seed_data()
 
-app = FastAPI(
-    title="API Carte de Mariage",
-    description="Backend pour la plateforme de gestion de mariages numériques",
-    version="1.0.0"
-)
-
-# Configuration CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# CONNEXION DES ROUTES
+app = FastAPI(title="API Mariage", version="1.0.0")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.include_router(api_router)
 
-# Montage des fichiers statiques pour les uploads
-if not os.path.exists("uploads"):
-    os.makedirs("uploads")
+if not os.path.exists("uploads"): os.makedirs("uploads")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/")
-async def health_check():
-    return {"status": "online", "message": "API opérationnelle"}
+async def health_check(): return {"status": "online"}
