@@ -112,5 +112,31 @@ Les routes publiques sont accessibles sans authentification.
 ## 🎨 Templates
 
 ### Liste des templates
-`GET /templates/`
-- **Description**: Liste tous les templates de design disponibles.
+
+---
+
+## 🔐 Authentification Google (Firebase)
+
+### 1. Configuration Frontend
+1. Créez un projet sur la [Console Firebase](https://console.firebase.google.com/).
+2. Activez l'authentification **Google** dans la section "Authentication".
+3. Créez une "Web App" pour obtenir vos clés API.
+4. Remplissez le fichier `frontend/.env` avec ces valeurs (voir `frontend/.env.example`).
+
+### 2. Configuration Backend (Firebase Admin SDK)
+Pour que le backend puisse vérifier les `idToken` envoyés par le frontend, vous devez configurer un compte de service :
+
+1. Dans la console Firebase, allez dans **Paramètres du projet** > **Comptes de service**.
+2. Cliquez sur **Générer une nouvelle clé privée**. Cela téléchargera un fichier `.json`.
+3. Placez ce fichier dans le dossier `backend/` (par exemple, nommez-le `firebase-service-account.json`).
+4. **Sécurité** : Ajoutez ce fichier au `.gitignore` pour ne jamais le commiter.
+5. Définissez la variable d'environnement suivante dans votre système ou votre `.env` backend :
+   ```env
+   GOOGLE_APPLICATION_CREDENTIALS="backend/firebase-service-account.json"
+   ```
+
+### 3. Endpoint d'Authentification Google
+`POST /auth/google`
+- **Corps**: `{ "id_token": "string" }`
+- **Description**: Échange un token Firebase contre un JWT local. Crée l'utilisateur automatiquement s'il n'existe pas.
+
