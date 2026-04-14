@@ -1,7 +1,31 @@
 <script setup>
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+import api from '../service/api';
 
 const router = useRouter();
+const auth = useAuthStore();
+
+const handlePlanSelection = async (planId) => {
+  if (auth.user) {
+    // Si déjà connecté, on tente de créer une session Stripe
+    try {
+      const response = await api.post('/payments/create-checkout-session', {
+        plan_name: planId
+      });
+      if (response.data.checkout_url) {
+        window.location.href = response.data.checkout_url;
+        return;
+      }
+    } catch (err) {
+      console.error("Erreur Stripe:", err);
+    }
+    router.push('/dashboard');
+  } else {
+    // Sinon on va à l'inscription avec le plan en paramètre
+    router.push({ path: '/register', query: { plan: planId } });
+  }
+};
 
 const templates = [
   {
@@ -29,6 +53,7 @@ const templates = [
 
 const pricingPlans = [
   {
+    id: 'classic',
     name: 'Forfait Classic',
     price: '29€',
     description: 'L\'essentiel pour une invitation élégante et rapide.',
@@ -43,6 +68,7 @@ const pricingPlans = [
     popular: false
   },
   {
+    id: 'premium',
     name: 'Forfait Premium',
     price: '59€',
     description: 'Une personnalisation complète pour un mariage d\'exception.',
@@ -95,7 +121,7 @@ const pricingPlans = [
             Créez une invitation digitale sublime en quelques minutes. Gérez vos invités, collectez les RSVP et organisez votre plan de table en toute sérénité.
           </p>
           <div class="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start">
-            <router-link to="/register" class="px-10 py-5 bg-neutral-900 text-white rounded-2xl text-[12px] font-bold uppercase tracking-[0.3em] hover:bg-primary-900 transition-all shadow-2xl shadow-neutral-900/20 transform hover:-translate-y-1">Commencer gratuitement</router-link>
+            <button @click="handlePlanSelection('classic')" class="px-10 py-5 bg-neutral-900 text-white rounded-2xl text-[12px] font-bold uppercase tracking-[0.3em] hover:bg-primary-900 transition-all shadow-2xl shadow-neutral-900/20 transform hover:-translate-y-1">Commencer gratuitement</button>
             <a href="#modeles" class="px-10 py-5 bg-white text-neutral-900 border border-neutral-200 rounded-2xl text-[12px] font-bold uppercase tracking-[0.3em] hover:bg-neutral-50 transition-all shadow-xl shadow-neutral-900/5 transform hover:-translate-y-1 text-center">Voir les modèles</a>
           </div>
         </div>
@@ -258,12 +284,13 @@ const pricingPlans = [
               </li>
             </ul>
             
-            <router-link to="/register" 
+            <button 
+              @click="handlePlanSelection(plan.id)"
               class="w-full py-5 rounded-2xl text-center text-[12px] font-bold uppercase tracking-[0.3em] transition-all duration-500"
               :class="plan.popular ? 'bg-neutral-900 text-white hover:bg-primary-900 shadow-2xl shadow-neutral-900/20' : 'bg-neutral-50 text-neutral-900 hover:bg-neutral-100 border border-neutral-100'"
             >
               {{ plan.cta }}
-            </router-link>
+            </button>
           </div>
         </div>
       </div>

@@ -25,3 +25,4 @@ boto3
 Pillow
 python-magic
 firebase-admin
+stripe
