@@ -44,3 +44,4 @@ login*.json
 # Docker
 .docker/
 
+backend/firebase-service-account.json
