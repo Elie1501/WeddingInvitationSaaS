@@ -102,10 +102,15 @@ def delete_guest(
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
-    """Supprime un invité."""
+    """Supprime un invité et libère ses places dans les tables."""
     guest = db.query(Guest).join(Event).filter(Guest.id == guest_id, Event.owner_id == current_user.id).first()
     if not guest:
         raise HTTPException(status_code=404, detail="Invité non trouvé")
+    
+    # Libérer les places dans les tables avant suppression
+    seats_to_free = 1 + (guest.plus_ones or 0)
+    for table in guest.assigned_tables:
+        table.remaining_seats += seats_to_free
     
     db.delete(guest)
     db.commit()
@@ -253,11 +258,25 @@ def process_rsvp(db: Session, event_id: int, first_name: str, last_name: str, em
         db.add(guest)
         db.flush()
 
-    # Mettre à jour le statut
+    # Mettre à jour le statut et synchroniser les tables
+    old_plus_ones = guest.plus_ones or 0
+    new_plus_ones = rsvp_in.plus_ones or 0
+    diff = new_plus_ones - old_plus_ones
+
     guest.rsvp_status = "confirmed" if rsvp_in.presence else "declined"
-    guest.plus_ones = rsvp_in.plus_ones
+    guest.plus_ones = new_plus_ones
     guest.dietary_restrictions = rsvp_in.dietary_restrictions
     guest.message = rsvp_in.message
+
+    # Si l'invité décline, on le retire de ses tables
+    if not rsvp_in.presence:
+        for table in guest.assigned_tables:
+            table.remaining_seats += (1 + old_plus_ones)
+        guest.assigned_tables = []
+    elif diff != 0:
+        # Si le nombre d'accompagnants change, on ajuste les places restantes
+        for table in guest.assigned_tables:
+            table.remaining_seats -= diff
 
     # Créer une entrée dans l'historique RSVP
     new_rsvp = RSVP(
