@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
+import GoogleLoginButton from '../components/GoogleLoginButton.vue';
 
 const email = ref('');
 const password = ref('');
@@ -24,6 +25,7 @@ const handleRegister = async () => {
     await auth.register(email.value, password.value, selectedPlan.value);
     router.push('/dashboard');
   } catch (err) {
+    console.error("Register Error:", err);
     const detail = err.response?.data?.detail;
     if (Array.isArray(detail)) {
         error.value = detail.map(d => d.msg).join(", ");
@@ -47,6 +49,16 @@ const handleRegister = async () => {
       <div class="text-center mb-10">
         <h1 class="text-4xl text-primary-800 mb-2">Rejoignez-nous</h1>
         <p class="text-sm text-gray-500 font-sans tracking-wide uppercase text-pretty">Commencez l'aventure Saas Wedding</p>
+      </div>
+
+      <div class="mb-8">
+        <GoogleLoginButton :plan="selectedPlan" />
+      </div>
+
+      <div class="relative flex py-5 items-center">
+        <div class="flex-grow border-t border-gray-200"></div>
+        <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase font-sans tracking-widest">OU</span>
+        <div class="flex-grow border-t border-gray-200"></div>
       </div>
 
       <form @submit.prevent="handleRegister" class="space-y-5">

@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
+import GoogleLoginButton from '../components/GoogleLoginButton.vue';
 
 const email = ref('');
 const password = ref('');
@@ -43,6 +44,16 @@ const handleLogin = async () => {
       <div class="text-center mb-10">
         <h1 class="text-4xl text-primary-800 mb-2">Saas Wedding</h1>
         <p class="text-sm text-gray-500 font-sans tracking-wide uppercase">L'art de l'invitation digitale</p>
+      </div>
+
+      <div class="mb-8">
+        <GoogleLoginButton />
+      </div>
+
+      <div class="relative flex py-5 items-center">
+        <div class="flex-grow border-t border-gray-200"></div>
+        <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase font-sans tracking-widest">OU</span>
+        <div class="flex-grow border-t border-gray-200"></div>
       </div>
 
       <form @submit.prevent="handleLogin" class="space-y-6">
