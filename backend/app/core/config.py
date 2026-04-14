@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     S3_REGION: str = "eu-west-3"
     S3_ACCESS_KEY: str = ""
     S3_SECRET_KEY: str = ""
+    
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = "" # Clé pour vérifier les webhooks Stripe
 
     # Configuration pour charger le fichier .env
     model_config = SettingsConfigDict(env_file=".env")

@@ -6,6 +6,7 @@ from app.api.api_v1.endpoints import events
 from app.api.api_v1.endpoints import cards
 from app.api.api_v1.endpoints import templates
 from app.api.api_v1.endpoints import users
+from app.api.api_v1.endpoints import payments
 
 api_router = APIRouter()
 
@@ -22,4 +23,6 @@ api_router.include_router(table.router, prefix="/tables", tags=["tables"])
 api_router.include_router(cards.router, prefix="/cards", tags=["cards"])
 
 api_router.include_router(templates.router, prefix="/templates", tags=["templates"])
+
+api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 
