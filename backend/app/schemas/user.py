@@ -17,3 +17,7 @@ class UserResponse(BaseModel):
 
 class UserUpdatePlan(BaseModel):
     plan: str # classic, premium
+
+class GoogleLoginRequest(BaseModel):
+    id_token: str
+    plan: Optional[str] = "classic"

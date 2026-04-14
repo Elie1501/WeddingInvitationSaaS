@@ -4,7 +4,6 @@ import CardSectionBanner from './CardSectionBanner.vue';
 import CardSectionDetails from './CardSectionDetails.vue';
 import CardSectionText from './CardSectionText.vue';
 import CardSectionItinerary from './CardSectionItinerary.vue';
-import CardSectionGallery from './CardSectionGallery.vue';
 import CardSplashScreen from './CardSplashScreen.vue';
 import CardCountdown from './CardCountdown.vue';
 
@@ -43,8 +42,7 @@ const componentsMap = {
   banner: CardSectionBanner,
   details: CardSectionDetails,
   text: CardSectionText,
-  itinerary: CardSectionItinerary,
-  gallery: CardSectionGallery
+  itinerary: CardSectionItinerary
 };
 
 const internalShowSplash = ref(false);
