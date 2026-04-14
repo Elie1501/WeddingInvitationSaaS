@@ -38,6 +38,7 @@ def create_table(
         raise HTTPException(status_code=403, detail="Accès refusé")
 
     new_table = WeddingTable(**table_in.model_dump())
+    new_table.remaining_seats = new_table.capacity # Initialement, toutes les places sont libres
     db.add(new_table)
     db.commit()
     db.refresh(new_table)
@@ -81,18 +82,28 @@ def assign_guest_to_table(
             detail="L'invité et la table doivent appartenir au même événement."
         )
 
-    # Vérifier la capacité
-    if len(table.guests) >= table.capacity:
-        raise HTTPException(status_code=400, detail="La table est déjà pleine")
+    # Nombre de places nécessaires pour cet invité
+    required_seats = 1 + (guest.plus_ones or 0)
 
     # Vérifier si l'invité est déjà à cette table
     if guest in table.guests:
         return table
 
-    # Désassigner l'invité de TOUTES ses tables actuelles (règle : 1 invité = 1 place)
+    # Si l'invité est déjà à une autre table, on libère ses places là-bas avant
+    for old_table in guest.assigned_tables:
+        old_table.remaining_seats += required_seats
+    
+    # Vérifier la capacité de la nouvelle table
+    if table.remaining_seats < required_seats:
+        raise HTTPException(status_code=400, detail=f"La table n'a pas assez de place ({table.remaining_seats} libres, besoin de {required_seats})")
+
+    # Désassigner l'invité de TOUTES ses tables actuelles
     guest.assigned_tables = []
     
+    # Assigner à la nouvelle table
     table.guests.append(guest)
+    table.remaining_seats -= required_seats
+    
     db.commit()
     db.refresh(table)
     return table
@@ -116,7 +127,7 @@ def get_tables_status(
     total_seated = 0
     
     for t in tables:
-        seated = len(t.guests)
+        seated = t.capacity - t.remaining_seats
         total_capacity += t.capacity
         total_seated += seated
         status.append({
@@ -124,7 +135,7 @@ def get_tables_status(
             "name": t.name,
             "capacity": t.capacity,
             "seated_count": seated,
-            "is_full": seated >= t.capacity
+            "is_full": t.remaining_seats <= 0
         })
     
     return {
@@ -150,7 +161,9 @@ def unassign_guest_from_table(
         raise HTTPException(status_code=404, detail="Table ou invité introuvable")
 
     if guest in table.guests:
+        required_seats = 1 + (guest.plus_ones or 0)
         table.guests.remove(guest)
+        table.remaining_seats += required_seats
         db.commit()
     
     db.refresh(table)
@@ -175,8 +188,9 @@ def export_table_plan_csv(
     writer.writerow(["Table", "Capacité", "Places occupées", "Invités"])
     
     for table in tables:
-        guest_names = ", ".join([f"{g.first_name} {g.last_name}" for g in table.guests])
-        writer.writerow([table.name, table.capacity, len(table.guests), guest_names])
+        seated = table.capacity - table.remaining_seats
+        guest_names = ", ".join([f"{g.first_name} {g.last_name}" + (f" (+{g.plus_ones})" if g.plus_ones > 0 else "") for g in table.guests])
+        writer.writerow([table.name, table.capacity, seated, guest_names])
     
     content = output.getvalue()
     return Response(

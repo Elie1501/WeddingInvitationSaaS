@@ -123,6 +123,7 @@ class WeddingTable(Base):
     event_id = Column(Integer, ForeignKey("events.id"))
     name = Column(String, nullable=False) # [cite: 95]
     capacity = Column(Integer, nullable=False) # [cite: 96]
+    remaining_seats = Column(Integer) # Nombre de places restantes
 
     event = relationship("Event", back_populates="tables")
     guests = relationship("Guest", secondary=guest_table_association, back_populates="assigned_tables")

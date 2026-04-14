@@ -12,7 +12,7 @@ const guests = ref([]);
 const loading = ref(true);
 const showAddTable = ref(false);
 const newTable = ref({ name: '', capacity: 10 });
-const newGuest = ref({ first_name: '', last_name: '' });
+const newGuest = ref({ first_name: '', last_name: '', plus_ones: 0 });
 const addingGuest = ref(false);
 
 const fetchData = async () => {
@@ -41,7 +41,7 @@ const addGuestManually = async () => {
       rsvp_status: 'confirmed' 
     });
     guests.value.push(res.data);
-    newGuest.value = { first_name: '', last_name: '' };
+    newGuest.value = { first_name: '', last_name: '', plus_ones: 0 };
   } catch (err) {
     alert("Erreur lors de l'ajout de l'invité");
   } finally {
@@ -72,16 +72,8 @@ const deleteTable = async (id) => {
 
 const assignGuest = async (tableId, guestId) => {
   try {
-    const res = await api.post(`/tables/${tableId}/assign/${guestId}`);
-    const index = tables.value.findIndex(t => t.id === tableId);
-    if (index !== -1) {
-      tables.value[index] = res.data;
-    }
-    tables.value.forEach(t => {
-      if (t.id !== tableId) {
-        t.guests = t.guests.filter(g => g.id !== guestId);
-      }
-    });
+    await api.post(`/tables/${tableId}/assign/${guestId}`);
+    await fetchData(); // Refresh all tables to keep remaining_seats in sync
   } catch (err) {
     alert(err.response?.data?.detail || "Erreur d'assignation");
   }
@@ -89,11 +81,8 @@ const assignGuest = async (tableId, guestId) => {
 
 const unassignGuest = async (tableId, guestId) => {
   try {
-    const res = await api.post(`/tables/${tableId}/unassign/${guestId}`);
-    const index = tables.value.findIndex(t => t.id === tableId);
-    if (index !== -1) {
-      tables.value[index] = res.data;
-    }
+    await api.post(`/tables/${tableId}/unassign/${guestId}`);
+    await fetchData(); // Refresh all tables
   } catch (err) {
     console.error(err);
   }
@@ -123,6 +112,8 @@ const unassignedGuests = computed(() => {
   const assignedIds = tables.value.flatMap(t => t.guests.map(g => g.id));
   return guests.value.filter(g => !assignedIds.includes(g.id));
 });
+
+
 
 onMounted(fetchData);
 </script>
@@ -162,6 +153,10 @@ onMounted(fetchData);
             <input v-model="newGuest.first_name" type="text" placeholder="Prénom" class="flex-1 text-[10px] p-2 bg-gray-50 border border-gray-100 rounded-lg outline-none focus:ring-1 focus:ring-primary-400">
             <input v-model="newGuest.last_name" type="text" placeholder="Nom" class="flex-1 text-[10px] p-2 bg-gray-50 border border-gray-100 rounded-lg outline-none focus:ring-1 focus:ring-primary-400">
           </div>
+          <div class="flex items-center space-x-2">
+            <label class="text-[10px] text-gray-400 uppercase font-bold">Accompagnants :</label>
+            <input v-model.number="newGuest.plus_ones" type="number" min="0" class="w-16 text-[10px] p-2 bg-gray-50 border border-gray-100 rounded-lg outline-none focus:ring-1 focus:ring-primary-400">
+          </div>
           <button 
             @click="addGuestManually" 
             :disabled="addingGuest || !newGuest.first_name || !newGuest.last_name"
@@ -180,7 +175,10 @@ onMounted(fetchData);
             class="p-3 bg-white border border-gray-100 rounded-xl shadow-sm cursor-move hover:border-primary-300 hover:shadow-md transition-all group"
           >
             <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-gray-700">{{ guest.first_name }} {{ guest.last_name }}</span>
+              <span class="text-sm font-medium text-gray-700">
+                {{ guest.first_name }} {{ guest.last_name }}
+                <span v-if="guest.plus_ones > 0" class="text-xs text-gray-400 ml-1">(+{{ guest.plus_ones }})</span>
+              </span>
               <svg class="w-4 h-4 text-gray-300 group-hover:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
             </div>
           </div>
@@ -203,7 +201,7 @@ onMounted(fetchData);
             <div>
               <h3 class="text-lg font-bold text-gray-900">{{ table.name }}</h3>
               <p class="text-xs text-gray-400 uppercase tracking-widest font-bold">
-                {{ table.guests.length }} / {{ table.capacity }} places
+                {{ table.capacity - table.remaining_seats }} / {{ table.capacity }} places
               </p>
             </div>
             <button @click="deleteTable(table.id)" class="text-gray-300 hover:text-red-500 transition-colors p-1">
@@ -215,8 +213,8 @@ onMounted(fetchData);
           <div class="w-full bg-gray-100 rounded-full h-1.5 mb-6">
             <div 
               class="h-1.5 rounded-full transition-all duration-500"
-              :class="table.guests.length >= table.capacity ? 'bg-red-500' : 'bg-primary-500'"
-              :style="{ width: `${(table.guests.length / table.capacity) * 100}%` }"
+              :class="(table.capacity - table.remaining_seats) >= table.capacity ? 'bg-red-500' : 'bg-primary-500'"
+              :style="{ width: `${((table.capacity - table.remaining_seats) / table.capacity) * 100}%` }"
             ></div>
           </div>
 
@@ -226,7 +224,10 @@ onMounted(fetchData);
               :key="guest.id"
               class="flex justify-between items-center p-2.5 bg-primary-50 rounded-xl text-sm text-primary-900 group/item"
             >
-              <span class="font-medium">{{ guest.first_name }} {{ guest.last_name }}</span>
+              <span class="font-medium">
+                {{ guest.first_name }} {{ guest.last_name }}
+                <span v-if="guest.plus_ones > 0" class="text-xs text-primary-400 ml-1">(+{{ guest.plus_ones }})</span>
+              </span>
               <button @click="unassignGuest(table.id, guest.id)" class="text-primary-300 hover:text-primary-600 opacity-0 group-hover/item:opacity-100 transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>

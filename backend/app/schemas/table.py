@@ -5,6 +5,7 @@ from app.schemas.guest import GuestResponse
 class TableBase(BaseModel):
     name: str
     capacity: int
+    remaining_seats: Optional[int] = None
 
 class TableCreate(TableBase):
     event_id: int
@@ -12,6 +13,7 @@ class TableCreate(TableBase):
 class TableResponse(TableBase):
     id: int
     event_id: int
+    remaining_seats: int
     # On pourra inclure la liste des invités assis à cette table
     guests: List[GuestResponse] = []
 
