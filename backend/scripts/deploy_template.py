@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models.wedding import CardTemplate
 
+
 def deploy_templates(templates_dir: str):
     db: Session = SessionLocal()
     try:
