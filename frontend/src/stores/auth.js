@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import api from '../service/api';
+import { auth, provider } from '../firebase';
+import { signInWithPopup } from 'firebase/auth';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -8,6 +10,26 @@ export const useAuthStore = defineStore('auth', {
         refreshToken: localStorage.getItem('refresh_token') || null,
     }),
     actions: {
+        async loginWithGoogle(plan = 'classic') {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const idToken = await result.user.getIdToken();
+
+                const response = await api.post('/auth/google', {
+                    id_token: idToken,
+                    plan: plan
+                });
+
+                this.token = response.data.access_token;
+                this.refreshToken = response.data.refresh_token;
+                localStorage.setItem('token', this.token);
+                localStorage.setItem('refresh_token', this.refreshToken);
+                await this.fetchMe();
+            } catch (error) {
+                console.error("Google Login Error:", error);
+                throw error;
+            }
+        },
         async login(email, password) {
             const params = new URLSearchParams();
             params.append('username', email);
