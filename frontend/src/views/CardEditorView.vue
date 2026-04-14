@@ -31,6 +31,15 @@ const defaultMusicTracks = [
   { name: 'Ambiance Jazz', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' }
 ];
 
+const backgroundLibrary = [
+  { id: 'lib-1', url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=1200', category: 'Mariage' },
+  { id: 'lib-2', url: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=1200', category: 'Réception' },
+  { id: 'lib-3', url: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=1200', category: 'Couple' },
+  { id: 'lib-4', url: 'https://images.unsplash.com/photo-1510076857177-7470076d4098?auto=format&fit=crop&q=80&w=1200', category: 'Minimaliste' },
+  { id: 'lib-5', url: 'https://images.unsplash.com/photo-1522673607200-164883eecd4c?auto=format&fit=crop&q=80&w=1200', category: 'Bohème' },
+  { id: 'lib-6', url: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80&w=1200', category: 'Fleurs' }
+];
+
 const planInfo = computed(() => getPlanInfo(auth.user?.plan || 'classic'));
 
 // Configuration dynamique
@@ -200,6 +209,52 @@ const addItineraryItem = () => {
   if (!config.sections.find(s => s.type === 'itinerary')) {
     config.sections.push({ type: 'itinerary', id: 'sec-itinerary-' + Date.now() });
   }
+};
+
+const addGallerySection = () => {
+  const newId = 'sec-gallery-' + Date.now();
+  const section = { type: 'gallery', id: newId, title: 'Galerie Photos', images: [] };
+  if (activePageIndex.value === 0) {
+    config.sections.push(section);
+  } else if (activePageIndex.value > 0) {
+    config.pages[activePageIndex.value - 1].sections.push(section);
+  }
+};
+
+const removeSection = (idx) => {
+  if (confirm("Supprimer cette section ?")) {
+    if (activePageIndex.value === 0) {
+      config.sections.splice(idx, 1);
+    } else if (activePageIndex.value > 0) {
+      config.pages[activePageIndex.value - 1].sections.splice(idx, 1);
+    }
+  }
+};
+
+const addImageToGallery = async (e, section) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('file_type', 'image');
+
+  try {
+    saving.value = true;
+    const res = await api.post(`/cards/${cardId}/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    if (!section.images) section.images = [];
+    section.images.push(res.data.url);
+  } catch (err) {
+    alert("Erreur lors de l'upload.");
+  } finally {
+    saving.value = false;
+  }
+};
+
+const removeImageFromGallery = (section, imgIdx) => {
+  section.images.splice(imgIdx, 1);
 };
 
 const removeItineraryItem = (index) => {
@@ -416,6 +471,20 @@ onMounted(fetchCard);
 
                <div v-if="config.splash.use_image">
                  <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Photo de couverture</label>
+                 
+                 <!-- Bibliothèque d'images pour splash -->
+                 <div class="grid grid-cols-3 gap-2 mb-4">
+                   <div 
+                     v-for="libImg in backgroundLibrary" 
+                     :key="'splash-' + libImg.id"
+                     @click="config.media.splash_url = libImg.url"
+                     :class="config.media.splash_url === libImg.url ? 'ring-2 ring-primary-500' : 'opacity-70 hover:opacity-100'"
+                     class="aspect-video rounded-lg overflow-hidden cursor-pointer transition-all border border-gray-100"
+                   >
+                     <img :src="libImg.url" class="w-full h-full object-cover" />
+                   </div>
+                 </div>
+
                  <div class="aspect-[4/3] bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative group" :style="(config.media.splash_url || config.media.banner_url) ? { backgroundImage: `url(${config.media.splash_url || config.media.banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center', border: 'none' } : {}">
                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
                       <button @click="$refs.fileInputSplash.click()" class="bg-white text-gray-900 px-4 py-2 rounded-full text-xs font-bold shadow-xl">Changer la photo</button>
@@ -501,28 +570,56 @@ onMounted(fetchCard);
            </section>
 
            <section class="space-y-4">
-             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Choix du Modèle</h3>
-             <div class="grid grid-cols-2 gap-3">
+             <div class="flex items-center justify-between">
+               <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Modèles de design</h3>
+               <span class="text-[9px] bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">Collection 2026</span>
+             </div>
+             <div class="grid grid-cols-2 gap-4">
                <button 
                  v-for="tpl in [
-                   { id: 'modern-chic', name: 'Moderne Chic', color: '#1f2937' },
-                   { id: 'romantic-pink', name: 'Rose Romantique', color: '#fbcfe8' },
-                   { id: 'classic-elegance', name: 'Élégance Classique', color: '#fef3c7' },
-                   { id: 'luxury-minimal', name: 'Luxe Minimaliste', color: '#000000' }
+                   { id: 'modern-chic', name: 'Modern Chic', color: '#1f2937', isPremium: false, img: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=300' },
+                   { id: 'classic-elegance', name: 'Élégance', color: '#fef3c7', isPremium: false, img: 'https://images.unsplash.com/photo-1510076857177-7470076d4098?auto=format&fit=crop&q=80&w=300' },
+                   { id: 'royal-gold', name: 'Royal Gold', color: '#000000', isPremium: true, img: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=300' },
+                   { id: 'bohemian-dream', name: 'Bohème', color: '#fbcfe8', isPremium: true, img: 'https://images.unsplash.com/photo-1522673607200-164883eecd4c?auto=format&fit=crop&q=80&w=300' },
+                   { id: 'midnight-glamour', name: 'Midnight', color: '#0f172a', isPremium: true, img: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=300' }
                  ]" 
                  :key="tpl.id"
-                 @click="card.template_id = tpl.id"
-                 :class="card?.template_id === tpl.id ? 'border-primary-600 ring-2 ring-primary-100' : 'border-gray-100 hover:border-primary-200'"
-                 class="p-3 border rounded-2xl transition-all text-center bg-white shadow-sm group"
+                 @click="(!tpl.isPremium || auth.user?.plan === 'premium') ? card.template_id = tpl.id : alert('Ce modèle est réservé aux membres Premium.')"
+                 :class="[
+                   card?.template_id === tpl.id ? 'border-primary-600 ring-2 ring-primary-100 shadow-lg' : 'border-gray-100 hover:border-primary-200',
+                   tpl.isPremium && auth.user?.plan !== 'premium' ? 'opacity-70 grayscale-[0.5]' : ''
+                 ]"
+                 class="group relative aspect-[3/4] border rounded-[1.5rem] overflow-hidden transition-all bg-white"
                >
-                 <div :style="{ backgroundColor: tpl.color }" class="w-full h-12 rounded-xl mb-2 opacity-80 group-hover:opacity-100 transition-opacity"></div>
-                 <span class="text-[10px] font-bold uppercase tracking-wider text-gray-700">{{ tpl.name }}</span>
+                 <img :src="tpl.img" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3 text-left">
+                   <span v-if="tpl.isPremium" class="absolute top-2 right-2 bg-amber-400 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg">Premium</span>
+                   <h4 class="text-white text-[10px] font-bold uppercase tracking-wider mb-0.5">{{ tpl.name }}</h4>
+                   <p class="text-white/60 text-[8px] italic">Utiliser ce style</p>
+                 </div>
+                 <div v-if="tpl.isPremium && auth.user?.plan !== 'premium'" class="absolute inset-0 bg-black/20 flex items-center justify-center backdrop-blur-[1px]">
+                   <svg class="w-6 h-6 text-white/80" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+                 </div>
                </button>
              </div>
            </section>
 
            <section class="space-y-4">
              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Image de Fond</h3>
+             
+             <!-- Bibliothèque d'images -->
+             <div class="grid grid-cols-3 gap-2 mb-4">
+               <div 
+                 v-for="libImg in backgroundLibrary" 
+                 :key="libImg.id"
+                 @click="config.media.banner_url = libImg.url"
+                 :class="config.media.banner_url === libImg.url ? 'ring-2 ring-primary-500' : 'opacity-70 hover:opacity-100'"
+                 class="aspect-video rounded-lg overflow-hidden cursor-pointer transition-all border border-gray-100"
+               >
+                 <img :src="libImg.url" class="w-full h-full object-cover" />
+               </div>
+             </div>
+
              <div class="aspect-video bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative group" :style="config.media.banner_url ? { backgroundImage: `url(${config.media.banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center', border: 'none' } : {}">
                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button @click="$refs.fileInput.click()" class="bg-white text-gray-900 px-4 py-2 rounded-full text-xs font-bold shadow-xl">Changer</button>
@@ -533,7 +630,38 @@ onMounted(fetchCard);
            </section>
 
            <section class="space-y-4 pt-4 border-t border-gray-100">
-             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center">
+             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center justify-between">
+               <span>Sections Additionnelles</span>
+               <button @click="addGallerySection" class="text-[10px] bg-primary-50 text-primary-600 px-2 py-1 rounded-lg hover:bg-primary-100 transition-colors">+ Ajouter Galerie</button>
+             </h3>
+
+             <div v-for="(section, sIdx) in (activePageIndex === 0 ? config.sections : config.pages[activePageIndex-1].sections)" :key="section.id">
+                <!-- Galerie Editor -->
+                <div v-if="section.type === 'gallery'" class="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3 relative group">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold text-primary-600 uppercase tracking-widest">Galerie Photos</span>
+                    <button @click="removeSection(activePageIndex === 0 ? sIdx : sIdx)" class="text-gray-300 hover:text-red-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                  </div>
+                  <input v-model="section.title" type="text" placeholder="Titre de la galerie" class="w-full bg-white border-gray-100 rounded-lg text-[11px] p-2 focus:ring-1 focus:ring-primary-500 outline-none">
+                  
+                  <div class="grid grid-cols-4 gap-2">
+                    <div v-for="(img, imgIdx) in section.images" :key="imgIdx" class="aspect-square rounded-lg overflow-hidden relative group/img border border-gray-200">
+                      <img :src="img" class="w-full h-full object-cover" />
+                      <button @click="removeImageFromGallery(section, imgIdx)" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                      </button>
+                    </div>
+                    <button @click="$refs['galleryInput' + section.id][0].click()" class="aspect-square bg-white border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-gray-400 hover:border-primary-300 hover:text-primary-500 transition-all">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                      <input :ref="'galleryInput' + section.id" type="file" class="hidden" accept="image/*" @change="e => addImageToGallery(e, section)">
+                    </button>
+                  </div>
+                </div>
+             </div>
+
+             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center mt-6">
                <svg class="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                Programme de l'événement
              </h3>

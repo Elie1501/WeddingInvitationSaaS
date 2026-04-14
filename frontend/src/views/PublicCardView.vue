@@ -86,36 +86,32 @@ const handleRSVP = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-neutral-50 flex flex-col items-center font-sans selection:bg-primary-100 selection:text-primary-900">
+  <div class="min-h-screen flex flex-col items-center selection:bg-primary-100 selection:text-primary-900">
     
     <!-- Floating Music Control -->
     <div v-if="cardData?.music_url" class="fixed bottom-8 right-8 z-[300]">
       <button 
         @click="toggleMusic"
-        class="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.1)] flex items-center justify-center text-primary-600 hover:scale-110 active:scale-95 transition-all border border-white group"
+        class="w-14 h-14 bg-white/20 backdrop-blur-xl rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all border border-white/20 group"
       >
         <div v-if="isMusicPlaying" class="flex items-end space-x-1 h-5">
-          <div class="w-[3px] bg-primary-500 animate-music-bar-1"></div>
-          <div class="w-[3px] bg-primary-600 animate-music-bar-2"></div>
-          <div class="w-[3px] bg-primary-400 animate-music-bar-3"></div>
+          <div class="w-[3px] bg-white animate-music-bar-1"></div>
+          <div class="w-[3px] bg-white animate-music-bar-2"></div>
+          <div class="w-[3px] bg-white animate-music-bar-3"></div>
         </div>
         <svg v-else class="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
-        
-        <span class="absolute right-16 bg-gray-900 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl uppercase tracking-widest font-bold">
-          {{ isMusicPlaying ? 'Couper le son' : 'Activer le son' }}
-        </span>
       </button>
       <audio ref="audioPlayer" loop :src="cardData.music_url" class="hidden"></audio>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading && !cardData" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
-       <div class="w-16 h-[1px] bg-primary-100 mb-8 animate-grow-width"></div>
-       <div class="animate-pulse text-primary-900 font-serif italic text-xl">Chargement de l'invitation...</div>
+    <div v-if="loading && !cardData" class="fixed inset-0 bg-neutral-900 z-[2000] flex flex-col items-center justify-center">
+       <div class="w-24 h-[1px] bg-primary-500 mb-8 animate-grow-width"></div>
+       <div class="animate-pulse text-white font-serif italic text-2xl tracking-widest">Initialisation...</div>
     </div>
 
     <!-- Invitation View -->
-    <div v-if="cardData" class="w-full flex flex-col animate-fade-in">
+    <div v-if="cardData" class="w-full flex flex-col animate-fade-in" :style="{'--theme-accent': JSON.parse(cardData.config_json || '{}').colors?.accent || '#000'}">
       
       <!-- Content -->
       <div class="w-full">
@@ -130,17 +126,20 @@ const handleRSVP = async () => {
 
       <!-- RSVP Section -->
       <div v-if="cardData.has_rsvp_form" 
-           class="w-full flex justify-center py-24 px-4 bg-white border-t border-neutral-100"
+           class="w-full flex justify-center py-32 px-4 relative z-10 overflow-hidden"
            id="rsvp-section">
-        <div class="w-full max-w-xl">
-          <div class="text-center mb-16">
-            <span class="text-[10px] uppercase tracking-[0.5em] text-primary-500 font-bold mb-4 block">Votre Réponse</span>
-            <h3 class="text-4xl md:text-5xl font-serif text-neutral-900 mb-6 italic">
+        <!-- Fond dynamique pour le RSVP -->
+        <div class="absolute inset-0 bg-neutral-950 opacity-95"></div>
+        
+        <div class="w-full max-w-xl relative z-10">
+          <div class="text-center mb-20">
+            <span class="text-[10px] uppercase tracking-[0.6em] text-primary-400 font-bold mb-6 block animate-fade-in">RSVP</span>
+            <h3 class="text-5xl md:text-7xl font-serif text-white mb-8 italic">
               {{ JSON.parse(cardData.config_json || '{}').content?.rsvp_title || 'Serez-vous des nôtres ?' }}
             </h3>
-            <div class="w-12 h-[1px] bg-primary-200 mx-auto mb-6"></div>
-            <p class="text-neutral-500 font-light tracking-wide text-lg">
-              {{ JSON.parse(cardData.config_json || '{}').content?.rsvp_subtitle || 'Veuillez nous confirmer votre présence avant la date limite.' }}
+            <div class="w-16 h-[1px] bg-primary-500/50 mx-auto mb-8"></div>
+            <p class="text-neutral-400 font-light tracking-widest text-lg md:text-xl">
+              {{ JSON.parse(cardData.config_json || '{}').content?.rsvp_subtitle || 'Nous avons hâte de célébrer ce moment avec vous.' }}
             </p>
           </div>
 
@@ -153,49 +152,49 @@ const handleRSVP = async () => {
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
               <button
                 type="button"
-                @click="rsvpForm.presence = true"
-                :class="rsvpForm.presence ? 'bg-green-600 text-white shadow-xl scale-105 shadow-green-600/20' : 'bg-neutral-50 text-neutral-400 hover:bg-neutral-100'"
-                class="flex-1 px-8 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border border-transparent"
+                @click.prevent="rsvpForm.presence = true"
+                :class="rsvpForm.presence ? 'bg-green-600 text-white shadow-xl scale-105 shadow-green-600/20' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'"
+                class="flex-1 px-8 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border border-white/5"
               >
                 Je serai présent(e)
               </button>
               <button
                 type="button"
-                @click="rsvpForm.presence = false"
-                :class="!rsvpForm.presence ? 'bg-red-600 text-white shadow-xl scale-105 shadow-red-600/20' : 'bg-neutral-50 text-neutral-400 hover:bg-neutral-100'"
-                class="flex-1 px-8 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border border-transparent"
+                @click.prevent="rsvpForm.presence = false"
+                :class="!rsvpForm.presence ? 'bg-red-600 text-white shadow-xl scale-105 shadow-red-600/20' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'"
+                class="flex-1 px-8 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border border-white/5"
               >
                 Je serai absent(e)
               </button>
             </div>
 
             <!-- Form Fields -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
               <div class="space-y-1">
-                <label class="text-[10px] uppercase tracking-widest text-neutral-400 font-bold ml-1">Prénom</label>
-                <input v-model="rsvpForm.first_name" type="text" required class="w-full px-5 py-4 rounded-2xl border border-neutral-100 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" />
+                <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Prénom</label>
+                <input v-model="rsvpForm.first_name" type="text" required class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" />
               </div>
               <div class="space-y-1">
-                <label class="text-[10px] uppercase tracking-widest text-neutral-400 font-bold ml-1">Nom</label>
-                <input v-model="rsvpForm.last_name" type="text" required class="w-full px-5 py-4 rounded-2xl border border-neutral-100 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" />
+                <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Nom</label>
+                <input v-model="rsvpForm.last_name" type="text" required class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" />
               </div>
             </div>
             
-            <div class="space-y-1">
-              <label class="text-[10px] uppercase tracking-widest text-neutral-400 font-bold ml-1">Email</label>
-              <input v-model="rsvpForm.email" type="email" class="w-full px-5 py-4 rounded-2xl border border-neutral-100 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" placeholder="Pour recevoir vos informations" />
+            <div class="space-y-1 animate-fade-in">
+              <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Email</label>
+              <input v-model="rsvpForm.email" type="email" class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" placeholder="Pour recevoir vos informations" />
             </div>
 
-            <div v-if="rsvpForm.presence" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div v-if="rsvpForm.presence" class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
               <div class="space-y-1">
-                <label class="text-[10px] uppercase tracking-widest text-neutral-400 font-bold ml-1">Accompagnants</label>
-                <select v-model.number="rsvpForm.plus_ones" class="w-full px-5 py-4 rounded-2xl border border-neutral-100 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300 appearance-none">
-                  <option v-for="n in 6" :key="n-1" :value="n-1">{{ n-1 === 0 ? 'Vient seul(e)' : n-1 + ' invité(s) supp.' }}</option>
+                <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Accompagnants</label>
+                <select v-model.number="rsvpForm.plus_ones" class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300 appearance-none">
+                  <option v-for="n in 6" :key="n-1" :value="n-1" class="bg-neutral-900">{{ n-1 === 0 ? 'Vient seul(e)' : n-1 + ' invité(s) supp.' }}</option>
                 </select>
               </div>
               <div class="space-y-1">
-                <label class="text-[10px] uppercase tracking-widest text-neutral-400 font-bold ml-1">Restrictions alimentaires</label>
-                <input v-model="rsvpForm.dietary_restrictions" type="text" placeholder="Allergies, régime..." class="w-full px-5 py-4 rounded-2xl border border-neutral-100 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" />
+                <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Restrictions alimentaires</label>
+                <input v-model="rsvpForm.dietary_restrictions" type="text" placeholder="Allergies, régime..." class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" />
               </div>
             </div>
 
