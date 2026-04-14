@@ -18,65 +18,61 @@ def seed_data():
         {
             "id": "modern-chic",
             "name": "Modern Chic",
-            "description": "Un design épuré et moderne avec une typographie serif élégante.",
+            "description": "Design minimaliste et typographie audacieuse.",
             "thumbnail_url": "https://placehold.co/400x300?text=Modern+Chic",
-            "required_plan": "classic",
+            "required_plan": "free",
             "default_config": {
-                "colors": {"primary": "#1a1a1a", "accent": "#d4af37", "text": "#333333"},
-                "typography": {"headings": "serif", "body": "sans-serif"},
-                "sections": [
-                    {"type": "banner", "id": "banner-1"},
-                    {"type": "text", "id": "intro-1"},
-                    {"type": "details", "id": "details-1"}
-                ]
+                "colors": {"primary": "#000000", "accent": "#6366f1", "background": "#ffffff", "text": "#111827"},
+                "typography": {"headings": "Inter", "body": "Inter"},
+                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
             }
         },
         {
             "id": "classic-elegance",
             "name": "Élégance Classique",
-            "description": "Un design traditionnel avec des tons crème et une typographie cursive.",
+            "description": "Traditionnel et raffiné, tons crème.",
             "thumbnail_url": "https://placehold.co/400x300?text=Classic+Elegance",
             "required_plan": "classic",
             "default_config": {
-                "colors": {"primary": "#4a3b2b", "accent": "#c5a059", "text": "#5d4a37"},
-                "typography": {"headings": "cursive", "body": "serif"},
-                "sections": [
-                    {"type": "banner", "id": "banner-classic"},
-                    {"type": "text", "id": "intro-classic"},
-                    {"type": "details", "id": "details-classic"}
-                ]
+                "colors": {"primary": "#451a03", "accent": "#92400e", "background": "#fef3c7", "text": "#451a03"},
+                "typography": {"headings": "Playfair Display", "body": "Playfair Display"},
+                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
             }
         },
         {
-            "id": "romantic-garden",
-            "name": "Jardin Romantique",
-            "description": "Thème floral avec des tons pastels et une ambiance champêtre.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Romantic+Garden",
+            "id": "royal-gold",
+            "name": "Royal Gold",
+            "description": "Luxe absolu, noir et or avec ornements majestueux.",
+            "thumbnail_url": "https://placehold.co/400x300?text=Royal+Gold",
             "required_plan": "premium",
             "default_config": {
-                "colors": {"primary": "#e8f5e9", "accent": "#81c784", "text": "#2e7d32"},
-                "typography": {"headings": "cursive", "body": "serif"},
-                "sections": [
-                    {"type": "banner", "id": "banner-floral"},
-                    {"type": "text", "id": "intro-floral"},
-                    {"type": "details", "id": "details-floral"}
-                ]
+                "colors": {"primary": "#d4af37", "accent": "#d4af37", "background": "#0c0a09", "text": "#f5f5f4"},
+                "typography": {"headings": "Great Vibes", "body": "Cormorant Garamond"},
+                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
             }
         },
         {
-            "id": "luxury-minimal",
-            "name": "Luxe Minimaliste",
-            "description": "Épure totale, typographie haute couture et contrastes forts.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Luxury+Minimal",
+            "id": "bohemian-dream",
+            "name": "Bohemian Dream",
+            "description": "Esprit champêtre, tons terreux et fleurs séchées.",
+            "thumbnail_url": "https://placehold.co/400x300?text=Bohemian+Dream",
+            "required_plan": "classic",
+            "default_config": {
+                "colors": {"primary": "#c46647", "accent": "#c46647", "background": "#fdf8f3", "text": "#4a3728"},
+                "typography": {"headings": "Playfair Display", "body": "Montserrat"},
+                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
+            }
+        },
+        {
+            "id": "midnight-glamour",
+            "name": "Midnight Glamour",
+            "description": "Ambiance nocturne, dégradés profonds et chic urbain.",
+            "thumbnail_url": "https://placehold.co/400x300?text=Midnight+Glamour",
             "required_plan": "premium",
             "default_config": {
-                "colors": {"primary": "#ffffff", "accent": "#000000", "text": "#1a1a1a"},
-                "typography": {"headings": "serif", "body": "serif"},
-                "sections": [
-                    {"type": "banner", "id": "banner-lux"},
-                    {"type": "text", "id": "intro-lux"},
-                    {"type": "details", "id": "details-lux"}
-                ]
+                "colors": {"primary": "#ffffff", "accent": "#818cf8", "background": "#020617", "text": "#f8fafc"},
+                "typography": {"headings": "Cormorant Garamond", "body": "Cormorant Garamond"},
+                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
             }
         }
     ]

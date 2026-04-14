@@ -9,92 +9,94 @@ const bannerUrl = computed(() => {
   }
   return props.config.media?.banner_url || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=2070';
 });
-
-const themeStyles = computed(() => {
-  const templateId = props.config.templateId;
-  if (templateId === 'luxury-minimal') {
-    return {
-      overlay: 'bg-black/40',
-      titleClass: 'text-3xl md:text-5xl font-bold uppercase tracking-[0.4em]',
-      font: 'Montserrat, sans-serif'
-    };
-  }
-  if (templateId === 'romantic-pink') {
-    return {
-      overlay: 'bg-rose-900/20',
-      titleClass: 'text-5xl md:text-7xl italic',
-      font: 'Great Vibes, cursive'
-    };
-  }
-  // Default / Classic
-  return {
-    overlay: 'bg-stone-900/30',
-    titleClass: 'text-5xl md:text-6xl italic',
-    font: 'Cormorant Garamond, serif'
-  };
-});
 </script>
 
 <template>
   <div 
-    class="relative min-h-[500px] flex flex-col items-center justify-center text-center p-12 overflow-hidden bg-fixed bg-cover bg-center"
-    :style="{ backgroundImage: `url(${bannerUrl})` }"
+    class="relative w-full flex flex-col items-center justify-center text-center overflow-hidden transition-all duration-1000"
+    :class="[
+      config.templateId === 'midnight-glamour' ? 'h-full min-h-screen' : 'min-h-[600px] rounded-3xl md:rounded-[4rem]'
+    ]"
   >
-    <!-- Overlay Dynamique -->
-    <div class="absolute inset-0 z-0 transition-colors duration-700" :class="themeStyles.overlay"></div>
-    
-    <!-- Décoration de coin (optionnelle selon thème) -->
-    <div v-if="config.templateId === 'classic-elegance'" class="absolute inset-4 border border-white/20 z-10 pointer-events-none"></div>
+    <!-- Image de fond avec effet parallax léger -->
+    <div 
+      class="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 hover:scale-105"
+      :style="{ backgroundImage: `url(${bannerUrl})` }"
+    ></div>
 
-    <div class="relative z-10 text-white max-w-3xl">
-      <div class="mb-6 overflow-hidden">
-        <p class="uppercase tracking-[0.5em] text-[10px] font-bold opacity-80 animate-fade-in-down">
-          Notre Mariage
-        </p>
-      </div>
+    <!-- Overlay intelligent -->
+    <div 
+      class="absolute inset-0 z-1"
+      :class="[
+        config.templateId === 'royal-gold' ? 'bg-black/40' : 
+        config.templateId === 'midnight-glamour' ? 'bg-indigo-950/30' : 
+        config.templateId === 'modern-chic' ? 'bg-white/10' : 'bg-black/20'
+      ]"
+    ></div>
+    
+    <!-- Contenu -->
+    <div class="relative z-10 p-8 md:p-16 flex flex-col items-center max-w-4xl">
+      <p 
+        class="uppercase tracking-[0.6em] text-[10px] md:text-xs font-bold mb-8 animate-fade-in drop-shadow-md"
+        :style="{ color: config.templateId === 'modern-chic' ? 'var(--theme-text)' : 'white' }"
+      >
+        {{ config.templateId === 'modern-chic' ? 'THE WEDDING OF' : 'Notre Mariage' }}
+      </p>
 
       <h1 
-        class="mb-6 leading-tight drop-shadow-2xl animate-reveal-up"
+        class="mb-8 leading-tight drop-shadow-2xl animate-reveal-up"
         :style="{ 
-          color: '#FFFFFF', 
-          fontFamily: themeStyles.font
+          fontFamily: 'var(--theme-font-headings)',
+          color: config.templateId === 'modern-chic' ? 'var(--theme-text)' : 'white'
         }"
-        :class="themeStyles.titleClass"
       >
-        {{ event.groom_name }} <span class="text-2xl md:text-4xl block md:inline opacity-70 my-2 md:my-0 md:mx-4">&</span> {{ event.bride_name }}
+        <span class="block">{{ event.groom_name || 'Prénom' }}</span>
+        <span class="text-3xl md:text-5xl block my-4 opacity-80">&</span>
+        <span class="block">{{ event.bride_name || 'Prénom' }}</span>
       </h1>
 
-      <div class="flex items-center justify-center space-x-4 mb-8">
-        <div class="w-8 h-[1px] bg-white/50"></div>
-        <p class="uppercase tracking-[0.3em] text-[12px] font-medium italic">
-          {{ event.date ? new Date(event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '' }}
+      <div class="flex items-center justify-center space-x-6 mb-10 animate-fade-in-delayed">
+        <div class="w-12 h-[1px]" :style="{ backgroundColor: config.templateId === 'modern-chic' ? 'var(--theme-text)' : 'white', opacity: 0.4 }"></div>
+        <p 
+          class="uppercase tracking-[0.4em] text-xs md:text-sm font-medium"
+          :style="{ color: config.templateId === 'modern-chic' ? 'var(--theme-text)' : 'white', opacity: 0.9 }"
+        >
+          {{ event.date ? new Date(event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Date de l\'événement' }}
         </p>
-        <div class="w-8 h-[1px] bg-white/50"></div>
+        <div class="w-12 h-[1px]" :style="{ backgroundColor: config.templateId === 'modern-chic' ? 'var(--theme-text)' : 'white', opacity: 0.4 }"></div>
       </div>
       
-      <p class="text-lg font-light tracking-widest opacity-90 italic font-serif">
-        {{ event.location }}
+      <p 
+        class="text-lg md:text-xl font-light tracking-[0.2em] italic animate-fade-in-delayed"
+        :style="{ color: config.templateId === 'modern-chic' ? 'var(--theme-text)' : 'white', opacity: 0.8 }"
+      >
+        {{ event.location || 'Lieu de la cérémonie' }}
       </p>
     </div>
 
     <!-- Scroll Indicator -->
-    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-50">
+    <div v-if="config.templateId !== 'modern-chic'" class="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce opacity-60 z-10">
       <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-8l-7 7-7-7"></path></svg>
     </div>
   </div>
 </template>
 
 <style scoped>
-@keyframes fade-in-down {
-  from { transform: translateY(-20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 0.8; }
-}
-
 @keyframes reveal-up {
-  from { transform: translateY(40px); opacity: 0; }
+  from { transform: translateY(60px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
-.animate-fade-in-down { animation: fade-in-down 1.2s ease-out forwards; }
-.animate-reveal-up { animation: reveal-up 1.5s cubic-bezier(0.19, 1, 0.22, 1) 0.3s forwards; opacity: 0; }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-reveal-up { animation: reveal-up 1.8s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
+.animate-fade-in { animation: fade-in 1.5s ease-out forwards; }
+.animate-fade-in-delayed { animation: fade-in 1.5s ease-out 0.8s forwards; opacity: 0; }
+
+h1 {
+  font-size: clamp(3rem, 10vw, 8rem);
+}
 </style>
