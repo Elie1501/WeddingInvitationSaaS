@@ -33,10 +33,23 @@ const handleLogout = () => {
 const handleUpdatePlan = async (newPlan) => {
   try {
     planUpdateLoading.value = true;
-    await auth.updatePlan(newPlan);
-    showPlanModal.value = false;
+    
+    // Appel au backend pour créer une session de paiement Stripe
+    const response = await api.post('/payments/create-checkout-session', {
+      plan_name: newPlan
+    });
+    
+    if (response.data.checkout_url) {
+      // Redirection vers la page de paiement sécurisée de Stripe
+      window.location.href = response.data.checkout_url;
+    } else {
+      // Fallback si pas d'URL (ne devrait pas arriver)
+      await auth.updatePlan(newPlan);
+      showPlanModal.value = false;
+    }
   } catch (err) {
-    alert("Une erreur est survenue lors du changement de forfait.");
+    console.error("Erreur d'initialisation du paiement Stripe:", err);
+    alert("Impossible d'initialiser le paiement. Veuillez réessayer.");
   } finally {
     planUpdateLoading.value = false;
   }

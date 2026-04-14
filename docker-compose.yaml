@@ -22,10 +22,12 @@ services:
     environment:
       - PYTHONPATH=/app
       - DATABASE_URL=postgresql://user:password@db:5432/wedding_db
-      - SECRET_KEY=mdp123
-      - ALGORITHM=HS256
-      - PROJECT_NAME=WeddingInvitationSaas
-      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - SECRET_KEY=${SECRET_KEY:-mdp123}
+      - ALGORITHM=${ALGORITHM:-HS256}
+      - PROJECT_NAME=${PROJECT_NAME:-WeddingInvitationSaas}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
     # On force la commande de démarrage ici pour être sûr du chemin
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
