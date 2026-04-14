@@ -15,6 +15,7 @@ const loading = ref(true);
 const searchQuery = ref('');
 const filterStatus = ref('all');
 
+
 const planInfo = computed(() => getPlanInfo(auth.user?.plan || 'classic'));
 const showAddGuest = ref(false);
 const newGuest = ref({ 
