@@ -33,7 +33,14 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
-            path: '/cards/edit/:id',
+          path: '/templates',
+          name: 'templates',
+          component: () => import('../views/TemplateGalleryView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: '/cards/edit/:id',
+
             name: 'edit-card',
             component: () => import('../views/CardEditorView.vue'),
             meta: { requiresAuth: true }
