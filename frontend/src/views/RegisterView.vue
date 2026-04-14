@@ -1,8 +1,9 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import GoogleLoginButton from '../components/GoogleLoginButton.vue';
+import api from '../service/api';
 
 const email = ref('');
 const password = ref('');
@@ -11,7 +12,14 @@ const selectedPlan = ref('classic');
 const error = ref('');
 const auth = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const loading = ref(false);
+
+onMounted(() => {
+  if (route.query.plan) {
+    selectedPlan.value = route.query.plan;
+  }
+});
 
 const handleRegister = async () => {
   if (password.value !== confirmPassword.value) {
@@ -23,9 +31,23 @@ const handleRegister = async () => {
     error.value = '';
     loading.value = true;
     await auth.register(email.value, password.value, selectedPlan.value);
-    router.push('/dashboard');
+    
+    // Redirection vers Stripe après inscription réussie
+    const response = await api.post('/payments/create-checkout-session', {
+      plan_name: selectedPlan.value
+    });
+    
+    if (response.data.checkout_url) {
+      window.location.href = response.data.checkout_url;
+    } else {
+      router.push('/dashboard');
+    }
   } catch (err) {
     console.error("Register Error:", err);
+    if (auth.user) {
+       router.push('/dashboard');
+       return;
+    }
     const detail = err.response?.data?.detail;
     if (Array.isArray(detail)) {
         error.value = detail.map(d => d.msg).join(", ");
