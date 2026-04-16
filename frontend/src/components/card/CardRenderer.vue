@@ -1,364 +1,172 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
-import CardSectionBanner from './CardSectionBanner.vue';
-import CardSectionDetails from './CardSectionDetails.vue';
-import CardSectionText from './CardSectionText.vue';
-import CardSectionItinerary from './CardSectionItinerary.vue';
-import CardSplashScreen from './CardSplashScreen.vue';
-import CardCountdown from './CardCountdown.vue';
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
   config: {
     type: Object,
-    default: () => ({ sections: [], pages: [], has_cover_page: false, colors: {}, typography: {}, media: {}, content: {} })
+    default: () => ({ 
+      layout: 'arch',
+      theme: { background: '#F9F7F2', accent: '#C5A059', text: '#1A1A1A', fontFamily: 'Playfair Display' },
+      content: { names: 'Lui & Elle', date: '', location: '', message: '', image_url: '' },
+      show_countdown: true,
+      music_url: ''
+    })
   },
   event: {
     type: Object,
     default: () => ({ groom_name: '', bride_name: '', date: '', location: '', title: '' })
   },
-  templateId: {
-    type: String,
-    default: 'modern-chic'
-  },
-  activePageIndex: {
-    type: Number,
-    default: 0
-  },
-  forceSplash: {
-    type: Boolean,
-    default: false
-  },
-  isEditor: {
-    type: Boolean,
-    default: false
-  },
-  showSplash: {
-    type: Boolean,
-    default: null
+  subEvents: {
+    type: Array,
+    default: () => []
   }
 });
 
-const componentsMap = {
-  banner: CardSectionBanner,
-  details: CardSectionDetails,
-  text: CardSectionText,
-  itinerary: CardSectionItinerary
-};
+// Sync des données pour l'affichage
+const displayData = computed(() => ({
+  names: `${props.event.groom_name || 'Lui'} & ${props.event.bride_name || 'Elle'}`,
+  date: props.event.date ? new Date(props.event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Date à venir',
+  location: props.event.location || 'Lieu secret',
+  message: props.config.content?.message || 'Nous nous marions !',
+  image: props.config.content?.image_url || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200'
+}));
 
-const internalShowSplash = ref(false);
+// Countdown Logic - Sécurisée et réactive
+const timeLeft = ref({ days: 0, hours: 0, mins: 0, secs: 0 });
+let timer = null;
 
-// Calcul initial et synchronisation
-const updateSplashVisibility = () => {
-  if (props.forceSplash) {
-    internalShowSplash.value = true;
-  } else if (props.showSplash !== null) {
-    internalShowSplash.value = props.showSplash;
+const updateCountdown = () => {
+  const dateToUse = props.event?.date || props.config?.content?.date;
+  if (!dateToUse) return;
+
+  const targetDate = new Date(dateToUse).getTime();
+  const now = new Date().getTime();
+  const diff = targetDate - now;
+
+  if (diff > 0) {
+    timeLeft.value = {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+      mins: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      secs: Math.floor((diff % (1000 * 60)) / 1000)
+    };
   } else {
-    internalShowSplash.value = (props.config?.has_cover_page && !props.isEditor);
+    timeLeft.value = { days: 0, hours: 0, mins: 0, secs: 0 };
   }
 };
 
-onMounted(updateSplashVisibility);
-
-watch(() => [props.showSplash, props.forceSplash, props.config?.has_cover_page], updateSplashVisibility);
-
-const currentPageIndex = ref(props.activePageIndex); 
-
-watch(() => props.activePageIndex, (newVal) => {
-  currentPageIndex.value = newVal;
+onMounted(() => {
+  updateCountdown();
+  timer = setInterval(updateCountdown, 1000);
 });
+onUnmounted(() => clearInterval(timer));
 
-const activePageConfig = computed(() => {
-  if (currentPageIndex.value === 0) {
-    return {
-      title: 'Invitation',
-      background_color: props.config?.colors?.background || '#ffffff',
-      text_color: props.config?.colors?.text || '#1f2937',
-      accent_color: props.config?.colors?.accent || '#4f46e5'
-    };
-  } else {
-    const p = props.config?.pages?.[currentPageIndex.value - 1];
-    return {
-      title: p?.title || 'Page',
-      background_color: p?.background_color || props.config?.colors?.background || '#ffffff',
-      text_color: p?.text_color || props.config?.colors?.text || '#1f2937',
-      accent_color: p?.accent_color || props.config?.colors?.accent || '#4f46e5'
-    };
-  }
-});
+// Surveiller les changements de date pour mettre à jour le décompte
+watch(() => props.event.date, updateCountdown);
 
-const activeSections = computed(() => {
-  let sections = [];
-  if (currentPageIndex.value <= 0) {
-    sections = [...(props.config?.sections || [
-      { type: 'banner', id: 'default-banner' },
-      { type: 'text', id: 'default-text' },
-      { type: 'details', id: 'default-details' }
-    ])];
-    
-    if (props.config?.itinerary?.length > 0 && !sections.find(s => s.type === 'itinerary')) {
-      sections.push({ type: 'itinerary', id: 'auto-itinerary' });
-    }
-  } else {
-    sections = props.config?.pages?.[currentPageIndex.value - 1]?.sections || [];
-  }
-  return sections;
-});
-
-const templateStyles = computed(() => {
-  const bg = activePageConfig.value.background_color;
-  const text = activePageConfig.value.text_color;
-  const accent = activePageConfig.value.accent_color;
-
-  const base = {
-    '--theme-bg': bg,
-    '--theme-text': text,
-    '--theme-accent': accent,
-    '--theme-font-body': props.config?.typography?.body || 'Inter, sans-serif',
-    '--theme-font-headings': props.config?.typography?.headings || 'Inter, sans-serif',
-    backgroundColor: bg,
-    color: text,
-    fontFamily: 'var(--theme-font-body)',
-  };
-
-  // Specific Overrides for Premium Templates
-  if (props.templateId === 'royal-gold') {
-    return {
-      ...base,
-      backgroundColor: '#0c0a09',
-      color: '#f5f5f4',
-      '--theme-bg': '#0c0a09',
-      '--theme-text': '#f5f5f4',
-      '--theme-accent': '#d4af37',
-      '--theme-font-headings': "'Great Vibes', cursive",
-      '--theme-font-body': "'Cormorant Garamond', serif",
-    };
-  }
-  if (props.templateId === 'bohemian-dream') {
-    return {
-      ...base,
-      backgroundColor: '#fdf8f3',
-      color: '#4a3728',
-      '--theme-bg': '#fdf8f3',
-      '--theme-text': '#4a3728',
-      '--theme-accent': '#c46647',
-      '--theme-font-headings': "'Playfair Display', serif",
-      '--theme-font-body': "'Montserrat', sans-serif",
-    };
-  }
-  if (props.templateId === 'midnight-glamour') {
-    return {
-      ...base,
-      backgroundColor: '#020617',
-      color: '#f8fafc',
-      '--theme-bg': '#020617',
-      '--theme-text': '#f8fafc',
-      '--theme-accent': '#818cf8',
-      '--theme-font-headings': "'Cormorant Garamond', serif",
-      '--theme-font-body': "'Cormorant Garamond', serif",
-    };
-  }
-  if (props.templateId === 'classic-elegance') {
-    return {
-      ...base,
-      backgroundColor: '#fef3c7', 
-      color: '#451a03',
-      '--theme-bg': '#fef3c7', 
-      '--theme-text': '#451a03',
-      '--theme-accent': '#92400e',
-      '--theme-font-headings': "'Playfair Display', serif",
-      '--theme-font-body': "'Playfair Display', serif",
-    };
-  }
-  
-  return base;
-});
+const theme = computed(() => props.config.theme || {});
+const layout = computed(() => props.config.layout || 'arch');
 </script>
 
 <template>
-  <div :class="['relative w-full overflow-hidden min-h-screen flex flex-col', 'layout-' + templateId]" :style="templateStyles">
+  <div class="card-engine w-full flex flex-col items-center bg-white overflow-x-hidden" :style="{ fontFamily: theme.fontFamily || 'Playfair Display' }">
     
-    <!-- FONDS DÉCORATIFS SPÉCIFIQUES -->
-    
-    <!-- Royal Gold Background -->
-    <div v-if="templateId === 'royal-gold'" class="absolute inset-0 z-0">
-       <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-neutral-900 to-black"></div>
-       <div class="absolute inset-10 border-[1px] border-[#d4af37]/20 rounded-lg pointer-events-none"></div>
-       <div class="absolute inset-12 border-[2px] border-[#d4af37]/10 rounded-lg pointer-events-none"></div>
-       <!-- Corners -->
-       <div class="absolute top-0 left-0 w-48 h-48 opacity-40 bg-[url('https://www.transparenttextures.com/patterns/vintage-speckles.png')]"></div>
-       <div class="absolute bottom-0 right-0 w-48 h-48 opacity-40 rotate-180 bg-[url('https://www.transparenttextures.com/patterns/vintage-speckles.png')]"></div>
+    <!-- AUDIO -->
+    <audio v-if="config.music_url" :src="config.music_url" autoplay loop class="hidden"></audio>
+
+    <!-- CANVAS PRINCIPAL (Le visuel de la carte) -->
+    <div class="main-canvas relative w-full aspect-[9/16] overflow-hidden shadow-2xl" :style="{ backgroundColor: theme.background || '#ffffff', color: theme.text || '#1A1A1A' }">
+      
+      <!-- LAYOUT 1 : L'ARCHE (Premium) -->
+      <div v-if="layout === 'arch'" class="h-full flex flex-col items-center p-8 text-center relative justify-end">
+        <div class="absolute top-12 w-[80%] aspect-[1/1.4] overflow-hidden shadow-2xl" style="border-radius: 1000px 1000px 0 0; border: 4px solid white;">
+          <img :src="displayData.image" class="w-full h-full object-cover" />
+        </div>
+        <div class="relative z-10 w-full flex flex-col items-center bg-gradient-to-t from-[var(--bg-color)] via-[var(--bg-color)] to-transparent pt-32 pb-8 px-4" :style="{'--bg-color': theme.background}">
+          <p class="text-[10px] uppercase tracking-[0.4em] mb-4" :style="{ color: theme.accent }">Save the Date</p>
+          <h1 class="text-6xl font-light leading-none italic mb-8 drop-shadow-sm">{{ displayData.names }}</h1>
+          <div class="w-12 h-[1px] mx-auto opacity-30 mb-6" :style="{ backgroundColor: theme.text }"></div>
+          <p class="text-sm tracking-widest font-bold uppercase mb-1">{{ displayData.date }}</p>
+          <p class="text-[10px] uppercase tracking-widest opacity-60">{{ displayData.location }}</p>
+        </div>
+      </div>
+
+      <!-- LAYOUT 2 : EDITORIAL (Minimal) -->
+      <div v-else-if="layout === 'typography-focus'" class="h-full flex flex-col p-10 relative overflow-hidden text-left justify-between" :style="{ backgroundColor: theme.background, color: theme.text }">
+        <div class="absolute top-10 left-10 w-3/4 aspect-[4/5] overflow-hidden shadow-xl rounded-2xl opacity-90">
+          <img :src="displayData.image" class="w-full h-full object-cover grayscale mix-blend-multiply" />
+        </div>
+        <div class="relative z-10 flex flex-col h-full justify-end pb-8 pt-48">
+          <h1 class="text-[5.5rem] font-black tracking-tighter uppercase leading-[0.85] w-[120%] -ml-2 mix-blend-difference break-words">{{ displayData.names.replace(' & ', '&') }}</h1>
+          <div class="mt-12 flex justify-between items-end border-t-2 pt-6" :style="{ borderColor: theme.text }">
+            <div class="space-y-1">
+              <p class="text-xs tracking-widest uppercase font-bold">{{ displayData.date }}</p>
+              <p class="text-[9px] uppercase tracking-widest opacity-60">{{ displayData.location }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-full border-2 flex items-center justify-center flex-shrink-0" :style="{ borderColor: theme.text }">
+              <span class="text-[8px] font-bold">OUI</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT 3 : GLASSMORPHISM (Boho) -->
+      <div v-else-if="layout === 'split'" class="h-full w-full relative flex items-center justify-center p-8">
+        <div class="absolute inset-0">
+          <img :src="displayData.image" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-black/20"></div>
+        </div>
+        <div class="relative z-10 w-full max-w-[90%] bg-white/20 backdrop-blur-xl border border-white/40 p-12 rounded-[2.5rem] text-center flex flex-col items-center space-y-8 shadow-2xl text-white">
+          <p class="text-[9px] uppercase tracking-[0.4em] opacity-90 font-bold">Nous nous marions</p>
+          <h1 class="text-5xl italic font-light drop-shadow-md leading-tight">{{ displayData.names }}</h1>
+          <div class="w-12 h-[2px] bg-white/50 mx-auto"></div>
+          <div class="space-y-3 pt-2">
+            <p class="text-sm font-bold tracking-[0.2em] uppercase drop-shadow-sm">{{ displayData.date }}</p>
+            <p class="text-[10px] uppercase tracking-widest opacity-80 font-medium">{{ displayData.location }}</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Bohemian Dream Background -->
-    <div v-if="templateId === 'bohemian-dream'" class="absolute inset-0 z-0">
-       <div class="absolute inset-0 bg-[#fdf8f3]"></div>
-       <div class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50"></div>
-       <!-- Abstract blobs -->
-       <div class="absolute -top-24 -left-24 w-96 h-96 bg-[#e6dcd3]/30 rounded-full blur-3xl"></div>
-       <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-[#c46647]/10 rounded-full blur-3xl"></div>
-    </div>
-
-    <!-- Midnight Glamour Background -->
-    <div v-if="templateId === 'midnight-glamour'" class="absolute inset-0 z-0">
-       <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950"></div>
-       <div class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
-       <!-- Animated glow -->
-       <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] animate-pulse"></div>
-    </div>
-
-    <!-- Classic Elegance Background -->
-    <div v-if="templateId === 'classic-elegance'" class="absolute inset-0 z-0">
-       <div class="absolute inset-0 bg-[#fef3c7]"></div>
-       <div class="absolute inset-8 border border-[#92400e]/10"></div>
-       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 opacity-10">
-         <svg viewBox="0 0 100 50" fill="currentColor" class="text-[#92400e]"><path d="M0 0 Q50 50 100 0 L100 10 Q50 60 0 10 Z"/></svg>
+    <!-- COUNTDOWN SECTION - Toujours visible si activé -->
+    <div v-if="config.show_countdown" class="w-full py-20 px-8 text-center bg-white border-t border-gray-50 z-10">
+       <p class="text-[10px] font-black uppercase tracking-[0.4em] mb-10 opacity-30">Le grand décompte</p>
+       <div class="flex justify-center space-x-8">
+          <div v-for="(val, label) in { Jours:timeLeft.days, Heures:timeLeft.hours, Minutes:timeLeft.mins, Sec:timeLeft.secs }" :key="label" class="flex flex-col items-center">
+             <span class="text-4xl font-light mb-1" :style="{ color: theme.accent }">{{ val }}</span>
+             <span class="text-[8px] font-bold uppercase tracking-widest opacity-40">{{ label }}</span>
+          </div>
        </div>
     </div>
 
-    <!-- SPLASH SCREEN -->
-    <CardSplashScreen 
-      v-if="internalShowSplash && (config.has_cover_page || isEditor)" 
-      :event="event" 
-      :config="config" 
-      :templateId="templateId"
-      :isPreview="isEditor && internalShowSplash"
-      @close="internalShowSplash = false"
-      @play-music="$emit('play-music')"
-    />
-
-    <!-- NAVIGATION -->
-    <nav v-if="config.pages && config.pages.length > 0 && (!internalShowSplash || isEditor)" 
-         class="relative z-30 flex justify-center bg-white/10 backdrop-blur-md border-b border-white/10 sticky top-0 overflow-x-auto no-scrollbar">
-      <button 
-        @click="currentPageIndex = 0"
-        :class="currentPageIndex === 0 ? 'text-white border-b-2 border-accent' : 'text-white/60'"
-        class="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em] transition-all"
-        :style="currentPageIndex === 0 ? { borderBottomColor: 'var(--theme-accent)' } : {}"
-      >
-        L'Invitation
-      </button>
-      <button 
-        v-for="(page, idx) in config.pages" 
-        :key="page.id"
-        @click="currentPageIndex = idx + 1"
-        :class="currentPageIndex === idx + 1 ? 'text-white border-b-2' : 'text-white/60'"
-        class="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em] transition-all border-transparent"
-        :style="currentPageIndex === idx + 1 ? { borderBottomColor: 'var(--theme-accent)' } : {}"
-      >
-        {{ page.title }}
-      </button>
-    </nav>
-
-    <!-- MAIN CONTENT -->
-    <main v-if="!internalShowSplash || isEditor" class="relative z-10 flex-1 flex flex-col items-center w-full">
+    <!-- PROGRAM SECTION - Affichage garanti si données présentes -->
+    <div v-if="subEvents && subEvents.length > 0" class="w-full py-24 px-12 bg-[#F9F7F2]/50 border-t border-gray-50 text-center space-y-16 z-10">
+      <div class="space-y-4">
+        <h2 class="text-3xl uppercase tracking-widest font-light">Le Programme</h2>
+        <div class="w-12 h-[1px] mx-auto bg-black/10"></div>
+      </div>
       
-      <!-- ARCHITECTURE RADICALE PAR THÈME -->
-      
-      <!-- 1. ROYAL GOLD : Centré, Majestueux, Espacé -->
-      <div v-if="templateId === 'royal-gold'" class="w-full max-w-3xl px-6 py-24 space-y-32">
-        <div v-for="section in activeSections" :key="section.id" class="relative">
-          <div class="absolute -left-8 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#d4af37]/30 to-transparent"></div>
-          <component
-            :is="componentsMap[section.type]"
-            :section="section"
-            :event="event"
-            :config="{...config, colors: {...config.colors, accent: 'var(--theme-accent)'}, activePageIndex: currentPageIndex, templateId: templateId}"
-          />
-          <div v-if="section.type === 'banner'" class="mt-16">
-             <CardCountdown :targetDate="event.date" themeColor="#d4af37" :templateId="templateId" />
-          </div>
+      <div class="space-y-12">
+        <div v-for="(se, idx) in subEvents" :key="idx" class="relative">
+          <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#C5A059] mb-2">{{ se.time }}</p>
+          <h3 class="text-xl font-medium mb-1 italic">{{ se.title }}</h3>
+          <p class="text-xs opacity-50">{{ se.location }}</p>
+          <div v-if="idx < subEvents.length - 1" class="w-[1px] h-8 bg-black/5 mx-auto mt-12"></div>
         </div>
       </div>
+    </div>
 
-      <!-- 2. BOHEMIAN DREAM : Organique, Cartes flottantes, Asymétrique -->
-      <div v-if="templateId === 'bohemian-dream'" class="w-full max-w-5xl px-6 py-12 grid grid-cols-1 gap-12">
-        <div v-for="(section, idx) in activeSections" :key="section.id" 
-             :class="[
-               'bg-white/60 backdrop-blur-sm rounded-[3rem] p-8 md:p-16 border border-[#e6dcd3] shadow-xl shadow-stone-200/50',
-               idx % 2 === 0 ? 'md:ml-12' : 'md:mr-12'
-             ]">
-          <component
-            :is="componentsMap[section.type]"
-            :section="section"
-            :event="event"
-            :config="{...config, colors: {...config.colors, accent: 'var(--theme-accent)'}, activePageIndex: currentPageIndex, templateId: templateId}"
-          />
-        </div>
-      </div>
+    <!-- FOOTER -->
+    <div class="py-20 w-full text-center opacity-30 text-[9px] uppercase tracking-[0.5em] bg-white border-t border-gray-50">
+      Fait avec amour • 2026
+    </div>
 
-      <!-- 3. MIDNIGHT GLAMOUR : Moderne, Full Width, Néon Soft -->
-      <div v-if="templateId === 'midnight-glamour'" class="w-full space-y-0">
-        <div v-for="section in activeSections" :key="section.id" class="w-full">
-          <div :class="section.type === 'banner' ? 'h-screen' : 'py-24 max-w-5xl mx-auto px-6'">
-            <component
-              :is="componentsMap[section.type]"
-              :section="section"
-              :event="event"
-              :config="{...config, colors: {...config.colors, accent: 'var(--theme-accent)'}, activePageIndex: currentPageIndex, templateId: templateId}"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- 4. MODERN CHIC : Typographie XXL, Grille Brutaliste -->
-      <div v-if="templateId === 'modern-chic'" class="w-full max-w-6xl px-6 py-12 flex flex-col">
-        <div v-for="section in activeSections" :key="section.id" class="border-b border-black/5 py-16">
-          <component
-            :is="componentsMap[section.type]"
-            :section="section"
-            :event="event"
-            :config="{...config, colors: {...config.colors, accent: 'var(--theme-accent)'}, activePageIndex: currentPageIndex, templateId: templateId}"
-          />
-        </div>
-      </div>
-
-      <!-- 5. CLASSIC ELEGANCE : Traditionnel, Centré, Décoratif -->
-      <div v-if="templateId === 'classic-elegance' || !['royal-gold', 'bohemian-dream', 'midnight-glamour', 'modern-chic'].includes(templateId)" 
-           class="w-full max-w-2xl px-6 py-24 space-y-24 text-center">
-        <div v-for="section in activeSections" :key="section.id" class="border-t border-[#92400e]/10 pt-16 first:border-t-0 first:pt-0">
-          <component
-            :is="componentsMap[section.type]"
-            :section="section"
-            :event="event"
-            :config="{...config, colors: {...config.colors, accent: 'var(--theme-accent)'}, activePageIndex: currentPageIndex, templateId: templateId}"
-          />
-        </div>
-      </div>
-
-    </main>
-
-    <!-- Editor Overlay (if needed) -->
-    <div v-if="isEditor" class="absolute inset-0 pointer-events-none border-4 border-primary-500/20 z-50"></div>
   </div>
 </template>
 
 <style scoped>
-@reference "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;700;900&family=Inter:wght@300;400;700&display=swap');
 
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-h1, h2, h3 {
-  font-family: var(--theme-font-headings);
-}
-
-/* Animations globale */
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.animate-fade-in { animation: fadeIn 1.5s ease-out; }
-
-/* Styles spécifiques injectés */
-:deep(h1) { color: var(--theme-accent); }
-:deep(.section-title) { font-family: var(--theme-font-headings); color: var(--theme-accent); }
-
-/* Overrides de composants de section pour les thèmes */
-
-/* Layout specific adjustments */
-.layout-royal-gold :deep(.banner-img) { border: 8px solid #d4af37/20; padding: 10px; }
-.layout-midnight-glamour :deep(.text-content) { text-shadow: 0 0 20px rgba(129, 140, 248, 0.3); }
-
-/* Modern Chic radical adjustments */
-.layout-modern-chic :deep(h1) {
-  @apply text-7xl md:text-[12rem] font-black uppercase tracking-tighter leading-none;
-}
+.card-engine::-webkit-scrollbar { display: none; }
+.card-engine { -ms-overflow-style: none; scrollbar-width: none; }
 </style>

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LandingView from '../views/LandingView.vue';
 import LoginView from '../views/LoginView.vue';
+import MagicWizard from '../components/MagicWizard.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -21,6 +22,12 @@ const router = createRouter({
             component: () => import('../views/RegisterView.vue')
         },
         {
+            path: '/onboarding',
+            name: 'onboarding',
+            component: MagicWizard,
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/dashboard',
             name: 'dashboard',
             component: () => import('../views/DashboardView.vue'),
@@ -29,11 +36,18 @@ const router = createRouter({
         {
             path: '/events/create',
             name: 'create-event',
-            component: () => import('../views/CreateEventView.vue'),
+            component: MagicWizard,
             meta: { requiresAuth: true }
         },
         {
-            path: '/cards/edit/:id',
+          path: '/templates',
+          name: 'templates',
+          component: () => import('../views/TemplateGalleryView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: '/cards/edit/:id',
+
             name: 'edit-card',
             component: () => import('../views/CardEditorView.vue'),
             meta: { requiresAuth: true }

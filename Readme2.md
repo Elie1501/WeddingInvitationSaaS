@@ -25,6 +25,8 @@ erDiagram
     EVENT ||--|| CARD : "est associé à"
     EVENT ||--o{ GUEST : "comporte"
     EVENT ||--o{ WEDDING_TABLE : "organise"
+    
+    
     CARD ||--o{ SUB_EVENT : "détaille (itinerary)"
     GUEST ||--o{ RSVP : "génère"
     GUEST }o--o{ WEDDING_TABLE : "est assis à (guest_table_association)"

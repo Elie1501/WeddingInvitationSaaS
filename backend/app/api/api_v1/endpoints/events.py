@@ -35,7 +35,7 @@ def create_event(
 
     # On sépare les champs de personnalisation initiale
     event_data = event_in.model_dump()
-    template_id = event_data.pop("template_id", "modern-chic")
+    template_id = event_data.pop("template_id", "eclat-eternel")
     has_cp = event_data.pop("has_cover_page", True)
     has_cd = event_data.pop("has_countdown", True)
 
@@ -138,6 +138,58 @@ def get_public_card(slug: str, db: Session = Depends(get_db)):
         "sub_events": [{"title": se.title, "time": se.time, "location": se.location, "description": se.description} for se in card.sub_events]
     }
 
+@router.get("/mine/latest")
+def get_latest_event(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Récupère le dernier événement de l'utilisateur ou en crée un par défaut s'il n'en a pas.
+    Utile pour rediriger directement vers l'éditeur après la connexion.
+    """
+    event = db.query(Event).filter(Event.owner_id == current_user.id).order_by(Event.id.desc()).first()
+    
+    if not event:
+        # Créer un événement par défaut
+        event = Event(
+            title="Mon Mariage",
+            groom_name="Marié",
+            bride_name="Mariée",
+            owner_id=current_user.id
+        )
+        db.add(event)
+        db.flush()
+        
+        # Template par défaut: L'Éclat Éternel (Ultra-Simple)
+        t_id = "eclat-eternel"
+        template = db.query(CardTemplate).filter(CardTemplate.id == t_id).first()
+        
+        # Si le template n'existe pas encore, on prend le premier dispo
+        if not template:
+            template = db.query(CardTemplate).first()
+            t_id = template.id if template else "eclat-eternel"
+
+        config_dict = {}
+        if template:
+            manifest = json.loads(template.manifest_json)
+            config_dict = manifest.get("default_config", {"canvas": {"width": 1080, "height": 1920, "background_color": "#ffffff"}, "elements": []})
+        
+        card = Card(
+            event_id=event.id,
+            template_id=t_id,
+            slug=f"wedding-{uuid.uuid4().hex[:8]}",
+            config_json=json.dumps(config_dict)
+        )
+        db.add(card)
+        db.commit()
+        db.refresh(event)
+
+    card = db.query(Card).filter(Card.event_id == event.id).first()
+    return {
+        "event_id": event.id,
+        "card_id": card.id if card else None
+    }
+
 @router.get("/", response_model=List[EventResponse])
 def list_my_events(
     db: Session = Depends(get_db),
@@ -164,3 +216,17 @@ def delete_event(
     db.delete(event)
     db.commit()
     return {"message": "Événement supprimé avec succès"}
+
+@router.get("/{event_id}", response_model=EventResponse)
+def get_event(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Récupère les détails d'un événement spécifique.
+    """
+    event = db.query(Event).filter(Event.id == event_id, Event.owner_id == current_user.id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement non trouvé")
+    return event

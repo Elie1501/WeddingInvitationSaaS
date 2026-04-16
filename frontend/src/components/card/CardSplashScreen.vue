@@ -78,6 +78,7 @@ const themeStyles = computed(() => {
       <!-- Bordures décoratives thématiques -->
       <div v-if="templateId === 'royal-gold'" class="absolute inset-8 border border-[#d4af37]/30 z-10 pointer-events-none"></div>
       <div v-if="templateId === 'royal-gold'" class="absolute inset-12 border border-[#d4af37]/10 z-10 pointer-events-none"></div>
+      <div v-if="templateId === 'arche-serenite'" class="absolute inset-8 border border-[#C5A059]/20 z-10 pointer-events-none rounded-[500px_500px_0_0]"></div>
       <div v-if="templateId === 'classic-elegance'" class="absolute inset-10 border border-white/20 z-10 pointer-events-none"></div>
 
       <!-- Contenu -->

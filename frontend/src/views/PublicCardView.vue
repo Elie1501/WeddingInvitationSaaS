@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
-import CardSplashScreen from '../components/card/CardSplashScreen.vue';
 
 const route = useRoute();
 const slug = route.params.slug;
@@ -24,13 +23,12 @@ const rsvpForm = ref({
 
 const isMusicPlaying = ref(false);
 const audioPlayer = ref(null);
-const showSplashFallback = ref(false);
 
 const startMusic = () => {
   if (audioPlayer.value && !isMusicPlaying.value) {
     audioPlayer.value.play().then(() => {
       isMusicPlaying.value = true;
-    }).catch(e => console.log("L'audio a été bloqué par le navigateur", e));
+    }).catch(e => console.log("Audio bloqué", e));
   }
 };
 
@@ -42,7 +40,7 @@ const toggleMusic = () => {
   } else {
     audioPlayer.value.play().then(() => {
       isMusicPlaying.value = true;
-    }).catch(e => console.log("L'audio a été bloqué", e));
+    }).catch(e => console.log("Audio bloqué", e));
   }
 };
 
@@ -50,14 +48,8 @@ onMounted(async () => {
   try {
     const response = await api.get(`/events/public/card/${slug}`);
     cardData.value = response.data;
-    
-    // Initialiser le splash screen si activé
-    const config = JSON.parse(cardData.value.config_json || '{}');
-    if (config.has_cover_page) {
-      showSplashFallback.value = true;
-    }
   } catch (err) {
-    error.value = "Invitation introuvable ou non publiée.";
+    error.value = "Invitation introuvable.";
     console.error(err);
   } finally {
     loading.value = false;
@@ -68,17 +60,14 @@ const handleRSVP = async () => {
   try {
     loading.value = true;
     error.value = '';
-    
     await api.post('/guests/public/rsvp', {
       ...rsvpForm.value,
       event_id: cardData.value.event_id || cardData.value.id
     });
-    
-    successMessage.value = "Merci ! Votre réponse a bien été enregistrée.";
+    successMessage.value = "Votre réponse a été enregistrée avec succès.";
     rsvpForm.value = { first_name: '', last_name: '', email: '', presence: true, plus_ones: 0, dietary_restrictions: '', message: '' };
   } catch (err) {
-    error.value = "Une erreur est survenue lors de l'enregistrement de votre réponse.";
-    console.error(err);
+    error.value = "Erreur lors de l'enregistrement.";
   } finally {
     loading.value = false;
   }
@@ -86,181 +75,122 @@ const handleRSVP = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col items-center selection:bg-primary-100 selection:text-primary-900">
+  <div class="min-h-screen bg-[#FDFCFB] flex flex-col items-center selection:bg-[#C5A059] selection:text-white font-serif">
     
-    <!-- Floating Music Control -->
+    <!-- Musique Discrète -->
     <div v-if="cardData?.music_url" class="fixed bottom-8 right-8 z-[300]">
-      <button 
-        @click="toggleMusic"
-        class="w-14 h-14 bg-white/20 backdrop-blur-xl rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all border border-white/20 group"
-      >
-        <div v-if="isMusicPlaying" class="flex items-end space-x-1 h-5">
-          <div class="w-[3px] bg-white animate-music-bar-1"></div>
-          <div class="w-[3px] bg-white animate-music-bar-2"></div>
-          <div class="w-[3px] bg-white animate-music-bar-3"></div>
+      <button @click="toggleMusic" class="w-12 h-12 bg-white border border-gray-100 rounded-full shadow-lg flex items-center justify-center text-[#1A1A1A] hover:scale-110 transition-all">
+        <div v-if="isMusicPlaying" class="flex items-end space-x-1 h-4">
+          <div class="w-[2px] bg-[#C5A059] animate-music-bar-1"></div>
+          <div class="w-[2px] bg-[#C5A059] animate-music-bar-2"></div>
+          <div class="w-[2px] bg-[#C5A059] animate-music-bar-3"></div>
         </div>
-        <svg v-else class="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+        <svg v-else class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
       </button>
       <audio ref="audioPlayer" loop :src="cardData.music_url" class="hidden"></audio>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading && !cardData" class="fixed inset-0 bg-neutral-900 z-[2000] flex flex-col items-center justify-center">
-       <div class="w-24 h-[1px] bg-primary-500 mb-8 animate-grow-width"></div>
-       <div class="animate-pulse text-white font-serif italic text-2xl tracking-widest">Initialisation...</div>
-    </div>
-
     <!-- Invitation View -->
-    <div v-if="cardData" class="w-full flex flex-col animate-fade-in" :style="{'--theme-accent': JSON.parse(cardData.config_json || '{}').colors?.accent || '#000'}">
+    <div v-if="cardData" class="w-full flex flex-col items-center">
       
-      <!-- Content -->
-      <div class="w-full">
+      <!-- Visualisateur Carte -->
+      <div class="w-full max-w-[500px] bg-white shadow-2xl overflow-hidden mb-20 md:mt-10 md:rounded-[40px] md:border-[12px] md:border-[#1A1A1A]">
         <CardRenderer 
-          :config="{ ...JSON.parse(cardData.config_json || '{}'), itinerary: cardData.sub_events }" 
-          :event="cardData.event || { groom_name: cardData.groom_name, bride_name: cardData.bride_name, date: cardData.date, location: cardData.location, title: cardData.title }" 
-          :templateId="cardData.template_id || 'modern-chic'"
-          :isEditor="false"
+          :config="JSON.parse(cardData.config_json || '{}')" 
+          :event="cardData.event || cardData" 
+          :sub-events="cardData.sub_events"
           @play-music="startMusic"
         />
       </div>
 
-      <!-- RSVP Section -->
-      <div v-if="cardData.has_rsvp_form" 
-           class="w-full flex justify-center py-32 px-4 relative z-10 overflow-hidden"
-           id="rsvp-section">
-        <!-- Fond dynamique pour le RSVP -->
-        <div class="absolute inset-0 bg-neutral-950 opacity-95"></div>
+      <!-- RSVP Section (BLANC EPURE) -->
+      <div v-if="cardData.has_rsvp_form" class="w-full max-w-2xl px-8 py-32 bg-white md:rounded-[3rem] md:mb-20 md:shadow-sm border-t border-gray-50">
         
-        <div class="w-full max-w-xl relative z-10">
-          <div class="text-center mb-20">
-            <span class="text-[10px] uppercase tracking-[0.6em] text-primary-400 font-bold mb-6 block animate-fade-in">RSVP</span>
-            <h3 class="text-5xl md:text-7xl font-serif text-white mb-8 italic">
-              {{ JSON.parse(cardData.config_json || '{}').content?.rsvp_title || 'Serez-vous des nôtres ?' }}
-            </h3>
-            <div class="w-16 h-[1px] bg-primary-500/50 mx-auto mb-8"></div>
-            <p class="text-neutral-400 font-light tracking-widest text-lg md:text-xl">
-              {{ JSON.parse(cardData.config_json || '{}').content?.rsvp_subtitle || 'Nous avons hâte de célébrer ce moment avec vous.' }}
-            </p>
+        <div class="text-center mb-20 space-y-6">
+          <span class="text-[10px] uppercase tracking-[0.5em] text-[#C5A059] font-black">Réponse attendue</span>
+          <h3 class="text-5xl font-light italic text-[#1A1A1A]">Serez-vous des nôtres ?</h3>
+          <div class="w-12 h-[1px] bg-gray-100 mx-auto"></div>
+        </div>
+
+        <div v-if="successMessage" class="bg-[#F9F7F2] p-12 rounded-3xl text-center border border-[#C5A059]/20 animate-fade-in">
+           <p class="text-xl italic text-[#1A1A1A]">{{ successMessage }}</p>
+        </div>
+
+        <form v-else @submit.prevent="handleRSVP" class="space-y-12">
+          
+          <!-- Presence Toggle -->
+          <div class="flex justify-center space-x-4">
+            <button type="button" @click="rsvpForm.presence = true" 
+              :class="rsvpForm.presence ? 'bg-[#1A1A1A] text-white shadow-xl' : 'bg-gray-50 text-gray-400'"
+              class="flex-1 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+              Je serai présent(e)
+            </button>
+            <button type="button" @click="rsvpForm.presence = false" 
+              :class="!rsvpForm.presence ? 'bg-[#1A1A1A] text-white shadow-xl' : 'bg-gray-50 text-gray-400'"
+              class="flex-1 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+              Je serai absent(e)
+            </button>
           </div>
 
-          <div v-if="successMessage" class="bg-primary-50/50 border border-primary-100 text-primary-900 p-8 rounded-[2rem] text-center font-serif italic text-xl animate-scale-up">
-             {{ successMessage }}
+          <!-- Identity -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Prénom</label>
+              <input v-model="rsvpForm.first_name" type="text" required class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-[#C5A059] outline-none transition-all" />
+            </div>
+            <div class="space-y-2">
+              <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Nom</label>
+              <input v-model="rsvpForm.last_name" type="text" required class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-[#C5A059] outline-none transition-all" />
+            </div>
           </div>
 
-          <form v-else @submit.prevent="handleRSVP" class="space-y-8">
-            <!-- Choice Buttons -->
-            <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-              <button
-                type="button"
-                @click.prevent="rsvpForm.presence = true"
-                :class="rsvpForm.presence ? 'bg-green-600 text-white shadow-xl scale-105 shadow-green-600/20' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'"
-                class="flex-1 px-8 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border border-white/5"
-              >
-                Je serai présent(e)
-              </button>
-              <button
-                type="button"
-                @click.prevent="rsvpForm.presence = false"
-                :class="!rsvpForm.presence ? 'bg-red-600 text-white shadow-xl scale-105 shadow-red-600/20' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'"
-                class="flex-1 px-8 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border border-white/5"
-              >
-                Je serai absent(e)
-              </button>
+          <!-- Details -->
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Email</label>
+              <input v-model="rsvpForm.email" type="email" class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-[#C5A059] outline-none transition-all" placeholder="votre@email.com" />
             </div>
 
-            <!-- Form Fields -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-              <div class="space-y-1">
-                <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Prénom</label>
-                <input v-model="rsvpForm.first_name" type="text" required class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Nom</label>
-                <input v-model="rsvpForm.last_name" type="text" required class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" />
-              </div>
-            </div>
-            
-            <div class="space-y-1 animate-fade-in">
-              <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Email</label>
-              <input v-model="rsvpForm.email" type="email" class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" placeholder="Pour recevoir vos informations" />
-            </div>
-
-            <div v-if="rsvpForm.presence" class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-              <div class="space-y-1">
-                <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Accompagnants</label>
-                <select v-model.number="rsvpForm.plus_ones" class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300 appearance-none">
-                  <option v-for="n in 6" :key="n-1" :value="n-1" class="bg-neutral-900">{{ n-1 === 0 ? 'Vient seul(e)' : n-1 + ' invité(s) supp.' }}</option>
+            <div v-if="rsvpForm.presence" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Accompagnants</label>
+                <select v-model.number="rsvpForm.plus_ones" class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white outline-none">
+                  <option v-for="n in 6" :key="n-1" :value="n-1">{{ n-1 === 0 ? 'Vient seul(e)' : n-1 + ' invité(s) supp.' }}</option>
                 </select>
               </div>
-              <div class="space-y-1">
-                <label class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold ml-1">Restrictions alimentaires</label>
-                <input v-model="rsvpForm.dietary_restrictions" type="text" placeholder="Allergies, régime..." class="w-full px-5 py-4 rounded-2xl border border-white/10 bg-white/5 text-white focus:bg-white/10 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300" />
+              <div class="space-y-2">
+                <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Régime alimentaire</label>
+                <input v-model="rsvpForm.dietary_restrictions" type="text" placeholder="Allergies..." class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white outline-none" />
               </div>
             </div>
 
-            <div class="space-y-1">
-              <label class="text-[10px] uppercase tracking-widest text-neutral-400 font-bold ml-1">Petit mot pour nous</label>
-              <textarea v-model="rsvpForm.message" rows="4" placeholder="Félicitations, questions..." class="w-full px-5 py-4 rounded-2xl border border-neutral-100 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all duration-300 resize-none"></textarea>
+            <div class="space-y-2">
+              <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Message aux mariés</label>
+              <textarea v-model="rsvpForm.message" rows="4" class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white outline-none resize-none"></textarea>
             </div>
+          </div>
 
-            <button 
-              type="submit" 
-              :disabled="loading" 
-              class="w-full py-5 rounded-2xl font-bold uppercase tracking-[0.3em] text-[12px] shadow-2xl transition-all duration-500 transform active:scale-[0.98] group relative overflow-hidden"
-              :class="rsvpForm.presence ? 'bg-primary-900 text-white' : 'bg-neutral-800 text-white'"
-            >
-              <div class="absolute inset-0 bg-white/10 w-0 group-hover:w-full transition-all duration-500"></div>
-              <span class="relative z-10">{{ loading ? 'Envoi en cours...' : 'Envoyer ma réponse' }}</span>
-            </button>
-          </form>
-        </div>
+          <button type="submit" :disabled="loading" class="w-full py-6 bg-[#1A1A1A] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] hover:bg-black transition-all shadow-xl disabled:opacity-50">
+            {{ loading ? 'Envoi en cours...' : 'Confirmer ma présence' }}
+          </button>
+
+        </form>
       </div>
 
-      <!-- Footer -->
-      <footer class="py-12 bg-neutral-50 border-t border-neutral-100 flex flex-col items-center">
-        <div class="w-8 h-[1px] bg-neutral-200 mb-6"></div>
-        <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-[0.4em] mb-2">Saas Wedding</p>
-        <p class="text-[10px] text-neutral-300 uppercase tracking-widest">© 2026 — Votre histoire commence ici</p>
+      <!-- Simple Footer -->
+      <footer class="py-20 text-center opacity-20">
+        <p class="text-[9px] uppercase tracking-[0.5em]">Saas Wedding • 2026</p>
       </footer>
+
     </div>
   </div>
 </template>
 
 <style scoped>
-@keyframes music-bar {
-  0%, 100% { height: 6px; }
-  50% { height: 18px; }
-}
+@keyframes music-bar { 0%, 100% { height: 4px; } 50% { height: 16px; } }
 .animate-music-bar-1 { animation: music-bar 0.6s ease-in-out infinite; }
 .animate-music-bar-2 { animation: music-bar 0.6s ease-in-out 0.2s infinite; }
 .animate-music-bar-3 { animation: music-bar 0.6s ease-in-out 0.4s infinite; }
-
-@keyframes grow-width {
-  from { width: 0; }
-  to { width: 4rem; }
-}
-.animate-grow-width { animation: grow-width 1.5s ease-out infinite alternate; }
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-.animate-fade-in { animation: fade-in 1.5s ease-out forwards; }
-
-@keyframes scale-up {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-.animate-scale-up { animation: scale-up 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
-</style>
-
-<style scoped>
-.bar-1 { animation: music 0.8s ease-in-out infinite; }
-.bar-2 { animation: music 0.8s ease-in-out 0.2s infinite; }
-.bar-3 { animation: music 0.8s ease-in-out 0.4s infinite; }
-
-@keyframes music {
-  0%, 100% { height: 8px; }
-  50% { height: 20px; }
-}
+@keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
 </style>

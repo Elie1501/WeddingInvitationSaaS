@@ -4,138 +4,127 @@ from fastapi.staticfiles import StaticFiles
 import json
 import os
 from app.db.session import engine, Base, SessionLocal
-from app.api.api_v1.api import api_router # Import du routeur global
-from app.models.wedding import CardTemplate, User # Force le chargement des modèles pour SQLAlchemy
+from app.api.api_v1.api import api_router
+from app.models.wedding import CardTemplate, User
 from app.core import security
 
-# Création des tables au démarrage (pour le dev)
+# Création des tables
 Base.metadata.create_all(bind=engine)
 
 def seed_data():
     db = SessionLocal()
-    # 1. Seed Templates
+    
+    # PHILOSOPHIE : MOTEUR DE CONCEPTION DE TEMPLATES ROBUSTES
+    # Simplicité, Structure Fixe, Rendu Premium.
+    
     templates = [
         {
-            "id": "modern-chic",
-            "name": "Modern Chic",
-            "description": "Design minimaliste et typographie audacieuse.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Modern+Chic",
-            "required_plan": "free",
+            "id": "eclat-eternel",
+            "name": "L'Éclat Éternel",
+            "description": "Arche minimaliste et typographie luxe. Le choix de l'élégance absolue.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200",
+            "required_plan": "ultimate",
             "default_config": {
-                "colors": {"primary": "#000000", "accent": "#6366f1", "background": "#ffffff", "text": "#111827"},
-                "typography": {"headings": "Inter", "body": "Inter"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
+                "layout": "arch",
+                "style": "premium",
+                "theme": {
+                    "background": "#F9F7F2",
+                    "accent": "#C5A059",
+                    "text": "#1A1A1A"
+                },
+                "content": {
+                    "names": "{groom_name} & {bride_name}",
+                    "date": "{date}",
+                    "location": "{location}",
+                    "message": "Nous nous réjouissons de célébrer ce jour sacré à vos côtés.",
+                    "image_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200"
+                }
             }
         },
         {
-            "id": "classic-elegance",
-            "name": "Élégance Classique",
-            "description": "Traditionnel et raffiné, tons crème.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Classic+Elegance",
+            "id": "vogue-minimal",
+            "name": "Vogue Minimal",
+            "description": "L'art du vide. Une typographie puissante pour un impact maximal.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1510076857177-7470076d4098?w=1200",
             "required_plan": "classic",
             "default_config": {
-                "colors": {"primary": "#451a03", "accent": "#92400e", "background": "#fef3c7", "text": "#451a03"},
-                "typography": {"headings": "Playfair Display", "body": "Playfair Display"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
+                "layout": "typography-focus",
+                "style": "minimalist",
+                "theme": {
+                    "background": "#FFFFFF",
+                    "accent": "#000000",
+                    "text": "#000000"
+                },
+                "content": {
+                    "names": "{groom_name} & {bride_name}",
+                    "date": "{date}",
+                    "location": "{location}",
+                    "message": "OUI.",
+                    "image_url": "https://images.unsplash.com/photo-1510076857177-7470076d4098?w=1200"
+                }
             }
         },
         {
-            "id": "royal-gold",
-            "name": "Royal Gold",
-            "description": "Luxe absolu, noir et or avec ornements majestueux.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Royal+Gold",
-            "required_plan": "premium",
-            "default_config": {
-                "colors": {"primary": "#d4af37", "accent": "#d4af37", "background": "#0c0a09", "text": "#f5f5f4"},
-                "typography": {"headings": "Great Vibes", "body": "Cormorant Garamond"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
-            }
-        },
-        {
-            "id": "bohemian-dream",
-            "name": "Bohemian Dream",
-            "description": "Esprit champêtre, tons terreux et fleurs séchées.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Bohemian+Dream",
+            "id": "boheme-chic",
+            "name": "Bohème Chic",
+            "description": "Naturel et poétique. Des teintes douces pour une union champêtre.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=1200",
             "required_plan": "classic",
             "default_config": {
-                "colors": {"primary": "#c46647", "accent": "#c46647", "background": "#fdf8f3", "text": "#4a3728"},
-                "typography": {"headings": "Playfair Display", "body": "Montserrat"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
-            }
-        },
-        {
-            "id": "midnight-glamour",
-            "name": "Midnight Glamour",
-            "description": "Ambiance nocturne, dégradés profonds et chic urbain.",
-            "thumbnail_url": "https://placehold.co/400x300?text=Midnight+Glamour",
-            "required_plan": "premium",
-            "default_config": {
-                "colors": {"primary": "#ffffff", "accent": "#818cf8", "background": "#020617", "text": "#f8fafc"},
-                "typography": {"headings": "Cormorant Garamond", "body": "Cormorant Garamond"},
-                "sections": [{"type": "banner", "id": "b1"}, {"type": "text", "id": "t1"}, {"type": "details", "id": "d1"}]
+                "layout": "split",
+                "style": "boho",
+                "theme": {
+                    "background": "#FFF5F7",
+                    "accent": "#4D2C2C",
+                    "text": "#4D2C2C"
+                },
+                "content": {
+                    "names": "{groom_name} & {bride_name}",
+                    "date": "{date}",
+                    "location": "{location}",
+                    "message": "Au grand air, sous les fleurs de cerisier.",
+                    "image_url": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=1200"
+                }
             }
         }
     ]
-    
-    for t in templates:
-        existing = db.query(CardTemplate).filter(CardTemplate.id == t["id"]).first()
-        if not existing:
+
+    # Désactiver les anciens
+    db.query(CardTemplate).update({CardTemplate.is_active: False})
+
+    for t_data in templates:
+        existing = db.query(CardTemplate).filter(CardTemplate.id == t_data["id"]).first()
+        manifest_json = json.dumps(t_data["default_config"])
+        if existing:
+            existing.name = t_data["name"]
+            existing.description = t_data["description"]
+            existing.thumbnail_url = t_data["thumbnail_url"]
+            existing.required_plan = t_data["required_plan"]
+            existing.manifest_json = manifest_json
+            existing.is_active = True
+        else:
             new_tpl = CardTemplate(
-                id=t["id"],
-                name=t["name"],
-                description=t["description"],
-                thumbnail_url=t["thumbnail_url"],
-                required_plan=t.get("required_plan", "classic"),
-                manifest_json=json.dumps(t)
+                id=t_data["id"],
+                name=t_data["name"],
+                description=t_data["description"],
+                thumbnail_url=t_data["thumbnail_url"],
+                required_plan=t_data["required_plan"],
+                manifest_json=manifest_json,
+                is_active=True
             )
             db.add(new_tpl)
-
-    # 2. Seed Test Users
-    users_to_create = [
-        {"email": "test@test.com", "password": "password123", "plan": "premium"},
-        {"email": "admin@wedding.com", "password": "password123", "plan": "premium"},
-        {"email": "marie@classic.com", "password": "password123", "plan": "classic"},
-        {"email": "thomas@premium.com", "password": "password123", "plan": "premium"},
-    ]
-    for u_data in users_to_create:
-        existing_user = db.query(User).filter(User.email == u_data["email"]).first()
-        if not existing_user:
-            new_user = User(
-                email=u_data["email"],
-                hashed_password=security.get_password_hash(u_data["password"]),
-                plan=u_data["plan"]
-            )
-            db.add(new_user)
-            print(f"Utilisateur de test créé : {u_data['email']}")
 
     db.commit()
     db.close()
 
 seed_data()
 
-app = FastAPI(
-    title="API Carte de Mariage",
-    description="Backend pour la plateforme de gestion de mariages numériques",
-    version="1.0.0"
-)
-
-# Configuration CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# CONNEXION DES ROUTES
+app = FastAPI(title="API Mariage", version="1.0.0")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.include_router(api_router)
 
-# Montage des fichiers statiques pour les uploads
-if not os.path.exists("uploads"):
-    os.makedirs("uploads")
+if not os.path.exists("uploads"): os.makedirs("uploads")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/")
-async def health_check():
-    return {"status": "online", "message": "API opérationnelle"}
+async def health_check(): return {"status": "online"}
