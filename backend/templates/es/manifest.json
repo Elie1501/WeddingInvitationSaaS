@@ -1,0 +1,17 @@
+{
+  "id": "es-template",
+  "name": "Élégance Sophistiquée",
+  "required_plan": "premium",
+  "description": "Un design minimaliste et luxueux, parfait pour les mariages modernes.",
+  "thumbnail_url": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800",
+  "default_config": {
+    "layout": "es",
+    "theme": {
+      "background": "#ffffff",
+      "accent": "#000000",
+      "text": "#1a1a1a",
+      "fontFamily": "Inter"
+    },
+    "sections": ["es-hero", "es-intro", "es-details", "es-footer"]
+  }
+}

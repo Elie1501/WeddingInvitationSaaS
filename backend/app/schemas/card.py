@@ -84,7 +84,6 @@ class TemplateResponse(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
-    required_plan: str
     manifest_json: str
     thumbnail_url: Optional[str] = None
 
