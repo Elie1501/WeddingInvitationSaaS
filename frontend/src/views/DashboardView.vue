@@ -122,16 +122,10 @@ onMounted(async () => {
         <div>
           <h2 class="text-4xl text-gray-900 mb-2">Mes Événements</h2>
           <p class="text-gray-500 font-sans">Gérez vos invitations, listes d'invités et plans de table avec élégance.</p>
-          <div v-if="events.length >= planInfo.max_sites" class="mt-4">
-             <span class="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100 transition-all">
-               Limite de sites atteinte pour le forfait {{ planInfo.name }} ({{ planInfo.max_sites }})
-             </span>
-          </div>
         </div>
         <button 
-          @click="events.length < planInfo.max_sites ? $router.push('/events/create') : alert('Limite de sites atteinte.')" 
-          :class="events.length >= planInfo.max_sites ? 'opacity-50 grayscale cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'"
-          class="mt-6 md:mt-0 inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white shadow-md shadow-primary-600/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 font-sans"
+          @click="$router.push('/events/create')" 
+          class="mt-6 md:mt-0 inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-600/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 font-sans"
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
           Créer un événement
