@@ -10,7 +10,7 @@ class EventBase(BaseModel):
     location: Optional[str] = None
 
 class EventCreate(EventBase):
-    template_id: Optional[str] = "modern-chic"
+    template_id: Optional[str] = "eclat-eternel"
     has_cover_page: Optional[bool] = True
     has_countdown: Optional[bool] = True
 

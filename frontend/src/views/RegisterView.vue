@@ -31,7 +31,7 @@ const handleRegister = async () => {
     error.value = '';
     loading.value = true;
     await auth.register(email.value, password.value, selectedPlan.value);
-    router.push('/dashboard');
+    router.push('/onboarding');
   } catch (err) {
     const detail = err.response?.data?.detail;
     if (Array.isArray(detail)) {
