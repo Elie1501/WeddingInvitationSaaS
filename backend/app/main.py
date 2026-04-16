@@ -8,88 +8,98 @@ from app.api.api_v1.api import api_router
 from app.models.wedding import CardTemplate, User
 from app.core import security
 
+# Création des tables
 Base.metadata.create_all(bind=engine)
 
 def seed_data():
     db = SessionLocal()
     
-    # On garde les templates actifs
+    # PHILOSOPHIE : MOTEUR DE CONCEPTION DE TEMPLATES ROBUSTES
+    # Simplicité, Structure Fixe, Rendu Premium.
+    
     templates = [
         {
-            "id": "arche-royale",
-            "name": "L'Arche Royale",
-            "description": "Une photo majestueuse découpée en arche dorée.",
-            "thumbnail_url": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=600",
-            "required_plan": "classic",
+            "id": "eclat-eternel",
+            "name": "L'Éclat Éternel",
+            "description": "Arche minimaliste et typographie luxe. Le choix de l'élégance absolue.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200",
+            "required_plan": "ultimate",
             "default_config": {
-                "canvas": {"width": 1080, "height": 1920, "background_color": "#FDFBF7"},
-                "theme": {"primaryColor": "#C5A059", "secondaryColor": "#FDFBF7", "fontFamily": "serif"},
-                "elements": [
-                    {"id": "hero_image", "type": "image", "x": 140, "y": 150, "width": 800, "height": 1100, "content": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1000", "style": {"borderRadius": "400px 400px 0 0", "mask": "arch", "outline": "gold"}},
-                    {"id": "names", "type": "text", "x": 0, "y": 1350, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "100px", "fontFamily": "serif", "color": "#1A1A1A", "fontStyle": "italic"}},
-                    {"id": "date", "type": "text", "x": 0, "y": 1600, "width": 1080, "height": 100, "content": "{date}", "style": {"fontSize": "40px", "letterSpacing": "0.3em", "color": "#C5A059"}}
-                ]
+                "layout": "arch",
+                "style": "premium",
+                "theme": {
+                    "background": "#F9F7F2",
+                    "accent": "#C5A059",
+                    "text": "#1A1A1A"
+                },
+                "content": {
+                    "names": "{groom_name} & {bride_name}",
+                    "date": "{date}",
+                    "location": "{location}",
+                    "message": "Nous nous réjouissons de célébrer ce jour sacré à vos côtés.",
+                    "image_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200"
+                }
             }
         },
         {
-            "id": "coeur-passion",
-            "name": "Cœur Romantique",
-            "description": "Votre amour au centre d'un cœur élégant.",
-            "thumbnail_url": "https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?w=600",
+            "id": "vogue-minimal",
+            "name": "Vogue Minimal",
+            "description": "L'art du vide. Une typographie puissante pour un impact maximal.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1510076857177-7470076d4098?w=1200",
             "required_plan": "classic",
             "default_config": {
-                "canvas": {"width": 1080, "height": 1920, "background_color": "#FFF5F5"},
-                "theme": {"primaryColor": "#E53E3E", "secondaryColor": "#FFF5F5", "fontFamily": "serif"},
-                "elements": [
-                    {"id": "hero_image", "type": "image", "x": 140, "y": 300, "width": 800, "height": 800, "content": "https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?w=1000", "style": {"borderRadius": "50%"}},
-                    {"id": "c2", "type": "text", "x": 0, "y": 1200, "width": 1080, "height": 150, "content": "OUI POUR LA VIE", "style": {"fontSize": "30px", "letterSpacing": "0.5em", "color": "#E53E3E", "fontWeight": "bold"}},
-                    {"id": "names", "type": "text", "x": 0, "y": 1350, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "90px", "fontFamily": "serif", "color": "#1A1A1A"}}
-                ]
+                "layout": "typography-focus",
+                "style": "minimalist",
+                "theme": {
+                    "background": "#FFFFFF",
+                    "accent": "#000000",
+                    "text": "#000000"
+                },
+                "content": {
+                    "names": "{groom_name} & {bride_name}",
+                    "date": "{date}",
+                    "location": "{location}",
+                    "message": "OUI.",
+                    "image_url": "https://images.unsplash.com/photo-1510076857177-7470076d4098?w=1200"
+                }
             }
         },
         {
-            "id": "modern-chic",
-            "name": "Modern Chic",
-            "description": "Épuré, minimaliste et résolument moderne.",
-            "thumbnail_url": "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=600",
+            "id": "boheme-chic",
+            "name": "Bohème Chic",
+            "description": "Naturel et poétique. Des teintes douces pour une union champêtre.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=1200",
             "required_plan": "classic",
             "default_config": {
-                "canvas": {"width": 1080, "height": 1920, "background_color": "#FFFFFF"},
-                "theme": {"primaryColor": "#111827", "secondaryColor": "#FFFFFF", "fontFamily": "Montserrat"},
-                "elements": [
-                    {"id": "hero_image", "type": "image", "x": 0, "y": 0, "width": 1080, "height": 1200, "content": "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200", "style": {"objectFit": "cover"}},
-                    {"id": "names", "type": "text", "x": 80, "y": 1300, "width": 920, "height": 200, "content": "{groom_name}\n&\n{bride_name}", "style": {"fontSize": "80px", "textAlign": "left", "fontWeight": "900", "textTransform": "uppercase"}}
-                ]
-            }
-        },
-        {
-            "id": "floral-romance",
-            "name": "Floral Romance",
-            "description": "Douceur florale et teintes poudrées.",
-            "thumbnail_url": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=600",
-            "required_plan": "classic",
-            "default_config": {
-                "canvas": {"width": 1080, "height": 1920, "background_color": "#FFF5F7"},
-                "theme": {"primaryColor": "#4D2C2C", "secondaryColor": "#FFF5F7", "fontFamily": "Cormorant Garamond"},
-                "elements": [
-                    {"id": "hero_image", "type": "image", "x": 100, "y": 200, "width": 880, "height": 1000, "content": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=1000", "style": {"borderRadius": "20px"}},
-                    {"id": "names", "type": "text", "x": 0, "y": 1300, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "110px", "fontFamily": "'Playfair Display'"}}
-                ]
+                "layout": "split",
+                "style": "boho",
+                "theme": {
+                    "background": "#FFF5F7",
+                    "accent": "#4D2C2C",
+                    "text": "#4D2C2C"
+                },
+                "content": {
+                    "names": "{groom_name} & {bride_name}",
+                    "date": "{date}",
+                    "location": "{location}",
+                    "message": "Au grand air, sous les fleurs de cerisier.",
+                    "image_url": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=1200"
+                }
             }
         }
     ]
-    
+
     # Désactiver les anciens
     db.query(CardTemplate).update({CardTemplate.is_active: False})
 
     for t_data in templates:
         existing = db.query(CardTemplate).filter(CardTemplate.id == t_data["id"]).first()
-        manifest_json = json.dumps(t_data)
+        manifest_json = json.dumps(t_data["default_config"])
         if existing:
             existing.name = t_data["name"]
             existing.description = t_data["description"]
             existing.thumbnail_url = t_data["thumbnail_url"]
-            existing.required_plan = t_data.get("required_plan", "classic")
+            existing.required_plan = t_data["required_plan"]
             existing.manifest_json = manifest_json
             existing.is_active = True
         else:
@@ -98,7 +108,7 @@ def seed_data():
                 name=t_data["name"],
                 description=t_data["description"],
                 thumbnail_url=t_data["thumbnail_url"],
-                required_plan=t_data.get("required_plan", "classic"),
+                required_plan=t_data["required_plan"],
                 manifest_json=manifest_json,
                 is_active=True
             )

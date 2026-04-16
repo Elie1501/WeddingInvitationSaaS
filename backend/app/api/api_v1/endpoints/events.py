@@ -35,7 +35,7 @@ def create_event(
 
     # On sépare les champs de personnalisation initiale
     event_data = event_in.model_dump()
-    template_id = event_data.pop("template_id", "vogue-minimal")
+    template_id = event_data.pop("template_id", "eclat-eternel")
     has_cp = event_data.pop("has_cover_page", True)
     has_cd = event_data.pop("has_countdown", True)
 
@@ -160,14 +160,14 @@ def get_latest_event(
         db.add(event)
         db.flush()
         
-        # Template par défaut: L'Arche d'Or (Ultra-Simple)
-        t_id = "template-arche-or"
+        # Template par défaut: L'Éclat Éternel (Ultra-Simple)
+        t_id = "eclat-eternel"
         template = db.query(CardTemplate).filter(CardTemplate.id == t_id).first()
         
         # Si le template n'existe pas encore, on prend le premier dispo
         if not template:
             template = db.query(CardTemplate).first()
-            t_id = template.id if template else "vogue-minimal"
+            t_id = template.id if template else "eclat-eternel"
 
         config_dict = {}
         if template:
