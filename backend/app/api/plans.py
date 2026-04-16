@@ -9,13 +9,13 @@ PLAN_LIMITS: Dict[PlanType, Dict[str, Any]] = {
     PlanType.CLASSIC: {
         "max_guests": 150,
         "max_pages": 3,
-        "max_sites": 1,
+        "max_sites": 100,
         "has_cover_page": True,
         "has_rsvp_form": True,
         "can_use_tables": True,
         "can_customize_extensively": True,
         "can_import_export": False,
-        "can_upload_music": False
+        "can_upload_music": True
     },
     PlanType.PREMIUM: {
         "max_guests": 1000,

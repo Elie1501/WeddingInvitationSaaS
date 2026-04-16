@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[TemplateResponse])
 def list_templates(db: Session = Depends(get_db)):
-    """Liste tous les templates disponibles."""
+    """Liste tous les templates disponibles et actifs."""
     return db.query(CardTemplate).filter(CardTemplate.is_active == True).all()
 
 @router.get("/{template_id}", response_model=TemplateResponse)

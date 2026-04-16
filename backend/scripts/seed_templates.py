@@ -22,9 +22,13 @@ def seed_templates():
             "description": "L'élégance intemporelle pour une cérémonie traditionnelle.",
             "required_plan": "classic",
             "manifest_json": json.dumps({
-                "colors": {"background": "#FDF5E6", "text": "#451a03", "accent": "#8B4513"},
-                "fonts": {"headings": "Playfair Display", "body": "Cormorant Garamond"},
-                "sections": ["banner", "details", "rsvp"]
+                "default_config": {
+                    "canvas": {"background_color": "#FDF5E6"},
+                    "theme": {"primaryColor": "#451a03", "fontFamily": "Playfair Display"},
+                    "elements": [
+                        {"id": "names", "type": "text", "x": 0, "y": 1400, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "100px"}}
+                    ]
+                }
             }),
             "thumbnail_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800",
             "is_active": True
@@ -35,9 +39,13 @@ def seed_templates():
             "description": "Un design épuré et minimaliste pour les mariages urbains.",
             "required_plan": "classic",
             "manifest_json": json.dumps({
-                "colors": {"background": "#FFFFFF", "text": "#111827", "accent": "#000000"},
-                "fonts": {"headings": "Montserrat", "body": "Inter"},
-                "sections": ["banner", "itinerary", "rsvp"]
+                "default_config": {
+                    "canvas": {"background_color": "#FFFFFF"},
+                    "theme": {"primaryColor": "#111827", "fontFamily": "Montserrat"},
+                    "elements": [
+                        {"id": "names", "type": "text", "x": 0, "y": 1400, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "100px"}}
+                    ]
+                }
             }),
             "thumbnail_url": "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=800",
             "is_active": True
@@ -48,9 +56,13 @@ def seed_templates():
             "description": "Luxe absolu avec des touches d'or et une typographie royale.",
             "required_plan": "premium",
             "manifest_json": json.dumps({
-                "colors": {"background": "#0c0a09", "text": "#f5f5f4", "accent": "#d4af37"},
-                "fonts": {"headings": "Great Vibes", "body": "Cormorant Garamond"},
-                "sections": ["banner", "details", "itinerary", "rsvp"]
+                "default_config": {
+                    "canvas": {"background_color": "#0c0a09"},
+                    "theme": {"primaryColor": "#d4af37", "fontFamily": "Great Vibes"},
+                    "elements": [
+                        {"id": "names", "type": "text", "x": 0, "y": 1400, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "100px"}}
+                    ]
+                }
             }),
             "thumbnail_url": "https://images.unsplash.com/photo-1510076857177-7470076d4098?auto=format&fit=crop&q=80&w=800",
             "is_active": True
@@ -61,9 +73,13 @@ def seed_templates():
             "description": "Un style nature, chaleureux et bohème pour un mariage en extérieur.",
             "required_plan": "premium",
             "manifest_json": json.dumps({
-                "colors": {"background": "#fdf8f3", "text": "#4a3728", "accent": "#c46647"},
-                "fonts": {"headings": "Playfair Display", "body": "Montserrat"},
-                "sections": ["banner", "details", "itinerary", "rsvp"]
+                "default_config": {
+                    "canvas": {"background_color": "#fdf8f3"},
+                    "theme": {"primaryColor": "#c46647", "fontFamily": "Playfair Display"},
+                    "elements": [
+                        {"id": "names", "type": "text", "x": 0, "y": 1400, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "100px"}}
+                    ]
+                }
             }),
             "thumbnail_url": "https://unsplash.com/fr/photos/couple-de-jeunes-maries-sur-lile-se-mariant-a-terre-jbtbin3u0Xw",
             "is_active": True
@@ -74,11 +90,32 @@ def seed_templates():
             "description": "Sombre, mystérieux et intensément romantique.",
             "required_plan": "premium",
             "manifest_json": json.dumps({
-                "colors": {"background": "#020617", "text": "#f8fafc", "accent": "#94a3b8"},
-                "fonts": {"headings": "Cormorant Garamond", "body": "Inter"},
-                "sections": ["banner", "itinerary", "rsvp"]
+                "default_config": {
+                    "canvas": {"background_color": "#020617"},
+                    "theme": {"primaryColor": "#f8fafc", "fontFamily": "Cormorant Garamond"},
+                    "elements": [
+                        {"id": "names", "type": "text", "x": 0, "y": 1400, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "100px"}}
+                    ]
+                }
             }),
             "thumbnail_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800",
+            "is_active": True
+        },
+        {
+            "id": "floral-romance",
+            "name": "🌸 Floral Romance",
+            "description": "Un style doux et romantique avec des motifs floraux délicats.",
+            "required_plan": "classic",
+            "manifest_json": json.dumps({
+                "default_config": {
+                    "canvas": {"background_color": "#FFF5F7"},
+                    "theme": {"primaryColor": "#4D2C2C", "fontFamily": "Playfair Display"},
+                    "elements": [
+                        {"id": "names", "type": "text", "x": 0, "y": 1400, "width": 1080, "height": 200, "content": "{groom_name} & {bride_name}", "style": {"fontSize": "100px"}}
+                    ]
+                }
+            }),
+            "thumbnail_url": "https://images.unsplash.com/photo-1522673607200-1648832cee98?auto=format&fit=crop&q=80&w=800",
             "is_active": True
         }
     ]
