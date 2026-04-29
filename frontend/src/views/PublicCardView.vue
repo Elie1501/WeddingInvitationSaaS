@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
@@ -17,8 +17,20 @@ const rsvpForm = ref({
   email: '',
   presence: true,
   plus_ones: 0,
+  sub_guests: [],
   dietary_restrictions: '',
   message: ''
+});
+
+watch(() => rsvpForm.value.plus_ones, (newVal) => {
+  const currentLen = rsvpForm.value.sub_guests.length;
+  if (newVal > currentLen) {
+    for (let i = 0; i < newVal - currentLen; i++) {
+      rsvpForm.value.sub_guests.push({ first_name: '', last_name: '', dietary_restrictions: '' });
+    }
+  } else if (newVal < currentLen) {
+    rsvpForm.value.sub_guests = rsvpForm.value.sub_guests.slice(0, newVal);
+  }
 });
 
 const isMusicPlaying = ref(false);
@@ -65,7 +77,7 @@ const handleRSVP = async () => {
       event_id: cardData.value.event_id || cardData.value.id
     });
     successMessage.value = "Votre réponse a été enregistrée avec succès.";
-    rsvpForm.value = { first_name: '', last_name: '', email: '', presence: true, plus_ones: 0, dietary_restrictions: '', message: '' };
+    rsvpForm.value = { first_name: '', last_name: '', email: '', presence: true, plus_ones: 0, sub_guests: [], dietary_restrictions: '', message: '' };
   } catch (err) {
     error.value = "Erreur lors de l'enregistrement.";
   } finally {
@@ -77,7 +89,7 @@ const handleRSVP = async () => {
 <template>
   <div class="min-h-screen bg-[#FDFCFB] flex flex-col items-center selection:bg-[#C5A059] selection:text-white font-serif">
     
-    <!-- Musique Discrète -->
+    <!-- Musique -->
     <div v-if="cardData?.music_url" class="fixed bottom-8 right-8 z-[300]">
       <button @click="toggleMusic" class="w-12 h-12 bg-white border border-gray-100 rounded-full shadow-lg flex items-center justify-center text-[#1A1A1A] hover:scale-110 transition-all">
         <div v-if="isMusicPlaying" class="flex items-end space-x-1 h-4">
@@ -90,10 +102,9 @@ const handleRSVP = async () => {
       <audio ref="audioPlayer" loop :src="cardData.music_url" class="hidden"></audio>
     </div>
 
-    <!-- Invitation View -->
     <div v-if="cardData" class="w-full flex flex-col items-center">
       
-      <!-- Visualisateur Carte -->
+      <!-- Carte -->
       <div class="w-full max-w-[500px] bg-white shadow-2xl overflow-hidden mb-20 md:mt-10 md:rounded-[40px] md:border-[12px] md:border-[#1A1A1A]">
         <CardRenderer 
           :config="JSON.parse(cardData.config_json || '{}')" 
@@ -103,13 +114,12 @@ const handleRSVP = async () => {
         />
       </div>
 
-      <!-- RSVP Section (BLANC EPURE) -->
+      <!-- RSVP -->
       <div v-if="cardData.has_rsvp_form" class="w-full max-w-2xl px-8 py-32 bg-white md:rounded-[3rem] md:mb-20 md:shadow-sm border-t border-gray-50">
         
         <div class="text-center mb-20 space-y-6">
           <span class="text-[10px] uppercase tracking-[0.5em] text-[#C5A059] font-black">Réponse attendue</span>
           <h3 class="text-5xl font-light italic text-[#1A1A1A]">Serez-vous des nôtres ?</h3>
-          <div class="w-12 h-[1px] bg-gray-100 mx-auto"></div>
         </div>
 
         <div v-if="successMessage" class="bg-[#F9F7F2] p-12 rounded-3xl text-center border border-[#C5A059]/20 animate-fade-in">
@@ -118,7 +128,6 @@ const handleRSVP = async () => {
 
         <form v-else @submit.prevent="handleRSVP" class="space-y-12">
           
-          <!-- Presence Toggle -->
           <div class="flex justify-center space-x-4">
             <button type="button" @click="rsvpForm.presence = true" 
               :class="rsvpForm.presence ? 'bg-[#1A1A1A] text-white shadow-xl' : 'bg-gray-50 text-gray-400'"
@@ -132,52 +141,43 @@ const handleRSVP = async () => {
             </button>
           </div>
 
-          <!-- Identity -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Prénom</label>
-              <input v-model="rsvpForm.first_name" type="text" required class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-[#C5A059] outline-none transition-all" />
+            <input v-model="rsvpForm.first_name" type="text" placeholder="Prénom" required class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-[#C5A059] outline-none transition-all" />
+            <input v-model="rsvpForm.last_name" type="text" placeholder="Nom" required class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-[#C5A059] outline-none transition-all" />
+          </div>
+
+          <div v-if="rsvpForm.presence" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <select v-model.number="rsvpForm.plus_ones" class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white outline-none">
+                <option v-for="n in 7" :key="n-1" :value="n-1">{{ n-1 === 0 ? 'Je viens seul(e)' : '+ ' + (n-1) + ' accompagnant(s)' }}</option>
+              </select>
+              <input v-model="rsvpForm.dietary_restrictions" type="text" placeholder="Allergies / Régime..." class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white outline-none" />
             </div>
-            <div class="space-y-2">
-              <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Nom</label>
-              <input v-model="rsvpForm.last_name" type="text" required class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-[#C5A059] outline-none transition-all" />
+
+            <!-- Accompagnants -->
+            <div v-if="rsvpForm.plus_ones > 0" class="space-y-6 animate-fade-in border-l-2 border-[#C5A059]/10 pl-6">
+              <div v-for="(sub, index) in rsvpForm.sub_guests" :key="index" class="space-y-4">
+                <p class="text-[10px] uppercase tracking-widest font-black text-[#C5A059]">Accompagnant {{ index + 1 }}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input v-model="sub.first_name" type="text" placeholder="Prénom" required class="w-full px-6 py-3 rounded-xl border border-gray-100 bg-gray-50/20 focus:bg-white outline-none" />
+                  <input v-model="sub.last_name" type="text" placeholder="Nom" required class="w-full px-6 py-3 rounded-xl border border-gray-100 bg-gray-50/20 focus:bg-white outline-none" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Details -->
-          <div class="space-y-6">
-            <div class="space-y-2">
-              <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Email</label>
-              <input v-model="rsvpForm.email" type="email" class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-[#C5A059] outline-none transition-all" placeholder="votre@email.com" />
-            </div>
-
-            <div v-if="rsvpForm.presence" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Accompagnants</label>
-                <select v-model.number="rsvpForm.plus_ones" class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white outline-none">
-                  <option v-for="n in 6" :key="n-1" :value="n-1">{{ n-1 === 0 ? 'Vient seul(e)' : n-1 + ' invité(s) supp.' }}</option>
-                </select>
-              </div>
-              <div class="space-y-2">
-                <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Régime alimentaire</label>
-                <input v-model="rsvpForm.dietary_restrictions" type="text" placeholder="Allergies..." class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white outline-none" />
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Message aux mariés</label>
-              <textarea v-model="rsvpForm.message" rows="4" class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white outline-none resize-none"></textarea>
-            </div>
+          <div class="space-y-2">
+            <label class="text-[9px] uppercase tracking-widest text-gray-400 font-black ml-1">Message aux mariés</label>
+            <textarea v-model="rsvpForm.message" rows="4" class="w-full px-6 py-4 rounded-xl border border-gray-100 bg-gray-50/30 focus:bg-white outline-none resize-none"></textarea>
           </div>
 
           <button type="submit" :disabled="loading" class="w-full py-6 bg-[#1A1A1A] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] hover:bg-black transition-all shadow-xl disabled:opacity-50">
-            {{ loading ? 'Envoi en cours...' : 'Confirmer ma présence' }}
+            {{ loading ? 'Envoi...' : 'Confirmer ma présence' }}
           </button>
 
         </form>
       </div>
 
-      <!-- Simple Footer -->
       <footer class="py-20 text-center opacity-20">
         <p class="text-[9px] uppercase tracking-[0.5em]">Saas Wedding • 2026</p>
       </footer>
