@@ -153,15 +153,6 @@ def auto_save_card(
     """Sauvegarde rapide de la carte (auto-save)."""
     card = check_card_ownership(db, card_id, current_user.id)
     
-    # Vérification des limites de pages
-    limits = get_limits(current_user.plan)
-    total_pages = count_pages(card_in, card.has_cover_page)
-    if total_pages > limits["max_pages"]:
-        raise HTTPException(
-            status_code=403, 
-            detail=f"Votre forfait {current_user.plan} est limité à {limits['max_pages']} page(s)."
-        )
-
     update_data = card_in.model_dump(exclude_unset=True)
     
     # Gestion des sous-événements
@@ -196,15 +187,6 @@ def update_card(
     """Met à jour une carte et crée une nouvelle version."""
     card = check_card_ownership(db, card_id, current_user.id)
     
-    # Vérification des limites de pages
-    limits = get_limits(current_user.plan)
-    total_pages = count_pages(card_in, card.has_cover_page)
-    if total_pages > limits["max_pages"]:
-        raise HTTPException(
-            status_code=403, 
-            detail=f"Votre forfait {current_user.plan} est limité à {limits['max_pages']} page(s)."
-        )
-
     # Sauvegarde de la version actuelle avant mise à jour
     old_content = {
         "intro_text": card.intro_text,
@@ -320,15 +302,6 @@ async def upload_media(
     """Upload un fichier vers S3 avec optimisation."""
     card = check_card_ownership(db, card_id, current_user.id)
     
-    # Vérification spécifique pour la musique
-    if file_type == "music":
-        limits = get_limits(current_user.plan)
-        if not limits.get("can_upload_music"):
-            raise HTTPException(
-                status_code=403, 
-                detail=f"Votre forfait {current_user.plan} ne permet pas d'uploader votre propre musique. Veuillez passer au forfait Premium."
-            )
-
     file_content = await file.read()
     s3_key = await storage.upload_file_to_s3(
         file_content=file_content,
