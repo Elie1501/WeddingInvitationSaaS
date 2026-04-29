@@ -12,7 +12,7 @@ const props = defineProps({
 const content = computed(() => props.config.content || {});
 const theme = computed(() => props.config.theme || { accent: '#C5A059', text: '#1a1a1a', background: '#ffffff' });
 
-const displayNames = computed(() => content.value.names || `${props.event.groom_name || 'Ora'} & ${props.event.bride_name || 'Samuel'}`);
+const displayNames = computed(() => content.value.names || `${props.event.groom_name || 'Lui'} & ${props.event.bride_name || 'Elle'}`);
 const displayDate = computed(() => props.event.date ? new Date(props.event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase() : 'DATE À VENIR');
 
 // Animation des pétales
@@ -67,7 +67,7 @@ onUnmounted(() => {
             <p class="label">{{ content.s1_label || 'Union Civile' }}</p>
             <h2 class="event-title">{{ content.s1_title || 'La Mairie' }}</h2>
             <p class="details">{{ content.s1_date || displayDate }}</p>
-            <p class="address" v-html="(content.s1_location || event.location || 'Lieu à définir').replace('\n', '<br>')"></p>
+            <p class="address" v-html="(content.s1_location || event.location || 'Lieu à définir').toString().replace(/\n/g, '<br>')"></p>
             <div class="btn-group">
                 <a :href="`https://waze.com/ul?q=${encodeURIComponent(content.s1_location || event.location)}`" class="btn" target="_blank">Waze</a>
                 <button class="btn">Calendrier</button>
@@ -75,16 +75,18 @@ onUnmounted(() => {
             <!-- Vin d'honneur -->
             <div v-if="content.s1_extra_title" style="margin-top: 40px;">
                 <p class="label" style="font-size: 0.6rem;">{{ content.s1_extra_label || "Vin d'honneur" }}</p>
-                <p class="address" style="font-size: 1.1rem;" v-html="content.s1_extra_title.replace('\n', '<br>')"></p>
+                <p class="address" style="font-size: 1.1rem;" v-html="content.s1_extra_title.toString().replace(/\n/g, '<br>')"></p>
                 <a v-if="content.s1_extra_location" :href="`https://waze.com/ul?q=${encodeURIComponent(content.s1_extra_location)}`" class="btn" target="_blank">Waze</a>
             </div>
         </section>
     </div>
 
     <!-- BLOC PARALLAX -->
-    <div v-if="(mode === 'parallax' || mode === 'full') && content.parallax_image_url" 
+    <div v-if="mode === 'parallax' || mode === 'full'" 
          class="parallax-section" 
-         :style="{ backgroundImage: `url(${content.parallax_image_url})` }">
+         :class="!content.parallax_image_url ? 'bg-gray-100 flex items-center justify-center' : ''"
+         :style="content.parallax_image_url ? { backgroundImage: `url(${content.parallax_image_url})` } : {}">
+         <p v-if="!content.parallax_image_url" class="text-[10px] font-black uppercase tracking-widest opacity-20 italic">Image Parallaxe vide</p>
     </div>
 
     <!-- BLOC SECTION 2 (RELIGIEUX / FAMILLES) -->
@@ -96,11 +98,11 @@ onUnmounted(() => {
             <div class="families-wrapper">
                 <div class="family-left text-left">
                     <p class="family-title">{{ content.family_left_title || 'Famille' }}</p>
-                    <p class="parents-names" v-html="content.family_left_parents?.replace('\n', '<br>') || 'Parents'"></p>
+                    <p class="parents-names" v-html="String(content.family_left_parents || 'Parents').replace(/\n/g, '<br>')"></p>
                 </div>
                 <div class="family-right text-right">
                     <p class="family-title">{{ content.family_right_title || 'Famille' }}</p>
-                    <p class="parents-names" v-html="content.family_right_parents?.replace('\n', '<br>') || 'Parents'"></p>
+                    <p class="parents-names" v-html="String(content.family_right_parents || 'Parents').replace(/\n/g, '<br>')"></p>
                 </div>
             </div>
 
@@ -109,7 +111,7 @@ onUnmounted(() => {
             <p class="intro-text">{{ content.intro_text_s2 || 'Seront honorés de votre présence...' }}</p>
             
             <p class="details">{{ content.s2_date || displayDate }}</p>
-            <p class="address" v-html="(content.s2_location || 'Lieu à définir').replace('\n', '<br>')"></p>
+            <p class="address" v-html="(content.s2_location || 'Lieu à définir').toString().replace(/\n/g, '<br>')"></p>
 
             <div class="btn-group">
                 <a :href="`https://waze.com/ul?q=${encodeURIComponent(content.s2_location)}`" class="btn" target="_blank">Waze</a>
@@ -122,8 +124,11 @@ onUnmounted(() => {
     <div v-if="mode === 'tribute' || mode === 'full'" class="container">
         <div v-if="content.tribute_title || content.tribute_text" class="tribute-card">
             <p class="tribute-title">{{ content.tribute_title || 'Une pensée pour nos disparus' }}</p>
-            <p class="tribute-text" v-html="content.tribute_text?.replace('\n', '<br>')"></p>
+            <p class="tribute-text" v-html="(content.tribute_text || '').toString().replace(/\n/g, '<br>')"></p>
             <p class="tribute-blessing">{{ content.tribute_blessing }}</p>
+        </div>
+        <div v-else class="py-10 border-2 border-dashed border-black/5 rounded-3xl mt-8">
+           <p class="text-[10px] font-black uppercase tracking-widest opacity-20">Bloc Hommage vide</p>
         </div>
     </div>
 
@@ -156,7 +161,6 @@ onUnmounted(() => {
     --bg-light: #ffffff;
     background-color: var(--bg-light);
     color: var(--text-dark);
-    font-family: 'Montserrat', sans-serif;
     line-height: 1.5;
     text-align: center;
     width: 100%;
@@ -220,7 +224,7 @@ onUnmounted(() => {
 }
 
 .main-names {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-size: 3.2rem;
     font-weight: 300;
     font-style: italic;
@@ -245,7 +249,7 @@ onUnmounted(() => {
 }
 
 .divider-symbol {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     color: var(--gold);
     font-size: 1.5rem;
     margin: 0 15px;
@@ -268,7 +272,7 @@ onUnmounted(() => {
 }
 
 .event-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-size: 2.4rem;
     font-weight: 300;
     margin-bottom: 10px;
@@ -283,7 +287,7 @@ onUnmounted(() => {
 }
 
 .address {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-style: italic;
     font-size: 1.25rem;
     color: #666;
@@ -322,7 +326,7 @@ onUnmounted(() => {
 .family-left, .family-right { width: 48%; }
 
 .family-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -331,14 +335,14 @@ onUnmounted(() => {
 }
 
 .parents-names {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-weight: 600;
     font-size: 1.05rem;
     line-height: 1.2;
 }
 
 .announcement-text {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-size: 1.25rem;
     font-style: italic;
     color: #555;
@@ -348,12 +352,12 @@ onUnmounted(() => {
 .hebrew {
     font-size: 2.5rem;
     margin: 10px 0;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     color: var(--gold);
 }
 
 .intro-text {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-size: 1.2rem;
     font-style: italic;
     margin: 15px 0;
@@ -370,7 +374,7 @@ onUnmounted(() => {
 }
 
 .tribute-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-style: italic;
     font-weight: 600;
     margin-bottom: 10px;
@@ -380,14 +384,14 @@ onUnmounted(() => {
     color: #555;
     font-size: 1rem;
     margin-bottom: 10px;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
 }
 
 .tribute-blessing {
     color: var(--gold);
     font-weight: 600;
     font-size: 0.95rem;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
 }
 
 .photo-gallery { padding: 60px 0; }

@@ -65,7 +65,7 @@ const props = defineProps({
     <div v-else-if="layout === 'ora'" class="h-full w-full flex flex-col justify-end bg-center bg-cover" :style="{ backgroundImage: `url(${displayData.image})` }">
        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg-light)]" :style="{'--bg-light': theme.background}"></div>
        <div class="relative z-10 p-12 text-center">
-          <h1 class="main-names text-6xl italic font-light mb-4 drop-shadow-lg" style="font-family: 'Cormorant Garamond', serif;">{{ displayData.names }}</h1>
+          <h1 class="main-names text-6xl italic font-light mb-4 drop-shadow-lg">{{ displayData.names }}</h1>
           <div class="w-12 h-[1px] bg-[#C5A059] mx-auto mb-8"></div>
        </div>
     </div>
