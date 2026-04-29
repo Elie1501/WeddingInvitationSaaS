@@ -63,17 +63,12 @@ const moveSection = (index, direction) => {
 };
 
 const sectionLabels = {
-  hero: 'Bannière Classique',
   'ora-hero': 'Bannière Ora (Pétales)',
   'ora-section1': 'Bloc Mairie (Ora)',
   'ora-parallax': 'Image Parallaxe',
   'ora-section2': 'Bloc Religieux (Ora)',
   'ora-tribute': 'Carte Hommage',
   'ora-gallery': 'Galerie Photos',
-  'es-hero': 'Bannière ES (Luxe)',
-  'es-intro': 'Introduction ES',
-  'es-details': 'Détails ES',
-  'es-footer': 'Pied de page ES',
   countdown: 'Compte à rebours',
   program: 'Programme',
   footer: 'Pied de page'
@@ -197,12 +192,12 @@ onMounted(fetchCard);
           <div v-if="activeTab === 'design'" class="space-y-8 animate-in">
              <section class="space-y-4">
                 <label class="text-[10px] font-black uppercase text-gray-400">Style de l'en-tête</label>
-                <div class="grid grid-cols-2 gap-2">
-                  <button v-for="l in ['arch', 'typography-focus', 'split', 'ora', 'es']" :key="l"
-                    @click="config.layout = l"
-                    :class="config.layout === l ? 'bg-black text-white' : 'bg-gray-50 text-gray-400'"
+                <div class="grid grid-cols-1 gap-2">
+                  <button
+                    @click="config.layout = 'ora'"
+                    :class="config.layout === 'ora' ? 'bg-black text-white' : 'bg-gray-50 text-gray-400'"
                     class="py-2 text-[9px] uppercase rounded-lg transition-all"
-                  >{{ l.toUpperCase() }}</button>
+                  >ORA PARALLAX</button>
                 </div>
              </section>
              <section class="space-y-4">
@@ -261,16 +256,6 @@ onMounted(fetchCard);
                   <input v-model="eventData.bride_name" placeholder="Elle" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
                 </div>
                 <input v-model="config.content.names" placeholder="Affichage (ex: O & S)" class="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs italic">
-             </section>
-
-             <section v-if="config.sections.includes('es-intro')" class="space-y-4 border-t pt-8">
-                <label class="text-[10px] font-black uppercase text-[#C5A059]">Introduction ES</label>
-                <textarea v-model="config.content.intro_text" placeholder="Texte d'introduction" class="w-full p-3 bg-gray-50 rounded-lg text-xs h-24"></textarea>
-             </section>
-
-             <section v-if="config.sections.includes('es-footer')" class="space-y-4 border-t pt-8">
-                <label class="text-[10px] font-black uppercase text-[#C5A059]">Pied de page ES</label>
-                <input v-model="config.content.footer_text" placeholder="Texte de fin" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
              </section>
 
              <!-- CHAMPS CONDITIONNELS À LA STRUCTURE -->

@@ -2,8 +2,6 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import CardSectionBanner from './CardSectionBanner.vue';
 import CardTemplateOra from './CardTemplateOra.vue';
-import CardTemplateES from './CardTemplateES.vue';
-import CardTemplateEY from './CardTemplateEY.vue';
 
 const props = defineProps({
   config: {
@@ -127,12 +125,6 @@ const layout = computed(() => props.config.layout || 'arch');
       <CardTemplateOra v-if="sectionId === 'ora-section2'" :config="config" :event="event" mode="section2" />
       <CardTemplateOra v-if="sectionId === 'ora-tribute'" :config="config" :event="event" mode="tribute" />
       <CardTemplateOra v-if="sectionId === 'ora-gallery'" :config="config" :event="event" mode="gallery" />
-
-      <!-- ES SPECIFIC BLOCKS -->
-      <CardTemplateES v-if="sectionId === 'es-hero'" :config="config" :event="event" mode="es-hero" />
-      <CardTemplateES v-if="sectionId === 'es-intro'" :config="config" :event="event" mode="es-intro" />
-      <CardTemplateES v-if="sectionId === 'es-details'" :config="config" :event="event" mode="es-details" />
-      <CardTemplateES v-if="sectionId === 'es-footer'" :config="config" :event="event" mode="es-footer" />
 
       <!-- FOOTER -->
       <div v-if="sectionId === 'footer'" class="py-20 w-full text-center opacity-30 text-[9px] uppercase tracking-[0.5em] bg-white border-t border-gray-50 relative z-10">
