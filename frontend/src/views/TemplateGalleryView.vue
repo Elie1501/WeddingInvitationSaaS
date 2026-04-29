@@ -45,7 +45,8 @@ const filteredTemplates = computed(() => {
   return templates.value;
 });
 
-const selectTemplate = async (template) => {
+const selectTemplate = async (template) =>
+{
   console.log("Template sélectionné:", template.id);
   try {
     loading.value = true;
