@@ -41,26 +41,8 @@ const fetchTemplates = async () => {
 };
 
 const filteredTemplates = computed(() => {
-  return templates.value.filter(tpl => {
-    const matchesSearch = tpl.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                          tpl.description.toLowerCase().includes(searchQuery.value.toLowerCase());
-    
-    let matchesStyle = selectedStyle.value === 'all';
-    if (!matchesStyle) {
-      const styleKeywords = {
-        'minimal': ['minimal', 'vogue', 'épuré', 'éternel'],
-        'classic': ['classic', 'royal', 'traditionnel', 'majestueux'],
-        'boho': ['boho', 'floral', 'nature', 'bohème', 'romance']
-      };
-      const currentKeywords = styleKeywords[selectedStyle.value] || [];
-      matchesStyle = currentKeywords.some(k => 
-        tpl.id.toLowerCase().includes(k) || 
-        tpl.name.toLowerCase().includes(k) || 
-        tpl.description.toLowerCase().includes(k)
-      );
-    }
-    return matchesSearch && matchesStyle;
-  });
+  // On montre TOUS les templates actifs sans aucune condition
+  return templates.value;
 });
 
 const selectTemplate = async (template) => {

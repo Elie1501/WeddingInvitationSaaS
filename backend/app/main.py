@@ -14,83 +14,41 @@ Base.metadata.create_all(bind=engine)
 def seed_data():
     db = SessionLocal()
     
-    # PHILOSOPHIE : MOTEUR DE CONCEPTION DE TEMPLATES ROBUSTES
-    # Simplicité, Structure Fixe, Rendu Premium.
-    
     templates = [
         {
-            "id": "eclat-eternel",
-            "name": "L'Éclat Éternel",
-            "description": "Arche minimaliste et typographie luxe. Le choix de l'élégance absolue.",
-            "thumbnail_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200",
-            "required_plan": "ultimate",
+            "id": "ora-parallax",
+            "name": "Élégance Parallaxe",
+            "description": "Un design majestueux avec effet parallaxe, animation de pétales et typographie raffinée.",
+            "thumbnail_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400",
+            "required_plan": "classic",
             "default_config": {
-                "layout": "arch",
-                "style": "premium",
+                "layout": "ora",
                 "theme": {
-                    "background": "#F9F7F2",
+                    "background": "#ffffff",
                     "accent": "#C5A059",
-                    "text": "#1A1A1A"
+                    "text": "#1a1a1a",
+                    "fontFamily": "Cormorant Garamond"
                 },
                 "content": {
-                    "names": "{groom_name} & {bride_name}",
-                    "date": "{date}",
-                    "location": "{location}",
-                    "message": "Nous nous réjouissons de célébrer ce jour sacré à vos côtés.",
-                    "image_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200"
-                }
-            }
-        },
-        {
-            "id": "vogue-minimal",
-            "name": "Vogue Minimal",
-            "description": "L'art du vide. Une typographie puissante pour un impact maximal.",
-            "thumbnail_url": "https://images.unsplash.com/photo-1510076857177-7470076d4098?w=1200",
-            "required_plan": "classic",
-            "default_config": {
-                "layout": "typography-focus",
-                "style": "minimalist",
-                "theme": {
-                    "background": "#FFFFFF",
-                    "accent": "#000000",
-                    "text": "#000000"
-                },
-                "content": {
-                    "names": "{groom_name} & {bride_name}",
-                    "date": "{date}",
-                    "location": "{location}",
-                    "message": "OUI.",
-                    "image_url": "https://images.unsplash.com/photo-1510076857177-7470076d4098?w=1200"
-                }
-            }
-        },
-        {
-            "id": "boheme-chic",
-            "name": "Bohème Chic",
-            "description": "Naturel et poétique. Des teintes douces pour une union champêtre.",
-            "thumbnail_url": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=1200",
-            "required_plan": "classic",
-            "default_config": {
-                "layout": "split",
-                "style": "boho",
-                "theme": {
-                    "background": "#FFF5F7",
-                    "accent": "#4D2C2C",
-                    "text": "#4D2C2C"
-                },
-                "content": {
-                    "names": "{groom_name} & {bride_name}",
-                    "date": "{date}",
-                    "location": "{location}",
-                    "message": "Au grand air, sous les fleurs de cerisier.",
-                    "image_url": "https://images.unsplash.com/photo-1522673607200-1648832cee98?w=1200"
+                    "names": "Ora & Samuel",
+                    "hebrew_names": "אורה & שמואל",
+                    "image_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200",
+                    "parallax_image_url": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1200",
+                    "family_left": {
+                        "title": "Famille NABET",
+                        "parents": "M. & Mme Carole et Moshé NABET"
+                    },
+                    "family_right": {
+                        "title": "Famille ATTARD & ASCOLI",
+                        "parents": "M. & Mme ATTARD et ASCOLI"
+                    },
+                    "tribute_title": "Une pensée très émue pour nos disparus",
+                    "tribute_text": "Liliane Ascoli, Alfred Ascoli, Georges Attard, Georgette Attard, et nos grands-parents Jean-Jacques Nabet et Jossiane Nabet.",
+                    "tribute_blessing": "Que leurs bénédictions illuminent notre vie."
                 }
             }
         }
     ]
-
-    # Désactiver les anciens
-    db.query(CardTemplate).update({CardTemplate.is_active: False})
 
     for t_data in templates:
         existing = db.query(CardTemplate).filter(CardTemplate.id == t_data["id"]).first()
@@ -114,6 +72,10 @@ def seed_data():
             )
             db.add(new_tpl)
 
+    # Forcer l'activation de UNIQUEMENT ces templates, désactiver les autres
+    allowed_ids = [t["id"] for t in templates]
+    db.query(CardTemplate).filter(CardTemplate.id.in_(allowed_ids)).update({CardTemplate.is_active: True})
+    db.query(CardTemplate).filter(~CardTemplate.id.in_(allowed_ids)).update({CardTemplate.is_active: False})
     db.commit()
     db.close()
 
