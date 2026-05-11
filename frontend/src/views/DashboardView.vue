@@ -101,14 +101,19 @@ onMounted(async () => {
             <h1 class="text-2xl text-primary-800">Saas Wedding</h1>
           </div>
           <div class="flex items-center space-x-6">
-             <div v-if="auth.user" class="flex flex-col items-end">
-                <span class="text-gray-900 font-sans text-sm font-medium">{{ auth.user.email }}</span>
-                <div class="flex items-center">
-                  <span :class="{
-                    'text-gray-500': auth.user.plan === 'classic',
-                    'text-primary-600': auth.user.plan === 'premium'
-                  }" class="text-[10px] font-bold uppercase tracking-widest mr-2">{{ planInfo.name }}</span>
-                  <button @click="showPlanModal = true" class="text-[10px] text-primary-500 hover:underline">Modifier</button>
+             <div v-if="auth.user" class="flex items-center space-x-4">
+                <button v-if="auth.user.is_admin" @click="router.push('/admin/users')" class="bg-amber-50 text-amber-700 border border-amber-200 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-amber-100 transition-colors">
+                  Panel Admin
+                </button>
+                <div class="flex flex-col items-end">
+                  <span class="text-gray-900 font-sans text-sm font-medium">{{ auth.user.email }}</span>
+                  <div class="flex items-center">
+                    <span :class="{
+                      'text-gray-500': auth.user.plan === 'classic',
+                      'text-primary-600': auth.user.plan === 'premium'
+                    }" class="text-[10px] font-bold uppercase tracking-widest mr-2">{{ planInfo.name }}</span>
+                    <button @click="showPlanModal = true" class="text-[10px] text-primary-500 hover:underline">Modifier</button>
+                  </div>
                 </div>
              </div>
              <button @click="handleLogout" class="text-gray-500 hover:text-red-500 transition-colors font-sans text-sm font-medium">Déconnexion</button>
