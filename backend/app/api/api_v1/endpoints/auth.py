@@ -112,12 +112,11 @@ def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = 
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    if not security.verify_password(form_data.password, user.hashed_password):
-        print(f"Mot de passe incorrect pour : {form_data.username}")
+    if not user.is_active:
+        print(f"Compte désactivé pour : {form_data.username}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email ou mot de passe incorrect.",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Votre compte a été désactivé. Veuillez contacter l'administrateur.",
         )
 
     print(f"Connexion réussie pour : {form_data.username}")
