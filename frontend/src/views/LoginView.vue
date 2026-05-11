@@ -16,7 +16,13 @@ const handleLogin = async () => {
     error.value = '';
     loading.value = true;
     await auth.login(email.value, password.value);
-    router.push('/dashboard');
+    
+    // Redirection intelligente : l'admin va vers sa console, le client vers son dashboard
+    if (auth.user?.is_admin) {
+      router.push('/admin/users');
+    } else {
+      router.push('/dashboard');
+    }
   } catch (err) {
     console.error("Login Error:", err);
     const detail = err.response?.data?.detail;

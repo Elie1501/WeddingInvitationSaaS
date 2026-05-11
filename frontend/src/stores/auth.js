@@ -62,6 +62,8 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await api.get('/auth/me');
                 this.user = response.data;
+                // Sauvegarder l'utilisateur pour le navigation guard
+                localStorage.setItem('user', JSON.stringify(this.user));
             } catch (error) {
                 this.logout();
             }
@@ -84,6 +86,7 @@ export const useAuthStore = defineStore('auth', {
             this.user = null;
             localStorage.removeItem('token');
             localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user');
         }
     }
 });
