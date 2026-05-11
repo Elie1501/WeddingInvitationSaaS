@@ -10,6 +10,8 @@ class UserResponse(BaseModel):
     id: int
     email: EmailStr
     plan: str # classic, premium
+    is_admin: bool
+    is_active: bool
 
     model_config = {
         "from_attributes": True
@@ -17,6 +19,9 @@ class UserResponse(BaseModel):
 
 class UserUpdatePlan(BaseModel):
     plan: str # classic, premium
+
+class UserUpdateStatus(BaseModel):
+    is_active: bool
 
 class GoogleLoginRequest(BaseModel):
     id_token: str

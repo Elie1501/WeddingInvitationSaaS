@@ -3,7 +3,6 @@ from sqlalchemy.orm import sessionmaker
 from app.models.wedding import User, Base
 from app.core import security
 from app.core.config import settings
-import os
 
 # On utilise l'URL des settings (qui pointe vers 'db' dans docker)
 db_url = settings.DATABASE_URL
@@ -17,9 +16,9 @@ def seed_users():
     Base.metadata.create_all(bind=engine)
 
     users_to_create = [
-        {"email": "marie@classic.com", "password": "password123", "plan": "classic"},
-        {"email": "thomas@premium.com", "password": "password123", "plan": "premium"},
-        {"email": "admin@wedding.com", "password": "password123", "plan": "premium"},
+        {"email": "marie@classic.com", "password": "password123", "plan": "classic", "is_admin": False},
+        {"email": "thomas@premium.com", "password": "password123", "plan": "premium", "is_admin": False},
+        {"email": "admin@wedding.com", "password": "password123", "plan": "premium", "is_admin": True},
     ]
     for user_data in users_to_create:
         # Vérifier si l'utilisateur existe déjà
@@ -28,12 +27,16 @@ def seed_users():
             new_user = User(
                 email=user_data["email"],
                 hashed_password=security.get_password_hash(user_data["password"]),
-                plan=user_data["plan"]
+                plan=user_data["plan"],
+                is_admin=user_data["is_admin"]
             )
             db.add(new_user)
-            print(f"Utilisateur créé : {user_data['email']} (Plan: {user_data['plan']})")
+            print(f"Utilisateur créé : {user_data['email']} (Plan: {user_data['plan']}, Admin: {user_data['is_admin']})")
         else:
-            print(f"L'utilisateur {user_data['email']} existe déjà.")
+            # S'il existe, on s'assure que le statut admin est correct
+            user.is_admin = user_data["is_admin"]
+            db.add(user)
+            print(f"L'utilisateur {user_data['email']} a été mis à jour (Admin: {user_data['is_admin']}).")
     
     db.commit()
     db.close()
