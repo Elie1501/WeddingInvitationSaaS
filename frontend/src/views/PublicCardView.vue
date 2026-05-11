@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
+import CardSplashScreen from '../components/card/CardSplashScreen.vue';
 
 const route = useRoute();
 const slug = route.params.slug;
@@ -10,6 +11,25 @@ const cardData = ref(null);
 const loading = ref(true);
 const error = ref('');
 const successMessage = ref('');
+
+const showSplash = ref(false);
+const config = computed(() => {
+  if (!cardData.value?.config_json) return {};
+  try {
+    return JSON.parse(cardData.value.config_json);
+  } catch (e) {
+    return {};
+  }
+});
+
+watch(cardData, (newVal) => {
+  if (newVal) {
+    const cfg = JSON.parse(newVal.config_json || '{}');
+    if (cfg.show_splash) {
+      showSplash.value = true;
+    }
+  }
+});
 
 const rsvpForm = ref({
   first_name: '',
@@ -89,6 +109,16 @@ const handleRSVP = async () => {
 <template>
   <div class="min-h-screen bg-[#FDFCFB] flex flex-col items-center selection:bg-[#C5A059] selection:text-white font-serif">
     
+    <!-- Splash Screen Overlay -->
+    <CardSplashScreen 
+      v-if="showSplash && cardData" 
+      :config="config" 
+      :event="cardData.event || cardData" 
+      :template-id="cardData.template_id"
+      @close="showSplash = false"
+      @play-music="startMusic"
+    />
+
     <!-- Musique -->
     <div v-if="cardData?.music_url" class="fixed bottom-8 right-8 z-[300]">
       <button @click="toggleMusic" class="w-12 h-12 bg-white border border-gray-100 rounded-full shadow-lg flex items-center justify-center text-[#1A1A1A] hover:scale-110 transition-all">
