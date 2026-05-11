@@ -27,28 +27,28 @@ const themeStyles = computed(() => {
   const base = {
     overlay: 'bg-black/40',
     font: 'Cormorant Garamond, serif',
-    accent: '#ffffff'
+    accent: props.config?.theme?.accent || '#ffffff'
   };
 
   if (props.templateId === 'royal-gold') {
     return {
       overlay: 'bg-neutral-900/60',
       font: "'Great Vibes', cursive",
-      accent: '#d4af37'
+      accent: props.config?.theme?.accent || '#d4af37'
     };
   }
   if (props.templateId === 'bohemian-dream') {
     return {
       overlay: 'bg-stone-900/30',
       font: "'Playfair Display', serif",
-      accent: '#c46647'
+      accent: props.config?.theme?.accent || '#c46647'
     };
   }
   if (props.templateId === 'midnight-glamour') {
     return {
       overlay: 'bg-indigo-950/40',
       font: "'Cormorant Garamond', serif",
-      accent: '#818cf8'
+      accent: props.config?.theme?.accent || '#818cf8'
     };
   }
   return base;

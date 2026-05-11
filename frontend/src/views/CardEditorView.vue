@@ -3,6 +3,7 @@ import { ref, onMounted, watch, reactive, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
+import CardSplashScreen from '../components/card/CardSplashScreen.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -13,6 +14,7 @@ const activeTab = ref('design');
 const selectedBlock = ref(null); // Pour la mise en surbrillance
 const tabs = [
   { id: 'design', label: 'Typographie' },
+  { id: 'cover', label: 'Page de garde' },
   { id: 'structure', label: 'Structure' },
   { id: 'content', label: 'Textes' },
   { id: 'program', label: 'Planning' },
@@ -46,10 +48,16 @@ const eventData = reactive({ groom_name: '', bride_name: '', date: '', location:
 const config = reactive({
   layout: 'arch',
   sections: [],
+  show_splash: false,
+  show_countdown_splash: true,
   theme: { background: '#F9F7F2', accent: '#C5A059', text: '#1A1A1A', fontFamily: 'Playfair Display' },
   content: { 
     names: '', 
     show_petals: true,
+    splash_top_text: 'Save the Date',
+    splash_title: '',
+    splash_subtitle: '',
+    splash_button_text: 'Entrer dans l\'invitation',
     s1_label: 'Union Civile', s1_title: 'La Mairie', 
     s1_location: 'Hôtel de Ville, 75004 Paris',
     s2_label: 'Cérémonie Religieuse', s2_title: 'Houppa & Soirée',
@@ -62,6 +70,9 @@ const config = reactive({
     tribute_text: '',
     gallery_label: 'Nos Souvenirs',
     footer_text: 'Fait avec amour • 2026'
+  },
+  media: {
+    splash_url: ''
   },
   show_countdown: true,
   music_url: ''
@@ -129,6 +140,10 @@ const fetchCard = async () => {
         Object.assign(config.theme, parsed.theme);
         delete parsed.theme;
       }
+      if (parsed.media) {
+        Object.assign(config.media, parsed.media);
+        delete parsed.media;
+      }
       Object.assign(config, parsed);
     }
     subEvents.value = card.value.sub_events || [];
@@ -174,7 +189,8 @@ const handleFileUpload = async (e, type, field = null) => {
   try {
     saving.value = true;
     const res = await api.post(`/cards/${cardId}/upload`, formData);
-    if (field) config.content[field] = res.data.url;
+    if (type === 'splash' && field) config.media[field] = res.data.url;
+    else if (field) config.content[field] = res.data.url;
     else if (type === 'image') config.content.image_url = res.data.url;
     else if (type === 'music') config.music_url = res.data.url;
     setTimeout(() => saveCard(), 500);
@@ -223,7 +239,6 @@ const applyTemplate = (type) => {
     config.theme.background = '#ffffff';
   }
 };
-
 const addSubEvent = () => {
   subEvents.value.push({
     time: '18:00',
@@ -245,77 +260,123 @@ const moveSubEvent = (index, direction) => {
   subEvents.value = events;
 };
 
+const previewMode = ref('card'); // 'card' or 'splash'
+const previewDevice = ref('mobile'); // 'mobile' or 'desktop'
+
 onMounted(fetchCard);
 </script>
 
 <template>
   <div class="h-screen flex flex-col bg-[#FDFCFB] overflow-hidden font-serif">
     <div class="flex-1 flex overflow-hidden">
-      <aside class="w-[500px] bg-white border-r border-gray-100 flex flex-col shadow-2xl z-20">
+      <aside :class="previewDevice === 'desktop' ? 'w-[450px]' : 'w-[500px]'" class="bg-white border-r border-gray-100 flex flex-col shadow-2xl z-20 transition-all duration-500">
         <!-- TABS SANS EMOJI -->
-        <nav class="flex px-4 pt-4 border-b border-gray-50 bg-gray-50/50 justify-between">
+        <nav class="flex px-4 pt-4 border-b border-gray-50 bg-gray-50/50 justify-between overflow-x-auto no-scrollbar">
           <button v-for="t in tabs" :key="t.id" @click="activeTab = t.id"
             :class="activeTab === t.id ? 'text-[#C5A059] border-b-2 border-[#C5A059] bg-white' : 'text-gray-400 hover:text-gray-600'"
-            class="pb-4 text-[10px] font-black uppercase tracking-widest transition-all px-2"
+            class="pb-4 text-[9px] font-black uppercase tracking-widest transition-all px-4 whitespace-nowrap"
           >
             {{ t.label }}
           </button>
         </nav>
 
-        <div class="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar pb-32">
+        <div class="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar pb-32">
           
           <!-- DESIGN TAB -->
-          <div v-if="activeTab === 'design'" class="space-y-8 animate-in">
-             <section class="space-y-4">
-                <label class="text-[10px] font-black uppercase text-gray-400">Style de l'en-tête</label>
-                <div class="grid grid-cols-2 gap-2">
+          <div v-if="activeTab === 'design'" class="space-y-10 animate-in">
+             <section class="space-y-6">
+                <label class="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Style de l'en-tête</label>
+                <div class="grid grid-cols-2 gap-3">
                   <button
-                    @click="applyTemplate('ora')"
-                    :class="config.layout === 'ora' ? 'bg-black text-white' : 'bg-gray-50 text-gray-400'"
-                    class="py-2 text-[9px] uppercase rounded-lg transition-all"
-                  >ORA PARALLAX</button>
-                  <button
-                    @click="applyTemplate('arch')"
-                    :class="config.layout === 'arch' ? 'bg-black text-white' : 'bg-gray-50 text-gray-400'"
-                    class="py-2 text-[9px] uppercase rounded-lg transition-all"
-                  >STYLE ARCH</button>
-                  <button
-                    @click="applyTemplate('typography-focus')"
-                    :class="config.layout === 'typography-focus' ? 'bg-black text-white' : 'bg-gray-50 text-gray-400'"
-                    class="py-2 text-[9px] uppercase rounded-lg transition-all"
-                  >EDITORIAL</button>
-                  <button
-                    @click="applyTemplate('split')"
-                    :class="config.layout === 'split' ? 'bg-black text-white' : 'bg-gray-50 text-gray-400'"
-                    class="py-2 text-[9px] uppercase rounded-lg transition-all"
-                  >SPLIT</button>
-                  <button
-                    @click="applyTemplate('es')"
-                    :class="config.layout === 'es' ? 'bg-black text-white' : 'bg-gray-50 text-gray-400'"
-                    class="py-2 text-[9px] uppercase rounded-lg transition-all"
-                  >LUXE ES</button>
+                    v-for="tpl in [{id:'ora', l:'ORA PARALLAX'}, {id:'arch', l:'STYLE ARCH'}, {id:'typography-focus', l:'EDITORIAL'}, {id:'split', l:'SPLIT'}, {id:'es', l:'LUXE ES'}]"
+                    :key="tpl.id"
+                    @click="applyTemplate(tpl.id)"
+                    :class="config.layout === tpl.id ? 'bg-[#1A1A1A] text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'"
+                    class="py-3 text-[9px] font-black uppercase rounded-xl transition-all"
+                  >{{ tpl.l }}</button>
                 </div>
              </section>
-             <section class="space-y-4">
-                <label class="text-[10px] font-black uppercase text-gray-400">Typographie</label>
-                <select v-model="config.theme.fontFamily" class="w-full p-4 bg-gray-50 rounded-xl text-sm border-none outline-none">
+             <section class="space-y-6">
+                <label class="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Typographie globale</label>
+                <select v-model="config.theme.fontFamily" class="w-full p-4 bg-gray-50 rounded-2xl text-xs font-bold border-none outline-none shadow-sm focus:ring-2 focus:ring-[#C5A059]/20 transition-all">
                   <option v-for="f in fonts" :key="f.name" :value="f.name">{{ f.label }}</option>
                 </select>
              </section>
-             <section class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <label class="text-[10px] font-black uppercase text-gray-400">Texte / Accent</label>
-                  <input type="color" v-model="config.theme.accent" class="w-full h-12 rounded-xl cursor-pointer">
+             <section class="grid grid-cols-2 gap-6">
+                <div class="space-y-3">
+                  <label class="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Accent</label>
+                  <div class="relative group">
+                    <input type="color" v-model="config.theme.accent" class="w-full h-14 rounded-2xl cursor-pointer bg-gray-50 p-1 border-none outline-none">
+                    <div class="absolute inset-0 pointer-events-none rounded-2xl border-2 border-white/50"></div>
+                  </div>
                 </div>
-                <div class="space-y-2">
-                  <label class="text-[10px] font-black uppercase text-gray-400">Fond</label>
-                  <input type="color" v-model="config.theme.background" class="w-full h-12 rounded-xl cursor-pointer">
+                <div class="space-y-3">
+                  <label class="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Fond</label>
+                  <div class="relative group">
+                    <input type="color" v-model="config.theme.background" class="w-full h-14 rounded-2xl cursor-pointer bg-gray-50 p-1 border-none outline-none">
+                    <div class="absolute inset-0 pointer-events-none rounded-2xl border-2 border-white/50"></div>
+                  </div>
                 </div>
              </section>
-             <section class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                <label class="text-[10px] font-black uppercase text-gray-400">Compte à rebours</label>
-                <input type="checkbox" v-model="config.show_countdown" class="w-5 h-5 accent-black">
+             <section class="flex items-center justify-between p-6 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm">
+                <div class="space-y-1">
+                  <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Compte à rebours</p>
+                  <p class="text-[9px] text-gray-400 italic">Afficher sur l'invitation</p>
+                </div>
+                <input type="checkbox" v-model="config.show_countdown" class="w-6 h-6 accent-[#1A1A1A]">
              </section>
+          </div>
+
+          <!-- COVER TAB -->
+          <div v-if="activeTab === 'cover'" class="space-y-8 animate-in">
+             <section class="flex items-center justify-between p-6 bg-[#1A1A1A] text-white rounded-3xl shadow-xl">
+                <div class="space-y-1">
+                  <p class="text-[10px] font-black uppercase tracking-widest opacity-60">Page de garde</p>
+                  <p class="text-xs font-bold">Activer l'écran d'accueil</p>
+                </div>
+                <input type="checkbox" v-model="config.show_splash" class="w-6 h-6 accent-[#C5A059]">
+             </section>
+
+             <div v-if="config.show_splash" class="space-y-8 animate-in">
+                <section class="space-y-4">
+                  <label class="text-[10px] font-black uppercase text-gray-400">Contenu de la page de garde</label>
+                  <div class="space-y-3">
+                    <input v-model="config.content.splash_top_text" placeholder="Texte du haut (ex: Save the Date)" class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-100">
+                    <input v-model="config.content.splash_title" :placeholder="eventData.groom_name + ' & ' + eventData.bride_name" class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-100">
+                    <input v-model="config.content.splash_subtitle" placeholder="Sous-titre (ex: Nous nous marions !)" class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-100">
+                  </div>
+                </section>
+
+                <section class="space-y-4">
+                  <label class="text-[10px] font-black uppercase text-gray-400">Bouton d'entrée</label>
+                  <input v-model="config.content.splash_button_text" placeholder="Texte du bouton" class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-100">
+                </section>
+
+                <section class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <label class="text-[10px] font-black uppercase text-gray-400">Compte à rebours</label>
+                  <input type="checkbox" v-model="config.show_countdown_splash" class="w-5 h-5 accent-black">
+                </section>
+
+                <section class="space-y-4">
+                  <label class="text-[10px] font-black uppercase text-gray-400">Image de fond (Splash)</label>
+                  <div v-if="config.media.splash_url" class="w-full h-40 rounded-2xl overflow-hidden mb-2 bg-gray-100 border border-gray-100 relative group">
+                    <img :src="config.media.splash_url" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                       <button @click="config.media.splash_url = ''" class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase text-white">Changer l'image</button>
+                    </div>
+                  </div>
+                  <div v-else class="w-full">
+                    <input type="file" @change="e => handleFileUpload(e, 'splash', 'splash_url')" class="hidden" id="splash_upload">
+                    <label for="splash_upload" class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50 transition-all">
+                      <span class="text-[9px] font-black uppercase text-gray-400">Cliquez pour uploader une photo</span>
+                    </label>
+                  </div>
+                </section>
+             </div>
+             
+             <div v-else class="p-8 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                <p class="text-[10px] font-black uppercase text-gray-400">La page de garde est désactivée. L'invitation s'ouvrira directement.</p>
+             </div>
           </div>
 
           <!-- STRUCTURE TAB -->
@@ -554,14 +615,70 @@ onMounted(fetchCard);
       </aside>
 
       <!-- APERÇU -->
-      <main class="flex-1 bg-[#F9F7F2] relative flex flex-col items-center justify-center p-12">
-        <div class="absolute top-8 right-8 bg-white/50 backdrop-blur-md rounded-full px-6 py-3 border border-white shadow-sm flex items-center space-x-3">
-          <span class="text-[9px] font-black uppercase text-gray-400">Aperçu</span>
-          <input type="range" v-model="zoomLevel" min="0.4" max="1" step="0.05" class="w-32 accent-black cursor-pointer">
+      <main class="flex-1 bg-[#F9F7F2] relative flex flex-col items-center justify-center p-12 transition-all duration-500">
+        <div class="absolute top-8 left-8 right-8 flex justify-between items-center z-30">
+          <!-- Toggle Preview Mode (Splash vs Card) -->
+          <div class="bg-white/50 backdrop-blur-md rounded-2xl p-1 border border-white shadow-sm flex space-x-1">
+            <button 
+              @click="previewMode = 'card'"
+              :class="previewMode === 'card' ? 'bg-[#1A1A1A] text-white' : 'text-gray-400 hover:text-black'"
+              class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all"
+            >Invitation</button>
+            <button 
+              @click="previewMode = 'splash'"
+              :class="previewMode === 'splash' ? 'bg-[#1A1A1A] text-white' : 'text-gray-400 hover:text-black'"
+              class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all"
+            >Page de garde</button>
+          </div>
+
+          <!-- Toggle Device Mode (Mobile vs Desktop) -->
+          <div class="bg-white/50 backdrop-blur-md rounded-2xl p-1 border border-white shadow-sm flex space-x-1">
+            <button 
+              @click="previewDevice = 'mobile'"
+              :class="previewDevice === 'mobile' ? 'bg-[#1A1A1A] text-white' : 'text-gray-400 hover:text-black'"
+              class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all flex items-center"
+            >
+              <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+              Mobile
+            </button>
+            <button 
+              @click="previewDevice = 'desktop'"
+              :class="previewDevice === 'desktop' ? 'bg-[#1A1A1A] text-white' : 'text-gray-400 hover:text-black'"
+              class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all flex items-center"
+            >
+              <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+              Ordi
+            </button>
+          </div>
+
+          <div class="bg-white/50 backdrop-blur-md rounded-full px-6 py-3 border border-white shadow-sm flex items-center space-x-3">
+            <span class="text-[9px] font-black uppercase text-gray-400">Zoom</span>
+            <input type="range" v-model="zoomLevel" min="0.4" max="1" step="0.05" class="w-32 accent-black cursor-pointer">
+          </div>
         </div>
-        <div class="bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.2)] transition-all duration-500 origin-center" :style="{ width: '450px', height: '800px', transform: `scale(${zoomLevel})`, borderRadius: '48px', border: '14px solid #1A1A1A', overflow: 'hidden' }">
+
+        <!-- Preview Container -->
+        <div 
+          class="bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.2)] transition-all duration-700 origin-center relative border-[#1A1A1A]" 
+          :style="{ 
+            width: previewDevice === 'mobile' ? '450px' : '100%',
+            maxWidth: previewDevice === 'mobile' ? '450px' : '1100px',
+            height: previewDevice === 'mobile' ? '800px' : '80%',
+            transform: `scale(${zoomLevel})`, 
+            borderRadius: previewDevice === 'mobile' ? '48px' : '24px', 
+            borderWidth: previewDevice === 'mobile' ? '14px' : '8px', 
+            overflow: 'hidden' 
+          }"
+        >
           <div class="h-full overflow-y-auto custom-scrollbar bg-white">
-            <CardRenderer :config="config" :event="eventData" :sub-events="subEvents" :selected-block="selectedBlock" @select-block="handleBlockSelection" />
+            <CardSplashScreen 
+              v-if="previewMode === 'splash'" 
+              :config="config" 
+              :event="eventData" 
+              :template-id="card.template_id"
+              :is-preview="true"
+            />
+            <CardRenderer v-else :config="config" :event="eventData" :sub-events="subEvents" :selected-block="selectedBlock" @select-block="handleBlockSelection" />
           </div>
         </div>
       </main>
