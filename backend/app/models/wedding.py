@@ -18,6 +18,8 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     plan = Column(String, default="classic") # classic, premium
+    is_admin = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
     events = relationship("Event", back_populates="owner")
 
 class Event(Base):

@@ -65,6 +65,12 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+          path: '/admin/users',
+          name: 'admin-users',
+          component: () => import('../views/AdminUsersView.vue'),
+          meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
             path: '/cards/:slug',
             name: 'public-card',
             component: () => import('../views/PublicCardView.vue')
@@ -73,12 +79,24 @@ const router = createRouter({
 });
 
 // Garde de navigation pour protéger les routes
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
     const token = localStorage.getItem('token');
     
     if (to.meta.requiresAuth && !token) {
-        // Rediriger vers login si on n'est pas connecté
         return '/login';
+    }
+
+    // Protection admin
+    if (to.meta.requiresAdmin) {
+        // On récupère l'info user via le store si nécessaire
+        // Note: Dans une vraie app, on vérifierait le décodage du JWT ou l'état du store
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (!user.is_admin) return '/dashboard';
+        } else {
+            return '/login';
+        }
     }
 });
 
