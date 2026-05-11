@@ -47,9 +47,17 @@ services:
 
   # Frontend Vue.js
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      target: build-stage
     container_name: wedding_ui
+    command: npm run dev -- --host
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     ports:
-      - "5173:80"
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
     depends_on:
       - backend
