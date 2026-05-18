@@ -61,7 +61,6 @@ const pricingPlans = [
       'Templates standards inclus',
       'RSVP simple et illimité',
       'Gestion des tables basique',
-      'Jusqu\'à 150 invités',
       'Lien de partage unique'
     ],
     cta: 'Choisir le forfait Classic',
@@ -70,14 +69,13 @@ const pricingPlans = [
   {
     id: 'premium',
     name: 'Forfait Premium',
-    price: '59€',
+    price: '79€',
     description: 'Une personnalisation complète pour un mariage d\'exception.',
     features: [
       'Accès à TOUS les templates Premium',
       'Upload de votre propre musique (MP3)',
       'Import/Export des invités (CSV)',
       'Gestion complète des tables',
-      'Jusqu\'à 1000 invités',
       'Support prioritaire'
     ],
     cta: 'Devenir Premium',

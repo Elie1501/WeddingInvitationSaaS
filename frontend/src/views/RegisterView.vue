@@ -21,6 +21,21 @@ onMounted(() => {
   }
 });
 
+const handleGoogleSuccess = async ({ isNewUser } = {}) => {
+  try {
+    const response = await api.post('/payments/create-checkout-session', {
+      plan_name: selectedPlan.value
+    });
+    if (response.data.checkout_url) {
+      window.location.href = response.data.checkout_url;
+      return;
+    }
+  } catch (err) {
+    console.error("Erreur Stripe après Google:", err);
+  }
+  router.push('/onboarding');
+};
+
 const handleRegister = async () => {
   if (password.value !== confirmPassword.value) {
     error.value = "Les mots de passe ne correspondent pas.";
@@ -31,6 +46,20 @@ const handleRegister = async () => {
     error.value = '';
     loading.value = true;
     await auth.register(email.value, password.value, selectedPlan.value);
+
+    // Déclencher le paiement Stripe après inscription (token disponible via login interne)
+    try {
+      const response = await api.post('/payments/create-checkout-session', {
+        plan_name: selectedPlan.value
+      });
+      if (response.data.checkout_url) {
+        window.location.href = response.data.checkout_url;
+        return;
+      }
+    } catch (stripeErr) {
+      console.error("Erreur Stripe:", stripeErr);
+    }
+
     router.push('/onboarding');
   } catch (err) {
     const detail = err.response?.data?.detail;
@@ -59,7 +88,7 @@ const handleRegister = async () => {
       </div>
 
       <div class="mb-8">
-        <GoogleLoginButton :plan="selectedPlan" />
+        <GoogleLoginButton :plan="selectedPlan" @success="handleGoogleSuccess" />
       </div>
 
       <div class="relative flex py-5 items-center">
@@ -112,7 +141,7 @@ const handleRegister = async () => {
             >
               <div class="font-bold text-gray-900 mb-1">Classic</div>
               <div class="text-[10px] text-gray-500 font-sans uppercase tracking-tight">L'essentiel pour votre mariage</div>
-              <div class="mt-2 text-primary-600 font-bold">45 €</div>
+              <div class="mt-2 text-primary-600 font-bold">29 €</div>
             </div>
             <div 
               @click="selectedPlan = 'premium'"
@@ -121,7 +150,7 @@ const handleRegister = async () => {
             >
               <div class="font-bold text-gray-900 mb-1">Premium</div>
               <div class="text-[10px] text-gray-500 font-sans uppercase tracking-tight">Expérience complète et personnalisée</div>
-              <div class="mt-2 text-primary-600 font-bold">99 €</div>
+              <div class="mt-2 text-primary-600 font-bold">79 €</div>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import GoogleLoginButton from '../components/GoogleLoginButton.vue';
+import api from '../service/api';
 
 const email = ref('');
 const password = ref('');
@@ -10,6 +11,37 @@ const error = ref('');
 const auth = useAuthStore();
 const router = useRouter();
 const loading = ref(false);
+
+const showPlanSelection = ref(false);
+const selectedPlan = ref('classic');
+const planLoading = ref(false);
+
+const handleGoogleSuccess = ({ isNewUser }) => {
+  if (isNewUser) {
+    showPlanSelection.value = true;
+  } else if (auth.user?.is_admin) {
+    router.push('/admin/users');
+  } else {
+    router.push('/dashboard');
+  }
+};
+
+const handlePlanPayment = async () => {
+  try {
+    planLoading.value = true;
+    const response = await api.post('/payments/create-checkout-session', {
+      plan_name: selectedPlan.value
+    });
+    if (response.data.checkout_url) {
+      window.location.href = response.data.checkout_url;
+    }
+  } catch (err) {
+    console.error("Erreur Stripe:", err);
+    router.push('/dashboard');
+  } finally {
+    planLoading.value = false;
+  }
+};
 
 const handleLogin = async () => {
   try {
@@ -53,7 +85,7 @@ const handleLogin = async () => {
       </div>
 
       <div class="mb-8">
-        <GoogleLoginButton />
+        <GoogleLoginButton @success="handleGoogleSuccess" />
       </div>
 
       <div class="relative flex py-5 items-center">
@@ -107,6 +139,43 @@ const handleLogin = async () => {
          <p class="text-sm text-gray-500 font-sans">Vous n'avez pas de compte ? <router-link to="/register" class="text-primary-600 hover:text-primary-700 font-medium transition-colors">Créer mon événement</router-link></p>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Modal choix de forfait pour nouveaux comptes Google -->
+  <div v-if="showPlanSelection" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+      <h2 class="text-2xl text-primary-800 mb-2 text-center">Bienvenue !</h2>
+      <p class="text-sm text-gray-500 text-center mb-8 font-sans">Choisissez votre forfait pour continuer</p>
+
+      <div class="grid grid-cols-2 gap-4 mb-8">
+        <div
+          @click="selectedPlan = 'classic'"
+          :class="selectedPlan === 'classic' ? 'border-primary-600 bg-primary-50 shadow-sm' : 'border-gray-200'"
+          class="cursor-pointer border-2 rounded-xl p-4 transition-all hover:border-primary-400"
+        >
+          <div class="font-bold text-gray-900 mb-1">Classic</div>
+          <div class="text-[10px] text-gray-500 font-sans uppercase tracking-tight">L'essentiel pour votre mariage</div>
+          <div class="mt-2 text-primary-600 font-bold">29 €</div>
+        </div>
+        <div
+          @click="selectedPlan = 'premium'"
+          :class="selectedPlan === 'premium' ? 'border-primary-600 bg-primary-50 shadow-sm' : 'border-gray-200'"
+          class="cursor-pointer border-2 rounded-xl p-4 transition-all hover:border-primary-400"
+        >
+          <div class="font-bold text-gray-900 mb-1">Premium</div>
+          <div class="text-[10px] text-gray-500 font-sans uppercase tracking-tight">Expérience complète</div>
+          <div class="mt-2 text-primary-600 font-bold">79 €</div>
+        </div>
+      </div>
+
+      <button
+        @click="handlePlanPayment"
+        :disabled="planLoading"
+        class="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-colors shadow-md shadow-primary-600/20 disabled:opacity-70 font-sans"
+      >
+        {{ planLoading ? 'Redirection...' : 'Continuer vers le paiement' }}
+      </button>
     </div>
   </div>
 </template>

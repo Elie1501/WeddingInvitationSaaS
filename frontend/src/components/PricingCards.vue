@@ -11,7 +11,6 @@ const plans = [
     price: '29€',
     description: 'Parfait pour un petit mariage élégant.',
     features: [
-      'Jusqu\'à 150 invités',
       '3 pages personnalisées',
       'Formulaire RSVP inclus',
       'Plan de table interactif',
@@ -26,7 +25,6 @@ const plans = [
     price: '79€',
     description: 'L\'expérience ultime pour un grand événement.',
     features: [
-      'Jusqu\'à 1000 invités',
       'Pages illimitées',
       'Gestion des accompagnants',
       'Import/Export CSV',
