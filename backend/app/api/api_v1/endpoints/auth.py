@@ -46,12 +46,13 @@ def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
 
         # 2. Chercher ou créer l'utilisateur dans notre DB
         user = db.query(User).filter(User.email == email).first()
-        
+        is_new_user = False
+
         if not user:
-            # Créer un utilisateur sans mot de passe (car Google Auth)
+            is_new_user = True
             user = User(
                 email=email,
-                hashed_password="google_auth_placeholder", # Pas utilisé pour le login Google
+                hashed_password="google_auth_placeholder",
                 plan=request.plan or "classic"
             )
             db.add(user)
@@ -63,6 +64,7 @@ def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
             "access_token": security.create_access_token(user.id),
             "refresh_token": security.create_refresh_token(user.id),
             "token_type": "bearer",
+            "is_new_user": is_new_user,
         }
     except Exception as e:
         print(f"Erreur Google Auth: {str(e)}")

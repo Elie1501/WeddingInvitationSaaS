@@ -25,6 +25,7 @@ export const useAuthStore = defineStore('auth', {
                 localStorage.setItem('token', this.token);
                 localStorage.setItem('refresh_token', this.refreshToken);
                 await this.fetchMe();
+                return { isNewUser: response.data.is_new_user || false };
             } catch (error) {
                 console.error("Google Login Error:", error);
                 throw error;
