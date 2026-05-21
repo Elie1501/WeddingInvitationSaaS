@@ -1,35 +1,8 @@
-import os
-import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from app.main import app
-from app.db.session import Base, get_db
-
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
-
-if DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-else:
-    engine = create_engine(DATABASE_URL)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-app.dependency_overrides[get_db] = override_get_db
-
-@pytest.fixture(scope="module", autouse=True)
-def setup_db():
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
 
 client = TestClient(app)
+
 
 def test_signup():
     response = client.post(
@@ -40,14 +13,15 @@ def test_signup():
     assert response.json()["email"] == "test@example.com"
     assert "id" in response.json()
 
+
 def test_signup_already_exists():
-    # Déjà créé par le test précédent
     response = client.post(
         "/auth/signup",
         json={"email": "test@example.com", "password": "password123"}
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Cet email est déjà enregistré."
+
 
 def test_login():
     response = client.post(
@@ -59,6 +33,7 @@ def test_login():
     assert "refresh_token" in response.json()
     assert response.json()["token_type"] == "bearer"
 
+
 def test_login_incorrect_password():
     response = client.post(
         "/auth/login",
@@ -66,6 +41,7 @@ def test_login_incorrect_password():
     )
     assert response.status_code == 401
     assert response.json()["detail"] == "Email ou mot de passe incorrect."
+
 
 def test_me():
     login_response = client.post(
@@ -81,9 +57,11 @@ def test_me():
     assert response.status_code == 200
     assert response.json()["email"] == "test@example.com"
 
+
 def test_me_without_token():
     response = client.get("/auth/me")
     assert response.status_code == 401
+
 
 def test_refresh_token():
     login_response = client.post(
