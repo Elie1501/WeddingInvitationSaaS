@@ -72,7 +72,7 @@ export const useAuthStore = defineStore('auth', {
         async refreshAccessToken() {
             if (!this.refreshToken) return;
             try {
-                const response = await api.post(`/auth/refresh-token?refresh_token=${this.refreshToken}`);
+                const response = await api.post('/auth/refresh-token', { refresh_token: this.refreshToken });
                 this.token = response.data.access_token;
                 this.refreshToken = response.data.refresh_token;
                 localStorage.setItem('token', this.token);
