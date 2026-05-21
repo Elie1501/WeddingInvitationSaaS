@@ -26,5 +26,20 @@ app.dependency_overrides[get_db] = override_get_db
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
+
+    # Seed le template par défaut utilisé par create_event ("eclat-eternel")
+    # Sans lui, PostgreSQL lève une FK violation (card_templates.id)
+    from app.models.wedding import CardTemplate
+    db = TestingSessionLocal()
+    if not db.query(CardTemplate).filter_by(id="eclat-eternel").first():
+        db.add(CardTemplate(
+            id="eclat-eternel",
+            name="Éclat Éternel",
+            manifest_json='{"default_config": {}}',
+            is_active=True
+        ))
+        db.commit()
+    db.close()
+
     yield
     Base.metadata.drop_all(bind=engine)
