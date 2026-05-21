@@ -38,6 +38,9 @@ backend/venv/
 backend/.venv/
 __pycache__/
 
+# Test database
+backend/test.db
+
 # JSON test/log files
 login*.json
 
