@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 from app.db.session import get_db
 from app.core import security
 from app.core.config import settings
@@ -102,41 +102,51 @@ def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = 
     """
     Connexion utilisateur et génération de tokens JWT.
     """
-    print(f"Tentative de connexion pour : {form_data.username}")
-    # Vérifier l'utilisateur
     user = db.query(User).filter(User.email == form_data.username).first()
 
     if not user:
-        print(f"Utilisateur non trouvé : {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou mot de passe incorrect.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
+    # Vérification du mot de passe (try/except pour les comptes Google sans mot de passe bcrypt)
+    try:
+        password_valid = security.verify_password(form_data.password, user.hashed_password)
+    except Exception:
+        password_valid = False
+
+    if not password_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email ou mot de passe incorrect.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     if not user.is_active:
-        print(f"Compte désactivé pour : {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Votre compte a été désactivé. Veuillez contacter l'administrateur.",
         )
 
-    print(f"Connexion réussie pour : {form_data.username}")
-    # Générer les tokens JWT
     return {
         "access_token": security.create_access_token(user.id),
         "refresh_token": security.create_refresh_token(user.id),
         "token_type": "bearer",
     }
 
+class RefreshTokenBody(BaseModel):
+    refresh_token: str
+
 @router.post("/refresh-token", response_model=Token)
-def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
+def refresh_token(body: RefreshTokenBody, db: Session = Depends(get_db)):
     """
     Renouveler l'access token à partir d'un refresh token valide.
     """
     try:
         payload = jwt.decode(
-            refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            body.refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         token_data = TokenPayload(**payload)
         if token_data.type != "refresh":

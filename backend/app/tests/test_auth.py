@@ -1,13 +1,17 @@
+import os
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.db.session import Base, get_db
-import pytest
 
-# Base de données de test (SQLite en mémoire)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def override_get_db():
@@ -64,14 +68,12 @@ def test_login_incorrect_password():
     assert response.json()["detail"] == "Email ou mot de passe incorrect."
 
 def test_me():
-    # Se connecter d'abord
     login_response = client.post(
         "/auth/login",
         data={"username": "test@example.com", "password": "password123"}
     )
     token = login_response.json()["access_token"]
-    
-    # Récupérer les infos
+
     response = client.get(
         "/auth/me",
         headers={"Authorization": f"Bearer {token}"}
@@ -79,17 +81,20 @@ def test_me():
     assert response.status_code == 200
     assert response.json()["email"] == "test@example.com"
 
+def test_me_without_token():
+    response = client.get("/auth/me")
+    assert response.status_code == 401
+
 def test_refresh_token():
-    # Se connecter d'abord
     login_response = client.post(
         "/auth/login",
         data={"username": "test@example.com", "password": "password123"}
     )
     refresh_token = login_response.json()["refresh_token"]
-    
-    # Rafraîchir
+
     response = client.post(
-        f"/auth/refresh-token?refresh_token={refresh_token}"
+        "/auth/refresh-token",
+        json={"refresh_token": refresh_token}
     )
     assert response.status_code == 200
     assert "access_token" in response.json()
