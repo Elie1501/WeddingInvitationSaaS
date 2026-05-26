@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import { useRouter } from 'vue-router';
 
 const props = defineProps({
   plan: {
@@ -10,8 +9,9 @@ const props = defineProps({
   }
 });
 
+const emit = defineEmits(['success']);
+
 const auth = useAuthStore();
-const router = useRouter();
 const loading = ref(false);
 const error = ref<string | null>(null);
 
@@ -19,8 +19,8 @@ const handleGoogleLogin = async () => {
   try {
     loading.value = true;
     error.value = null;
-    await auth.loginWithGoogle(props.plan);
-    router.push('/dashboard');
+    const { isNewUser } = await auth.loginWithGoogle(props.plan);
+    emit('success', { isNewUser });
   } catch (err: any) {
     console.error("Google Auth Error:", err);
     error.value = "Une erreur est survenue lors de la connexion avec Google.";

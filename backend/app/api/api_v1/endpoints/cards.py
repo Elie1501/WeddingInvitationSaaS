@@ -152,7 +152,16 @@ def auto_save_card(
 ):
     """Sauvegarde rapide de la carte (auto-save)."""
     card = check_card_ownership(db, card_id, current_user.id)
-    
+
+    if card_in.config_json is not None:
+        limits = get_limits(current_user.plan)
+        total_pages = count_pages(card_in, card.has_cover_page)
+        if total_pages > limits["max_pages"]:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Votre forfait {current_user.plan} est limité à {limits['max_pages']} page(s)."
+            )
+
     update_data = card_in.model_dump(exclude_unset=True)
     
     # Gestion des sous-événements
@@ -186,7 +195,16 @@ def update_card(
 ):
     """Met à jour une carte et crée une nouvelle version."""
     card = check_card_ownership(db, card_id, current_user.id)
-    
+
+    if card_in.config_json is not None:
+        limits = get_limits(current_user.plan)
+        total_pages = count_pages(card_in, card.has_cover_page)
+        if total_pages > limits["max_pages"]:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Votre forfait {current_user.plan} est limité à {limits['max_pages']} page(s)."
+            )
+
     # Sauvegarde de la version actuelle avant mise à jour
     old_content = {
         "intro_text": card.intro_text,

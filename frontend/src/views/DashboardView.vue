@@ -2,19 +2,29 @@
 import { ref, onMounted, computed } from 'vue';
 import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { getPlanInfo } from '../service/plans';
 
 const events = ref([]);
 const loading = ref(true);
 const auth = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const baseUrl = window.location.origin;
 
 const planInfo = computed(() => getPlanInfo(auth.user?.plan || 'classic'));
 const showApiModal = ref(false);
 const showPlanModal = ref(false);
 const planUpdateLoading = ref(false);
+const canCreateEvent = computed(() => events.value.length < planInfo.value.max_sites);
+
+const handleCreateEvent = () => {
+  if (!canCreateEvent.value) {
+    showPlanModal.value = true;
+    return;
+  }
+  router.push('/events/create');
+};
 
 const copyToClipboard = async (text) => {
   try {
@@ -80,6 +90,20 @@ onMounted(async () => {
   if (!auth.user) {
     await auth.fetchMe();
   }
+
+  // Confirmation du paiement Stripe après redirection
+  const sessionId = route.query.session_id;
+  const paymentSuccess = route.query.payment_success;
+  if (paymentSuccess === 'true' && sessionId) {
+    try {
+      await api.post('/payments/confirm-payment', { session_id: sessionId });
+      await auth.fetchMe();
+      router.replace({ query: {} });
+    } catch (err) {
+      console.error("Erreur confirmation paiement:", err);
+    }
+  }
+
   try {
     const response = await api.get('/events/');
     events.value = response.data;
@@ -128,12 +152,15 @@ onMounted(async () => {
           <h2 class="text-4xl text-gray-900 mb-2">Mes Événements</h2>
           <p class="text-gray-500 font-sans">Gérez vos invitations, listes d'invités et plans de table avec élégance.</p>
         </div>
-        <button 
-          @click="$router.push('/events/create')" 
-          class="mt-6 md:mt-0 inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-600/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 font-sans"
+        <button
+          @click="handleCreateEvent"
+          :class="canCreateEvent ? 'bg-primary-600 hover:bg-primary-700' : 'bg-gray-300 cursor-not-allowed'"
+          class="mt-6 md:mt-0 inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white shadow-md transition-all duration-300 font-sans"
+          :title="!canCreateEvent ? `Limite atteinte — forfait ${planInfo.name} : ${planInfo.max_sites} site(s) max` : ''"
         >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-          Créer un événement
+          <svg v-if="canCreateEvent" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+          <svg v-else class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+          {{ canCreateEvent ? 'Créer un événement' : 'Limite atteinte — Passer au Premium' }}
         </button>
       </div>
 
@@ -275,12 +302,11 @@ onMounted(async () => {
               <div class="flex justify-between items-start mb-4">
                 <div class="flex flex-col">
                   <h3 class="font-bold text-lg text-gray-900">Classic</h3>
-                  <span class="text-primary-600 font-bold text-sm">45 €</span>
+                  <span class="text-primary-600 font-bold text-sm">29 €</span>
                 </div>
                 <span v-if="auth.user.plan === 'classic'" class="bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">Actuel</span>
               </div>
               <ul class="text-sm text-gray-600 space-y-2 mb-6 font-sans">
-                <li class="flex items-center"><svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Jusqu'à 100 invités</li>
                 <li class="flex items-center"><svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Plan de table complet</li>
                 <li class="flex items-center"><svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 1 site d'invitation</li>
               </ul>
@@ -300,13 +326,15 @@ onMounted(async () => {
               :class="auth.user.plan === 'premium' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 hover:border-primary-200'"
             >
               <div class="flex justify-between items-start mb-4">
-                <h3 class="font-bold text-lg text-gray-900">Premium</h3>
+                <div class="flex flex-col">
+                  <h3 class="font-bold text-lg text-gray-900">Premium</h3>
+                  <span class="text-primary-600 font-bold text-sm">79 €</span>
+                </div>
                 <span v-if="auth.user.plan === 'premium'" class="bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">Actuel</span>
               </div>
               <ul class="text-sm text-gray-600 space-y-2 mb-6 font-sans">
-                <li class="flex items-center"><svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Jusqu'à 500 invités</li>
                 <li class="flex items-center"><svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 5 sites d'invitation</li>
-                <li class="flex items-center"><svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Formulaire RSVP</li>
+                <li class="flex items-center"><svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Import/Export CSV</li>
               </ul>
               <button 
                 v-if="auth.user.plan !== 'premium'"
