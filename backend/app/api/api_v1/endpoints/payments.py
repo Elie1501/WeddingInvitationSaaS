@@ -57,7 +57,7 @@ def create_checkout_session(
                 },
             ],
             mode='payment',
-            success_url=f"http://localhost:5173/dashboard?payment_success=true&plan={request.plan_name}",
+            success_url=f"http://localhost:5173/dashboard?payment_success=true&plan={request.plan_name}&session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url="http://localhost:5173/dashboard?payment_cancel=true",
             metadata={
                 "user_id": current_user.id,
@@ -68,6 +68,42 @@ def create_checkout_session(
     except Exception as e:
         print(f"Erreur Stripe: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+class ConfirmRequest(BaseModel):
+    session_id: str
+
+@router.post("/confirm-payment")
+def confirm_payment(
+    request: ConfirmRequest,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Vérifie une session Stripe et met à jour le plan de l'utilisateur."""
+    try:
+        session = stripe.checkout.Session.retrieve(request.session_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Session Stripe invalide")
+
+    if session.payment_status != "paid":
+        raise HTTPException(status_code=400, detail="Paiement non confirmé")
+
+    try:
+        user_id = session.metadata["user_id"]
+        new_plan = session.metadata["plan"]
+    except (KeyError, TypeError):
+        raise HTTPException(status_code=400, detail="Metadata manquante dans la session Stripe")
+
+    if str(user_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Session non autorisée")
+
+    if not new_plan:
+        raise HTTPException(status_code=400, detail="Plan introuvable dans la session")
+
+    current_user.plan = new_plan
+    db.commit()
+    db.refresh(current_user)
+    return {"plan": current_user.plan}
+
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
