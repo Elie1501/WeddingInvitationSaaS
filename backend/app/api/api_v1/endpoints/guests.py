@@ -92,12 +92,22 @@ def delete_guest(
 @router.post("/public/rsvp") 
 def public_rsvp(
     rsvp_data: dict, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(deps.get_current_user_optional)
 ):
     event_id = rsvp_data.get("event_id")
-    card = db.query(Card).filter(Card.event_id == event_id, Card.is_published == True).first()
+    
+    # On cherche la carte. 
+    # Si l'utilisateur est le propriétaire, on autorise même si non publiée.
+    # Sinon, elle doit être publiée.
+    card = db.query(Card).filter(Card.event_id == event_id).first()
     if not card:
-        raise HTTPException(status_code=403, detail="RSVP non autorisé")
+        raise HTTPException(status_code=404, detail="Invitation non trouvée")
+        
+    is_owner = current_user and card.event.owner_id == current_user.id
+    
+    if not card.is_published and not is_owner:
+        raise HTTPException(status_code=403, detail="L'invitation n'est pas encore publiée. Le RSVP n'est pas autorisé.")
 
     # Chercher ou créer l'invité principal
     guest = db.query(Guest).filter(
@@ -120,21 +130,59 @@ def public_rsvp(
     guest.dietary_restrictions = rsvp_data.get("dietary_restrictions")
     guest.message = rsvp_data.get("message")
 
-    # Gérer les sous-invités (enfants)
-    if rsvp_data.get("sub_guests"):
-        # On supprime les anciens sous-invités pour simplifier l'update
-        db.query(Guest).filter(Guest.parent_id == guest.id).delete()
+    # Gérer les sous-invités (enfants et adultes suppl.)
+    # On supprime les anciens sous-invités pour repartir de zéro
+    db.query(Guest).filter(Guest.parent_id == guest.id).delete()
+
+    if rsvp_data.get("presence"):
+        # Option 1: Liste explicite de sous-invités
+        if rsvp_data.get("sub_guests"):
+            for sub in rsvp_data.get("sub_guests"):
+                new_sub = Guest(
+                    event_id=event_id,
+                    parent_id=guest.id,
+                    first_name=sub.get("first_name"),
+                    last_name=sub.get("last_name"),
+                    rsvp_status=guest.rsvp_status,
+                    dietary_restrictions=sub.get("dietary_restrictions")
+                )
+                db.add(new_sub)
         
-        for sub in rsvp_data.get("sub_guests"):
-            new_sub = Guest(
-                event_id=event_id,
-                parent_id=guest.id,
-                first_name=sub.get("first_name"),
-                last_name=sub.get("last_name"),
-                rsvp_status=guest.rsvp_status,
-                dietary_restrictions=sub.get("dietary_restrictions")
-            )
-            db.add(new_sub)
+        # Option 2: Création basée sur les compteurs (Adultes et Enfants)
+        else:
+            # On accepte 'adults' (total) ou 'guests_count'/'plus_ones' (accompagnants)
+            if "adults" in rsvp_data:
+                adults_count = int(rsvp_data["adults"])
+            elif "guests_count" in rsvp_data:
+                adults_count = int(rsvp_data["guests_count"]) + 1
+            elif "plus_ones" in rsvp_data:
+                adults_count = int(rsvp_data["plus_ones"]) + 1
+            else:
+                adults_count = 1
+
+            children_count = int(rsvp_data.get("children", 0))
+
+            # On crée n-1 adultes (le premier est l'invité principal)
+            for i in range(adults_count - 1):
+                new_sub = Guest(
+                    event_id=event_id,
+                    parent_id=guest.id,
+                    first_name=f"Accompagnant",
+                    last_name=f"{i+1} de {guest.first_name}",
+                    rsvp_status="confirmed"
+                )
+                db.add(new_sub)
+            
+            # On crée n enfants
+            for i in range(children_count):
+                new_sub = Guest(
+                    event_id=event_id,
+                    parent_id=guest.id,
+                    first_name=f"Enfant",
+                    last_name=f"{i+1} de {guest.first_name}",
+                    rsvp_status="confirmed"
+                )
+                db.add(new_sub)
 
     # Si décliné, libérer place en table
     if not rsvp_data.get("presence"):
