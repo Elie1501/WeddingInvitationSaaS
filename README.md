@@ -64,4 +64,28 @@ Le projet tourne entièrement via **Docker Compose** : 4 services (db, backend, 
 | thomas@premium.com    | password123  | premium | Non   |
 | admin@wedding.com     | password123  | premium | Oui   |
 
+---
+
+## Seeds
+
+Lancer tous les seeds d'un coup :
+
+```bash
+docker exec wedding_api python scripts/seed_all.py
+```
+
+Ou un par un :
+
+```bash
+docker exec wedding_api python scripts/seed_users.py
+docker exec wedding_api python scripts/seed_templates.py
+docker exec wedding_api python scripts/seed_art_templates.py
+docker exec wedding_api python scripts/seed_ultimate_minimal.py
+docker exec wedding_api python scripts/seed_ora_template.py
+docker exec wedding_api python scripts/seed_extended_art_templates.py
+docker exec wedding_api python scripts/seed_premium_templates.py
+docker exec wedding_api python scripts/seed_ky_template.py
+docker exec wedding_api python scripts/seed_new_premium_templates.py
+```
+
 > Voir [LAUNCH.md](LAUNCH.md) pour démarrer le projet.
