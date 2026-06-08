@@ -4,6 +4,9 @@ import { useRouter, useRoute } from 'vue-router';
 import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
 
+const authStore = useAuthStore();
+const isPremium = computed(() => authStore.user?.plan === 'premium');
+
 const router = useRouter();
 const route = useRoute();
 const auth = useAuthStore();
@@ -61,8 +64,31 @@ const filteredTemplates = computed(() => {
   return result;
 });
 
-const selectTemplate = async (template) =>
-{
+const upgradingToPremium = ref(false);
+
+const upgradeToPremium = async () => {
+  if (upgradingToPremium.value) return;
+  upgradingToPremium.value = true;
+  try {
+    const res = await api.post('/payments/create-checkout-session', { plan_name: 'premium' });
+    if (res.data.checkout_url) {
+      window.location.href = res.data.checkout_url;
+    }
+  } catch (err) {
+    console.error("Erreur paiement:", err);
+    alert("Impossible d'initialiser le paiement. Veuillez réessayer.");
+  } finally {
+    upgradingToPremium.value = false;
+  }
+};
+
+const selectTemplate = async (template) => {
+  // Bloquer les templates premium pour les utilisateurs Classic → Stripe
+  if (template.required_plan === 'premium' && !isPremium.value) {
+    await upgradeToPremium();
+    return;
+  }
+
   console.log("Template sélectionné:", template.id);
   try {
     loading.value = true;
@@ -211,27 +237,64 @@ onMounted(() => {
       </div>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
-        <div 
-          v-for="tpl in filteredTemplates" 
+        <div
+          v-for="tpl in filteredTemplates"
           :key="tpl.id"
-          class="group cursor-pointer space-y-8"
+          class="group cursor-pointer space-y-5"
           @click="selectTemplate(tpl)"
         >
           <div class="relative aspect-[3/4.5] overflow-hidden bg-white shadow-2xl transition-all duration-700 group-hover:-translate-y-4 border border-gray-100">
-            <img 
-               :src="tpl.thumbnail_url" 
+            <img
+               :src="tpl.thumbnail_url"
                class="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
                alt="Template"
             />
-            
-            <div class="absolute inset-0 bg-[#1A1A1A]/90 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-center p-12 text-center space-y-8">
+
+            <!-- Badge plan (coin supérieur droit) -->
+            <div class="absolute top-4 right-4 z-10">
+              <span v-if="tpl.required_plan === 'premium'"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-[#1A1A1A]/80 backdrop-blur-sm text-[#C5A059] border border-[#C5A059]/40">
+                <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1l3.09 6.26L22 8.27l-5 4.87 1.18 6.88L12 16.77l-6.18 3.25L7 13.14 2 8.27l6.91-1.01L12 1z"/></svg>
+                Premium
+              </span>
+              <span v-else
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/80 backdrop-blur-sm text-gray-600 border border-gray-200">
+                Classic
+              </span>
+            </div>
+
+            <!-- Overlay hover : différent selon plan requis -->
+            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-center p-12 text-center space-y-6"
+                 :class="tpl.required_plan === 'premium' && !isPremium ? 'bg-[#0C0906]/92' : 'bg-[#1A1A1A]/90'">
+
+              <!-- CTA premium verrouillé -->
+              <template v-if="tpl.required_plan === 'premium' && !isPremium">
+                <svg class="w-10 h-10 text-[#C5A059]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <div>
+                  <p class="text-[#C5A059] text-[10px] font-black uppercase tracking-widest mb-1">Template Premium</p>
+                  <p class="text-white/70 text-[11px] font-sans leading-relaxed">{{ tpl.description }}</p>
+                </div>
+                <button @click.stop="upgradeToPremium"
+                        :disabled="upgradingToPremium"
+                        class="flex items-center gap-2 px-8 py-3 bg-[#C5A059] text-white text-[10px] uppercase tracking-widest font-bold hover:bg-[#b08c47] disabled:opacity-60 transition-all rounded-sm">
+                  <span v-if="upgradingToPremium" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  <span v-else>Passer au Premium →</span>
+                </button>
+              </template>
+
+              <!-- CTA normal -->
+              <template v-else>
                 <div class="w-12 h-[1px] bg-[#C5A059]"></div>
                 <p class="text-white text-sm font-sans leading-relaxed opacity-80">{{ tpl.description }}</p>
                 <span class="px-8 py-3 border border-white text-white text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all">
                   Choisir ce design
                 </span>
+              </template>
             </div>
 
+            <!-- Preview nom couple -->
             <div class="absolute bottom-12 inset-x-0 text-center pointer-events-none group-hover:opacity-0 transition-opacity duration-300 px-4">
                 <div class="bg-white/95 backdrop-blur-sm py-4 px-6 inline-block rounded-sm shadow-xl border border-gray-100">
                     <p class="text-[10px] uppercase tracking-[0.3em] text-[#C5A059] mb-1">Célébration</p>
@@ -239,9 +302,16 @@ onMounted(() => {
                 </div>
             </div>
           </div>
-          
-          <div class="text-center">
+
+          <!-- Nom + badge plan -->
+          <div class="text-center space-y-2">
             <h4 class="text-sm uppercase tracking-[0.3em] text-[#1A1A1A]">{{ tpl.name }}</h4>
+            <span class="inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full"
+                  :class="tpl.required_plan === 'premium'
+                    ? 'text-[#C5A059] bg-[#C5A059]/10 border border-[#C5A059]/30'
+                    : 'text-gray-400 bg-gray-100 border border-gray-200'">
+              {{ tpl.required_plan === 'premium' ? '★ Premium' : 'Classic' }}
+            </span>
           </div>
         </div>
       </div>

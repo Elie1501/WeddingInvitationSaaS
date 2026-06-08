@@ -4,7 +4,6 @@ from typing import Optional
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, description="Le mot de passe doit faire au moins 8 caractères.")
-    plan: Optional[str] = "classic" # classic, premium
 
 class UserResponse(BaseModel):
     id: int
@@ -25,4 +24,3 @@ class UserUpdateStatus(BaseModel):
 
 class GoogleLoginRequest(BaseModel):
     id_token: str
-    plan: Optional[str] = "classic"

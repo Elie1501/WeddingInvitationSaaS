@@ -88,6 +88,7 @@ class TemplateResponse(BaseModel):
     manifest_json: str
     thumbnail_url: Optional[str] = None
     category: Optional[str] = "minimal"
+    required_plan: Optional[str] = "classic"
 
     class Config:
         from_attributes = True

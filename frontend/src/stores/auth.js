@@ -10,14 +10,13 @@ export const useAuthStore = defineStore('auth', {
         refreshToken: localStorage.getItem('refresh_token') || null,
     }),
     actions: {
-        async loginWithGoogle(plan = 'classic') {
+        async loginWithGoogle() {
             try {
                 const result = await signInWithPopup(auth, provider);
                 const idToken = await result.user.getIdToken();
 
                 const response = await api.post('/auth/google', {
-                    id_token: idToken,
-                    plan: plan
+                    id_token: idToken
                 });
 
                 this.token = response.data.access_token;
@@ -47,17 +46,9 @@ export const useAuthStore = defineStore('auth', {
             localStorage.setItem('refresh_token', this.refreshToken);
             await this.fetchMe();
         },
-        async register(email, password, plan = 'classic') {
-            await api.post('/auth/signup', {
-                email,
-                password,
-                plan
-            });
+        async register(email, password) {
+            await api.post('/auth/signup', { email, password });
             await this.login(email, password);
-        },
-        async updatePlan(plan) {
-            const response = await api.patch('/users/me/plan', { plan });
-            this.user = response.data;
         },
         async fetchMe() {
             try {

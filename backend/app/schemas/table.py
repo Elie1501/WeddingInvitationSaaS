@@ -10,6 +10,10 @@ class TableBase(BaseModel):
 class TableCreate(TableBase):
     event_id: int
 
+class TableUpdate(BaseModel):
+    name: Optional[str] = None
+    capacity: Optional[int] = None
+
 class TableResponse(TableBase):
     id: int
     event_id: int

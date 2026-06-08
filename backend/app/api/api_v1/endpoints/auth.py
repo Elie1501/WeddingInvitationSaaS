@@ -53,7 +53,7 @@ def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
             user = User(
                 email=email,
                 hashed_password="google_auth_placeholder",
-                plan=request.plan or "classic"
+                plan="classic"
             )
             db.add(user)
             db.commit()
@@ -90,7 +90,7 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
     new_user = User(
         email=user_in.email,
         hashed_password=security.get_password_hash(user_in.password),
-        plan=user_in.plan
+        plan="classic"
     )
     db.add(new_user)
     db.commit()

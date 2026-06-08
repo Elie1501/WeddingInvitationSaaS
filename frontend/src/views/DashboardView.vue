@@ -50,12 +50,7 @@ const handleUpdatePlan = async (newPlan) => {
     });
     
     if (response.data.checkout_url) {
-      // Redirection vers la page de paiement sécurisée de Stripe
       window.location.href = response.data.checkout_url;
-    } else {
-      // Fallback si pas d'URL (ne devrait pas arriver)
-      await auth.updatePlan(newPlan);
-      showPlanModal.value = false;
     }
   } catch (err) {
     console.error("Erreur d'initialisation du paiement Stripe:", err);
