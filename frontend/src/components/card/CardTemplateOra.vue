@@ -1,418 +1,341 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 
 const props = defineProps({
   config: { type: Object, required: true },
-  event: { type: Object, required: true },
-  subEvents: { type: Array, default: () => [] },
-  mode: { type: String, default: 'full' } 
-  // Modes: 'hero', 'section1', 'parallax', 'section2', 'tribute', 'gallery', 'footer'
+  event:  { type: Object, required: true },
+  mode:   { type: String, default: 'full' }
 });
 
-const content = computed(() => props.config.content || {});
-const theme = computed(() => props.config.theme || { accent: '#C5A059', text: '#1a1a1a', background: '#ffffff' });
+const theme = computed(() => ({
+  bg:     props.config.theme?.background || '#FAF8F5',
+  accent: props.config.theme?.accent     || '#C5A059',
+  text:   props.config.theme?.text       || '#1A1A1A',
+}));
 
-const displayNames = computed(() => content.value.names || `${props.event.groom_name || 'Lui'} & ${props.event.bride_name || 'Elle'}`);
-const displayDate = computed(() => props.event.date ? new Date(props.event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase() : 'DATE À VENIR');
+const displayNames = computed(() =>
+  props.config.content?.names ||
+  (props.event.groom_name && props.event.bride_name
+    ? `${props.event.groom_name} & ${props.event.bride_name}`
+    : '')
+);
 
-// Animation des pétales
-const petalsContainer = ref(null);
-let petalInterval = null;
-
-const createPetal = () => {
-  if (!petalsContainer.value || content.value.show_petals === false) return;
-  const petal = document.createElement('div');
-  petal.className = 'petal';
-  const size = Math.random() * 8 + 5;
-  petal.style.width = size + 'px';
-  petal.style.height = size * 1.5 + 'px';
-  petal.style.left = Math.random() * 100 + '%';
-  petal.style.top = '-20px';
-  petal.style.animation = `fall ${Math.random() * 3 + 4}s linear forwards`;
-  petalsContainer.value.appendChild(petal);
-  setTimeout(() => petal.remove(), 7000);
-};
-
-onMounted(() => {
-  if (props.mode === 'hero' || props.mode === 'full') {
-    petalInterval = setInterval(createPetal, 600);
-  }
+const displayDate = computed(() => {
+  if (props.config.content?.date_display) return props.config.content.date_display;
+  return props.event.date
+    ? new Date(props.event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : '15 juin 2026';
 });
 
-onUnmounted(() => {
-  if (petalInterval) clearInterval(petalInterval);
-});
+const location = computed(() =>
+  props.config.content?.address || props.event.location || ''
+);
+
+const imageUrl = computed(() =>
+  props.config.content?.image_url ||
+  'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200'
+);
+
+const introText = computed(() =>
+  props.config.content?.intro_text ||
+  'Nous avons le bonheur de vous convier à la célébration de notre mariage'
+);
+
+const isLoaded = ref(false);
+onMounted(() => setTimeout(() => isLoaded.value = true, 80));
 </script>
 
 <template>
-  <div class="ora-block" :style="{ '--gold': theme.accent, '--text-dark': theme.text, '--bg-light': theme.background }">
-    
-    <!-- BLOC HERO -->
-    <div v-if="mode === 'hero' || mode === 'full'" class="hero-wrapper">
-        <div ref="petalsContainer" class="petals-wrapper"></div>
-        <div class="hero-image" :style="{ backgroundImage: `url(${content.image_url || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200'})` }">
-            <div class="hero-overlay"></div>
+  <div class="eclat-template" :style="{ '--bg': theme.bg, '--accent': theme.accent, '--text': theme.text }">
+
+    <!-- ── HERO ── -->
+    <div v-if="mode === 'hero' || mode === 'full'" class="hero">
+
+      <div class="hero-photo" :style="{ backgroundImage: `url(${imageUrl})` }"></div>
+      <div class="hero-veil"></div>
+
+      <div class="hero-content" :class="{ revealed: isLoaded }">
+        <p class="eyebrow">Célébration de Mariage</p>
+
+        <div class="rule"></div>
+        <h1 class="main-names">{{ displayNames }}</h1>
+        <div class="rule"></div>
+
+        <p class="hero-date">{{ displayDate }}</p>
+        <p v-if="location" class="hero-location">{{ location }}</p>
+      </div>
+
+      <div class="scroll-cue" :class="{ revealed: isLoaded }">
+        <div class="scroll-line"></div>
+      </div>
+    </div>
+
+    <!-- ── BODY ── -->
+    <div v-if="mode === 'full'" class="body">
+      <div class="body-card">
+
+      <section class="invite-section">
+        <p class="invite-text">{{ introText }}</p>
+
+        <div class="diamond-sep">
+          <span class="sep-line"></span>
+          <span class="diamond"></span>
+          <span class="sep-line"></span>
         </div>
-        <div class="container relative z-10">
-            <h1 class="main-names">{{ displayNames }}</h1>
-            <div class="luxury-divider">
-                <span class="divider-symbol">{{ content.divider_symbol || '✧' }}</span>
-            </div>
+      </section>
+
+      <section class="details-section">
+        <div class="detail-item">
+          <span class="detail-label">Date</span>
+          <span class="detail-value">{{ displayDate }}</span>
         </div>
-    </div>
-
-    <!-- BLOC SECTION 1 (MAIRIE) -->
-    <div v-if="mode === 'section1' || mode === 'full'" class="container">
-        <section class="event-section no-border">
-            <p class="label">{{ content.s1_label || 'Union Civile' }}</p>
-            <h2 class="event-title">{{ content.s1_title || 'La Mairie' }}</h2>
-            <p class="details">{{ content.s1_date || displayDate }}</p>
-            <p class="address" v-html="(content.s1_location || event.location || 'Lieu à définir').toString().replace(/\n/g, '<br>')"></p>
-            <div class="btn-group">
-                <a :href="`https://waze.com/ul?q=${encodeURIComponent(content.s1_location || event.location)}`" class="btn" target="_blank">Waze</a>
-                <button class="btn">Calendrier</button>
-            </div>
-            <!-- Vin d'honneur -->
-            <div v-if="content.s1_extra_title" style="margin-top: 40px;">
-                <p class="label" style="font-size: 0.6rem;">{{ content.s1_extra_label || "Vin d'honneur" }}</p>
-                <p class="address" style="font-size: 1.1rem;" v-html="content.s1_extra_title.toString().replace(/\n/g, '<br>')"></p>
-                <a v-if="content.s1_extra_location" :href="`https://waze.com/ul?q=${encodeURIComponent(content.s1_extra_location)}`" class="btn" target="_blank">Waze</a>
-            </div>
-        </section>
-    </div>
-
-    <!-- BLOC PARALLAX -->
-    <div v-if="mode === 'parallax' || mode === 'full'" 
-         class="parallax-section" 
-         :class="!content.parallax_image_url ? 'bg-gray-100 flex items-center justify-center' : ''"
-         :style="content.parallax_image_url ? { backgroundImage: `url(${content.parallax_image_url})` } : {}">
-         <p v-if="!content.parallax_image_url" class="text-[10px] font-black uppercase tracking-widest opacity-20 italic">Image Parallaxe vide</p>
-    </div>
-
-    <!-- BLOC SECTION 2 (RELIGIEUX / FAMILLES) -->
-    <div v-if="mode === 'section2' || mode === 'full'" class="container">
-        <section class="event-section">
-            <p class="label">{{ content.s2_label || 'Cérémonie Religieuse' }}</p>
-            <h2 class="event-title">{{ content.s2_title || 'Houppa & Soirée' }}</h2>
-            
-            <div class="families-wrapper">
-                <div class="family-left text-left">
-                    <p class="family-title">{{ content.family_left_title || 'Famille' }}</p>
-                    <p class="parents-names" v-html="String(content.family_left_parents || 'Parents').replace(/\n/g, '<br>')"></p>
-                </div>
-                <div class="family-right text-right">
-                    <p class="family-title">{{ content.family_right_title || 'Famille' }}</p>
-                    <p class="parents-names" v-html="String(content.family_right_parents || 'Parents').replace(/\n/g, '<br>')"></p>
-                </div>
-            </div>
-
-            <p class="announcement-text">{{ content.announcement_text || 'Ont la joie de vous faire part du mariage de leurs enfants' }}</p>
-            <div v-if="content.hebrew_names" class="hebrew">{{ content.hebrew_names }}</div>
-            <p class="intro-text">{{ content.intro_text_s2 || 'Seront honorés de votre présence...' }}</p>
-            
-            <p class="details">{{ content.s2_date || displayDate }}</p>
-            <p class="address" v-html="(content.s2_location || 'Lieu à définir').toString().replace(/\n/g, '<br>')"></p>
-
-            <div class="btn-group">
-                <a :href="`https://waze.com/ul?q=${encodeURIComponent(content.s2_location)}`" class="btn" target="_blank">Waze</a>
-                <button class="btn">Calendrier</button>
-            </div>
-        </section>
-    </div>
-
-    <!-- BLOC HOMMAGE -->
-    <div v-if="mode === 'tribute' || mode === 'full'" class="container">
-        <div v-if="content.tribute_title || content.tribute_text" class="tribute-card">
-            <p class="tribute-title">{{ content.tribute_title || 'Une pensée pour nos disparus' }}</p>
-            <p class="tribute-text" v-html="(content.tribute_text || '').toString().replace(/\n/g, '<br>')"></p>
-            <p class="tribute-blessing">{{ content.tribute_blessing }}</p>
+        <span class="detail-divider"></span>
+        <div v-if="location" class="detail-item">
+          <span class="detail-label">Lieu</span>
+          <span class="detail-value">{{ location }}</span>
         </div>
-        <div v-else class="py-10 border-2 border-dashed border-black/5 rounded-3xl mt-8">
-           <p class="text-[10px] font-black uppercase tracking-widest opacity-20">Bloc Hommage vide</p>
-        </div>
-    </div>
+      </section>
 
-    <!-- BLOC GALERIE -->
-    <div v-if="mode === 'gallery' || mode === 'full'" class="container">
-        <section class="photo-gallery">
-            <p class="label" style="margin-bottom: 30px;">{{ content.gallery_label || 'Nos Souvenirs' }}</p>
-            <div class="gallery-grid">
-                <div class="gallery-item"><img :src="content.gal_img1 || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800'"></div>
-                <div class="gallery-item"><img :src="content.gal_img2 || 'https://images.unsplash.com/photo-1510076857177-7470076d4098?w=400'"></div>
-                <div class="gallery-item"><img :src="content.gal_img3 || 'https://images.unsplash.com/photo-1522673607200-1648832cee98?w=400'"></div>
-            </div>
-        </section>
+      </div><!-- /body-card -->
     </div>
-
-    <!-- BLOC FOOTER -->
-    <div v-if="mode === 'footer' || mode === 'full'" class="ora-footer">
-        {{ content.footer_text || `${event.groom_name?.[0] || 'O'} & ${event.bride_name?.[0] || 'S'} — 2026` }}
-    </div>
-
   </div>
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@200;300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@300;400&display=swap');
 
-.ora-block {
-    --gold: #C5A059;
-    --text-dark: #1a1a1a;
-    --bg-light: #ffffff;
-    background-color: var(--bg-light);
-    color: var(--text-dark);
-    line-height: 1.5;
-    text-align: center;
-    width: 100%;
+.eclat-template {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-family: 'Montserrat', sans-serif;
+  overflow-x: hidden;
 }
 
-.hero-wrapper { position: relative; width: 100%; }
-
-.petals-wrapper {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 50;
-    overflow: hidden;
+/* ── Hero ── */
+.hero {
+  height: 100vh;
+  min-height: 600px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-:deep(.petal) {
-    position: absolute;
-    background: linear-gradient(135deg, #fdfbf7 0%, var(--gold) 100%);
-    border-radius: 150% 0 150% 0;
-    opacity: 0.3;
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.04);
 }
 
-@keyframes fall {
-    to { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+.hero-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.30) 0%,
+    rgba(0,0,0,0.18) 40%,
+    rgba(0,0,0,0.42) 100%
+  );
 }
 
-.hero-image {
-    width: 100%;
-    height: 45vh;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    position: relative;
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 0 36px;
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 1.5s ease-out, transform 1.5s ease-out;
+}
+.hero-content.revealed { opacity: 1; transform: translateY(0); }
+
+.eyebrow {
+  font-size: 0.58rem;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 22px;
+  font-weight: 300;
 }
 
-.hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, transparent 50%, var(--bg-light) 95%);
-}
-
-.parallax-section {
-    width: 100%;
-    height: 40vh;
-    background-attachment: fixed;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    margin: 20px 0;
-}
-
-@media (max-width: 768px) {
-    .parallax-section { background-attachment: scroll; }
-}
-
-.container {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 0 20px;
+.rule {
+  width: 72px;
+  height: 1px;
+  background: var(--accent);
+  margin: 16px auto;
+  opacity: 0.85;
 }
 
 .main-names {
-    font-family: inherit;
-    font-size: 3.2rem;
-    font-weight: 300;
-    font-style: italic;
-    margin: -25px 0 20px;
-    position: relative;
-    animation: fadeInUp 1.2s ease-out;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(2.8rem, 11vw, 6.5rem);
+  color: #ffffff;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 28px rgba(0,0,0,0.25);
 }
 
-.luxury-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 40px;
-    width: 80%;
+.hero-date {
+  font-size: 0.68rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.72);
+  margin-top: 18px;
+  font-weight: 300;
 }
 
-.luxury-divider::before, .luxury-divider::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(to right, transparent, var(--gold), transparent);
+.hero-location {
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: 7px;
 }
 
-.divider-symbol {
-    font-family: inherit;
-    color: var(--gold);
-    font-size: 1.5rem;
-    margin: 0 15px;
+.scroll-cue {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 2s ease 1.2s;
+}
+.scroll-cue.revealed { opacity: 0.45; }
+.scroll-line {
+  width: 1px;
+  height: 48px;
+  background: #fff;
+  margin: 0 auto;
+  animation: scrollDrop 2.4s ease-in-out infinite;
+  transform-origin: top;
+}
+@keyframes scrollDrop {
+  0%, 100% { transform: scaleY(0.15); opacity: 0; }
+  35%, 65%  { transform: scaleY(1); opacity: 1; }
 }
 
-.event-section {
-    padding: 50px 0;
-    border-top: 1px solid #f5f5f5;
+/* ── Body ── */
+.body { background: var(--bg); padding: 0 20px 40px; }
+
+.body-card {
+  max-width: 640px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid rgba(197,160,89,0.15);
+  box-shadow: 0 8px 48px rgba(0,0,0,0.06), 0 2px 12px rgba(0,0,0,0.03);
+  border-radius: 2px;
 }
 
-.event-section.no-border { border-top: none; }
-
-.label {
-    font-size: 0.7rem;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 15px;
-    font-weight: 600;
+.invite-section {
+  padding: 88px 36px 56px;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.event-title {
-    font-family: inherit;
-    font-size: 2.4rem;
-    font-weight: 300;
-    margin-bottom: 10px;
+.invite-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  line-height: 1.8;
+  opacity: 0.72;
 }
 
-.details {
-    font-size: 1rem;
-    font-weight: 400;
-    letter-spacing: 1.5px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
+.diamond-sep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 48px;
+}
+.sep-line {
+  display: block;
+  width: 56px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.4;
+}
+.diamond {
+  display: block;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  transform: rotate(45deg);
+  opacity: 0.65;
 }
 
-.address {
-    font-family: inherit;
-    font-style: italic;
-    font-size: 1.25rem;
-    color: #666;
-    margin-bottom: 25px;
+.details-section {
+  padding: 12px 36px 64px;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.btn-group {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 26px 0;
+  text-align: center;
+  width: 100%;
 }
 
-.btn {
-    padding: 12px 20px;
-    border: 1px solid var(--gold);
-    color: var(--gold);
-    text-decoration: none;
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    min-width: 110px;
-    background: none;
-    transition: 0.3s;
-    cursor: pointer;
+.detail-divider {
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.25;
 }
 
-.btn:hover { background: var(--gold); color: white; }
-
-.families-wrapper {
-    display: flex;
-    justify-content: space-between;
-    margin: 30px 0 20px;
+.detail-label {
+  font-size: 0.56rem;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.8;
 }
 
-.family-left, .family-right { width: 48%; }
-
-.family-title {
-    font-family: inherit;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--gold);
-    margin-bottom: 8px;
+.detail-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1rem, 3vw, 1.35rem);
+  opacity: 0.82;
+  line-height: 1.45;
 }
 
-.parents-names {
-    font-family: inherit;
-    font-weight: 600;
-    font-size: 1.05rem;
-    line-height: 1.2;
+.rsvp-wrap {
+  padding: 48px 36px 100px;
+  max-width: 540px;
+  margin: 0 auto;
+  text-align: center;
 }
 
-.announcement-text {
-    font-family: inherit;
-    font-size: 1.25rem;
-    font-style: italic;
-    color: #555;
-    margin: 20px 0 30px;
+.rsvp-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  margin-bottom: 40px;
+  opacity: 0.82;
 }
 
-.hebrew {
-    font-size: 2.5rem;
-    margin: 10px 0;
-    font-family: inherit;
-    color: var(--gold);
-}
-
-.intro-text {
-    font-family: inherit;
-    font-size: 1.2rem;
-    font-style: italic;
-    margin: 15px 0;
-    color: #444;
-}
-
-.tribute-card {
-    background-color: #fafafa;
-    border-radius: 4px;
-    padding: 25px 15px;
-    margin: 35px auto 20px;
-    border-left: 1px solid var(--gold);
-    border-right: 1px solid var(--gold);
-}
-
-.tribute-title {
-    font-family: inherit;
-    font-style: italic;
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-.tribute-text {
-    color: #555;
-    font-size: 1rem;
-    margin-bottom: 10px;
-    font-family: inherit;
-}
-
-.tribute-blessing {
-    color: var(--gold);
-    font-weight: 600;
-    font-size: 0.95rem;
-    font-family: inherit;
-}
-
-.photo-gallery { padding: 60px 0; }
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-gap: 12px;
-}
-.gallery-item:first-child { grid-column: span 2; }
-.gallery-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-
-.ora-footer {
-    padding: 60px 0;
-    font-size: 0.7rem;
-    letter-spacing: 3px;
-    color: var(--gold);
-    text-transform: uppercase;
-}
-
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+@media (max-width: 600px) {
+  .hero { min-height: 100svh; }
+  .invite-section  { padding: 64px 24px 40px; }
+  .details-section { padding: 0 24px 44px; }
+  .rsvp-wrap       { padding: 36px 24px 80px; }
 }
 </style>

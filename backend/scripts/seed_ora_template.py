@@ -24,21 +24,21 @@ def seed_ora_template():
                 "fontFamily": "Cormorant Garamond"
             },
             "content": {
-                "names": "Ora & Samuel",
-                "hebrew_names": "אורה & שמואל",
+                "names": "",
+                "hebrew_names": "",
                 "image_url": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200",
                 "parallax_image_url": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1200",
                 "family_left": {
-                    "title": "Famille NABET",
-                    "parents": "M. & Mme Carole et Moshé NABET"
+                    "title": "Famille du Marié",
+                    "parents": "Parents du Marié"
                 },
                 "family_right": {
-                    "title": "Famille ATTARD & ASCOLI",
-                    "parents": "M. & Mme ATTARD et ASCOLI"
+                    "title": "Famille de la Mariée",
+                    "parents": "Parents de la Mariée"
                 },
-                "tribute_title": "Une pensée très émue pour nos disparus",
-                "tribute_text": "Liliane Ascoli, Alfred Ascoli, Georges Attard, Georgette Attard, et nos grands-parents Jean-Jacques Nabet et Jossiane Nabet.",
-                "tribute_blessing": "Que leurs bénédictions illuminent notre vie."
+                "tribute_title": "Une pensée pour nos disparus",
+                "tribute_text": "",
+                "tribute_blessing": ""
             }
         }
     }

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import uuid
 import json
 from app.db.session import get_db
@@ -62,6 +62,15 @@ def create_event(
     config_dict["content"] = config_dict.get("content", {})
     config_dict["content"]["splash_top_text"] = "Save the Date"
     config_dict["content"]["splash_button_text"] = "Ouvrir l'invitation"
+    
+    # Injection dynamique des noms
+    names_display = f"{new_event.groom_name} & {new_event.bride_name}"
+    config_dict["content"]["names"] = names_display
+    config_dict["content"]["splash_title"] = names_display
+    
+    # On vide les noms hébreux par défaut s'ils existent (pour éviter "Ora & Samuel" sur un autre mariage)
+    if "hebrew_names" in config_dict["content"]:
+        config_dict["content"]["hebrew_names"] = ""
 
     new_card = Card(
         event_id=new_event.id,
@@ -102,18 +111,23 @@ def update_event(
     return event
 
 @router.get("/public/card/{slug}")
-def get_public_card(slug: str, db: Session = Depends(get_db)):
+def get_public_card(
+    slug: str, 
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(deps.get_current_user_optional)
+):
     card = db.query(Card).filter(Card.slug == slug, Card.is_published == True).first()
     if not card:
         raise HTTPException(status_code=404, detail="Invitation non trouvée ou non publiée")
-    
+
     event = card.event
-    
+    is_owner = current_user and event.owner_id == current_user.id
+
     # Signer les URLs si nécessaire
     media_url = card.media_url
     if media_url and not media_url.startswith("http"):
         media_url = storage.generate_signed_url(media_url)
-    
+
     music_url = card.music_url
     if music_url and not music_url.startswith("http"):
         music_url = storage.generate_signed_url(music_url)
@@ -121,7 +135,10 @@ def get_public_card(slug: str, db: Session = Depends(get_db)):
     limits = get_limits(event.owner.plan)
 
     return {
+        "id": event.id,
+        "card_id": card.id,
         "event_id": event.id,
+        "is_owner": is_owner,
         "title": event.title,
         "groom_name": event.groom_name,
         "bride_name": event.bride_name,
@@ -174,6 +191,15 @@ def get_latest_event(
             manifest = json.loads(template.manifest_json)
             config_dict = manifest.get("default_config", {"canvas": {"width": 1080, "height": 1920, "background_color": "#ffffff"}, "elements": []})
         
+        # Injection dynamique des noms
+        names_display = f"{event.groom_name} & {event.bride_name}"
+        config_dict["content"] = config_dict.get("content", {})
+        config_dict["content"]["names"] = names_display
+        config_dict["content"]["splash_title"] = names_display
+        
+        if "hebrew_names" in config_dict["content"]:
+            config_dict["content"]["hebrew_names"] = ""
+
         card = Card(
             event_id=event.id,
             template_id=t_id,
