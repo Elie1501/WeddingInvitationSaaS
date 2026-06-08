@@ -29,6 +29,7 @@ class SubEventResponse(SubEventBase):
         from_attributes = True
 
 class EventLite(BaseModel):
+    id: int
     title: str
     groom_name: Optional[str] = None
     bride_name: Optional[str] = None
@@ -86,6 +87,7 @@ class TemplateResponse(BaseModel):
     description: Optional[str] = None
     manifest_json: str
     thumbnail_url: Optional[str] = None
+    category: Optional[str] = "minimal"
 
     class Config:
         from_attributes = True

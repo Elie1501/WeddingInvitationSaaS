@@ -30,6 +30,48 @@ const themeStyles = computed(() => {
     accent: props.config?.theme?.accent || '#ffffff'
   };
 
+  if (props.templateId === 'template-japonais' || props.templateId === 'japonais') {
+    return {
+      overlay: 'bg-[#F5F0E8]/40',
+      font: "'Noto Serif JP', serif",
+      accent: props.config?.theme?.accent || '#B8960C'
+    };
+  }
+  if (props.templateId === 'template-riviera' || props.templateId === 'riviera') {
+    return {
+      overlay: 'bg-[#FAF7F0]/30',
+      font: "'Cormorant', serif",
+      accent: props.config?.theme?.accent || '#C1440E'
+    };
+  }
+  if (props.templateId === 'template-brutaliste' || props.templateId === 'brutaliste') {
+    return {
+      overlay: 'bg-black/10',
+      font: "'Inter', sans-serif",
+      accent: props.config?.theme?.accent || '#FF3E00'
+    };
+  }
+  if (props.templateId === 'template-film' || props.templateId === 'film') {
+    return {
+      overlay: 'bg-black/60',
+      font: "'Cormorant SC', serif",
+      accent: props.config?.theme?.accent || '#8B6914'
+    };
+  }
+  if (props.templateId === 'template-luxe' || props.templateId === 'luxe') {
+    return {
+      overlay: 'bg-black/70',
+      font: "'Playfair Display', serif",
+      accent: props.config?.theme?.accent || '#C9A84C'
+    };
+  }
+  if (props.templateId === 'template-ora' || props.templateId === 'ora') {
+    return {
+      overlay: 'bg-white/20',
+      font: "'Cormorant Garamond', serif",
+      accent: props.config?.theme?.accent || '#C5A059'
+    };
+  }
   if (props.templateId === 'royal-gold') {
     return {
       overlay: 'bg-neutral-900/60',
@@ -58,8 +100,8 @@ const themeStyles = computed(() => {
 <template>
   <Transition name="splash-reveal">
     <div 
-      v-if="isVisible || isPreview" 
-      :class="[isPreview ? 'absolute' : 'fixed', 'layout-' + templateId]" 
+      v-if="isVisible || isPreview"
+      :class="[isPreview ? 'absolute' : 'splash-public', 'layout-' + templateId]"
       class="inset-0 z-[1000] flex flex-col items-center justify-center text-center p-6 overflow-hidden bg-neutral-950"
     >
       <!-- Background Image -->
@@ -141,6 +183,11 @@ const themeStyles = computed(() => {
 </template>
 
 <style scoped>
+/* Mobile : plein écran */
+.splash-public { position: fixed; }
+/* Desktop : contenu dans la colonne carte */
+@media (min-width: 640px) { .splash-public { position: absolute; } }
+
 @keyframes reveal-up { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes grow-width { from { width: 0; opacity: 0; } to { width: 8rem; opacity: 1; } }
 @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

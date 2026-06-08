@@ -1,5 +1,157 @@
 <script setup>
 import { ref, reactive, watch, onMounted, onUnmounted, computed, provide, nextTick } from 'vue';
+
+// ── Champs texte par layout (source unique) ────────────────────────────
+
+const TEMPLATE_FIELDS = {
+  'aquarelle':        [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text', placeholder: 'ex: 15 Juin 2026' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+  ],
+  'monolithe':        [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'section_title',label: 'Titre section',        type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'quote',        label: 'Citation',             type: 'textarea' },
+    { key: 'dress_code',   label: 'Tenue vestimentaire',  type: 'text' },
+    { key: 'image_url',    label: 'Image de couverture',  type: 'image' },
+  ],
+  'noir-eternel':     [
+    { key: 'names',         label: 'Prénoms',              type: 'text' },
+    { key: 'monogram',      label: 'Monogramme',           type: 'text', placeholder: 'E & L' },
+    { key: 'date_display',  label: 'Date affichée',         type: 'text', placeholder: '15 JUIN 2026' },
+    { key: 'address',       label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',    label: 'Texte d\'introduction', type: 'textarea' },
+    { key: 'divider_symbol',label: 'Symbole décoratif',     type: 'text', placeholder: '✦' },
+  ],
+  'riviera-blanche':  [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'monogram',     label: 'Monogramme',          type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'divider_symbol',label: 'Symbole décoratif',   type: 'text' },
+  ],
+  'jardin-celeste':   [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'monogram',     label: 'Monogramme',          type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'divider_symbol',label: 'Symbole décoratif',   type: 'text' },
+  ],
+  'empire-abstrait':  [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'monogram',     label: 'Monogramme',          type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'divider_symbol',label: 'Symbole décoratif',   type: 'text' },
+  ],
+  'arch':             [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'section_title',label: 'Titre de cérémonie',   type: 'text', placeholder: 'Union Sacrée' },
+    { key: 'intro_text',   label: 'Citation / intro',     type: 'textarea' },
+  ],
+  'split':            [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'section_title',label: 'Titre section',        type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'image_url',    label: 'Photo principale',     type: 'image' },
+    { key: 'image_url_2',  label: 'Photo secondaire',     type: 'image' },
+  ],
+  'es':               [
+    { key: 'names',        label: 'Prénoms (séparés par & ou /)', type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'image_url',    label: 'Image',                type: 'image' },
+  ],
+  'typography-focus': [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'section_title',label: 'Titre section',        type: 'text', placeholder: 'Première Mondiale' },
+    { key: 'intro_text',   label: 'Citation / intro',     type: 'textarea' },
+    { key: 'image_url',    label: 'Photo héro',           type: 'image' },
+    { key: 'image_url_2',  label: 'Photos pellicule',     type: 'image' },
+  ],
+  'couture':          [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Citation lookbook',    type: 'textarea' },
+    { key: 'image_url',    label: 'Photo lookbook 1',     type: 'image' },
+    { key: 'image_url_2',  label: 'Photo lookbook 2',     type: 'image' },
+  ],
+  'ora':              [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'image_url',    label: 'Photo de couverture',  type: 'image' },
+    { key: 'intro_text',   label: "Texte d'invitation",   type: 'textarea' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+  ],
+  'japonais':         null, // alias → arch
+  'riviera':          null, // alias → split
+  'brutaliste':       null, // alias → es
+  'film':             null, // alias → typography-focus
+  'cinema': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Synopsis',              type: 'textarea' },
+    { key: 'image_url',    label: 'Photo héro',            type: 'image' },
+  ],
+  'celestial': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Citation céleste',      type: 'textarea' },
+  ],
+  'wabi-sabi': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Citation wabi-sabi',    type: 'textarea' },
+    { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
+  ],
+  'gatsby': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: "Texte d'invitation",    type: 'textarea' },
+    { key: 'dress_code',   label: 'Tenue vestimentaire',   type: 'text' },
+    { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
+  ],
+  'editorial': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Texte éditorial',       type: 'textarea' },
+    { key: 'image_url',    label: 'Photo éditoriale',      type: 'image' },
+  ],
+  'velvet-noir': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Texte velours',         type: 'textarea' },
+    { key: 'dress_code',   label: 'Tenue vestimentaire',   type: 'text' },
+    { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
+  ],
+};
+// Résoudre les alias
+TEMPLATE_FIELDS['japonais']   = TEMPLATE_FIELDS['arch'];
+TEMPLATE_FIELDS['riviera']    = TEMPLATE_FIELDS['split'];
+TEMPLATE_FIELDS['brutaliste'] = TEMPLATE_FIELDS['es'];
+TEMPLATE_FIELDS['film']       = TEMPLATE_FIELDS['typography-focus'];
 import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
@@ -13,8 +165,13 @@ const cardId = route.params.id;
 // ==========================================
 const loading = ref(true);
 const saving = ref(false);
+const publishing = ref(false);
 const showSaveToast = ref(false);
 const hasUnsavedChanges = ref(false);
+const isPublished = ref(false);
+const cardSlug = ref(null);
+const showCopiedToast = ref(false);
+const publicUrl = computed(() => cardSlug.value ? `${window.location.origin}/cards/${cardSlug.value}` : null);
 
 const activeTab = ref('context');
 const selectedBlock = ref(null);
@@ -58,10 +215,10 @@ const config = reactive({
     fontFamily: 'Jost', fontSize: '1rem', titleSize: '4rem'
   },
   content: {
-    names: 'Emma & Lucas', monogram: 'E & L', date_display: '15 Juin 2026', address: 'Villa Ephrussi, Cap Ferrat',
-    intro_text: 'Nous serions honorés de votre présence pour célébrer notre union.', rsvp_title: 'Serez-vous des nôtres ?', rsvp_deadline_text: 'Réponse souhaitée avant le 1er Mai.',
+    names: '', monogram: '', date_display: '', address: '',
+    intro_text: '', rsvp_title: 'Serez-vous des nôtres ?', rsvp_deadline_text: 'Réponse souhaitée avant le 1er Mai.',
     divider_symbol: '✦', footer_text: 'Fait avec amour • 2026',
-    splash_title: 'Emma & Lucas', splash_top_text: 'Save the Date', splash_button_text: 'Entrer dans l\'invitation'
+    splash_title: '', splash_top_text: 'Save the Date', splash_button_text: 'Entrer dans l\'invitation'
   },
   media: { image_url: '', music_url: '', splash_url: '' },
   show_countdown: true,
@@ -69,7 +226,7 @@ const config = reactive({
   show_countdown_splash: true
 });
 
-const eventData = reactive({ date: '2026-06-15', location: 'Villa Ephrussi, Cap Ferrat' });
+const eventData = reactive({ date: '', location: '', groom_name: '', bride_name: '' });
 const subEvents = ref([]);
 
 // ==========================================
@@ -305,7 +462,27 @@ const contextFields = computed(() => {
     };
   }
 
-  if (selectedBlock.value.includes('-full') || selectedBlock.value.includes('-hero')) return maps['hero'];
+  const isHeroBlock = selectedBlock.value === 'hero'
+    || selectedBlock.value.includes('-full')
+    || selectedBlock.value.includes('-hero');
+
+  if (isHeroBlock) {
+    const tplFields = TEMPLATE_FIELDS[config.layout];
+    if (!tplFields) return maps['hero'];
+    return {
+      label: 'Bannière principale',
+      fields: [
+        ...tplFields.map(f => ({
+          type: f.type,
+          label: f.label,
+          model: 'content.' + f.key,
+          placeholder: f.placeholder || ''
+        })),
+        { type: 'color', label: 'Couleur Noms', model: 'theme.namesColor' }
+      ]
+    };
+  }
+
   return maps[selectedBlock.value] || null;
 });
 
@@ -318,8 +495,23 @@ const removeProgramStep = (index) => {
 };
 
 // Auto-switch vers 'context' quand on sélectionne un bloc
+// (sauf si on est dans 'cover' — la garde gère sa propre preview)
 watch(selectedBlock, (newVal) => {
-  if (newVal && contextFields.value) activeTab.value = 'context';
+  if (newVal && contextFields.value && activeTab.value !== 'cover') {
+    activeTab.value = 'context';
+  }
+});
+
+// Onglet Garde : sync preview ↔ onglet
+watch(activeTab, (newTab, oldTab) => {
+  if (newTab === 'cover') {
+    // Entrer → montrer la garde dans la preview si activée
+    selectedBlock.value = config.show_splash ? 'splash' : null;
+  }
+  if (oldTab === 'cover') {
+    // Quitter → retour carte normale
+    selectedBlock.value = null;
+  }
 });
 
 // ==========================================
@@ -343,9 +535,23 @@ const fetchCard = async () => {
       history.value = [snapshot()];
       historyIndex.value = 0;
     }
+    isPublished.value = response.data.is_published || false;
+    cardSlug.value = response.data.slug || null;
+
     if (response.data.event) {
-      eventData.date = response.data.event.date?.split('T')[0] || '';
-      eventData.location = response.data.event.location || '';
+      const ev = response.data.event;
+      eventData.date = ev.date?.split('T')[0] || '';
+      eventData.location = ev.location || '';
+      eventData.groom_name = ev.groom_name || '';
+      eventData.bride_name = ev.bride_name || '';
+
+      // Auto-remplir les noms depuis l'event si non définis dans la config
+      if (!config.content.names && ev.groom_name && ev.bride_name) {
+        config.content.names = `${ev.groom_name} & ${ev.bride_name}`;
+      }
+      if (!config.content.splash_title && ev.groom_name && ev.bride_name) {
+        config.content.splash_title = `${ev.groom_name} & ${ev.bride_name}`;
+      }
       
       // Charger les sous-événements réels depuis l'API
       if (response.data.sub_events) {
@@ -384,6 +590,27 @@ const saveCard = async () => {
   }
 };
 
+const publishCard = async () => {
+  try {
+    publishing.value = true;
+    await saveCard();
+    const response = await api.post(`/cards/${cardId}/publish`);
+    isPublished.value = response.data.is_published;
+    cardSlug.value = response.data.slug;
+  } catch (err) {
+    console.error('Publish Error:', err);
+  } finally {
+    publishing.value = false;
+  }
+};
+
+const copyPublicUrl = async () => {
+  if (!publicUrl.value) return;
+  await navigator.clipboard.writeText(publicUrl.value);
+  showCopiedToast.value = true;
+  setTimeout(() => showCopiedToast.value = false, 2000);
+};
+
 const handleFileUpload = async (event, fieldPath) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -411,7 +638,31 @@ const handleFileUpload = async (event, fieldPath) => {
 };
 
 // ==========================================
-// 10. WATCHERS & FONTS
+// 10. COMPUTED TEMPLATE FIELDS & TAILLES
+// ==========================================
+const currentTemplateFields = computed(() =>
+  TEMPLATE_FIELDS[config.layout] || [
+    { key: 'names',        label: 'Prénoms',      type: 'text' },
+    { key: 'date_display', label: 'Date affichée', type: 'text' },
+    { key: 'address',      label: 'Lieu',          type: 'text' },
+  ]
+);
+
+const namesSize = computed({
+  get: () => parseFloat(config.theme.namesSize) || 5,
+  set: v => { config.theme.namesSize = String(v); }
+});
+const titleSize = computed({
+  get: () => parseFloat(config.theme.titleSize) || 3.5,
+  set: v => { config.theme.titleSize = String(v); }
+});
+const bodySize = computed({
+  get: () => parseFloat(config.theme.fontSize) || 1,
+  set: v => { config.theme.fontSize = String(v); }
+});
+
+// ==========================================
+// 11. WATCHERS & FONTS
 // ==========================================
 const loadedFonts = new Set();
 const loadGoogleFont = (fontName) => {
@@ -547,6 +798,7 @@ onUnmounted(() => {
                 <label class="text-[10px] font-bold uppercase text-gray-500 tracking-wider" :data-field="field.model">{{ field.label }}</label>
                 
                 <input v-if="field.type === 'text'" :value="resolveModel(field.model).get()" @input="resolveModel(field.model).set($event.target.value)"
+                       :placeholder="field.placeholder || ''"
                        class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] focus:ring-2 focus:ring-[#C5A059]/20 outline-none transition-all">
                 
                 <textarea v-else-if="field.type === 'textarea'" :value="resolveModel(field.model).get()" @input="resolveModel(field.model).set($event.target.value)"
@@ -592,43 +844,158 @@ onUnmounted(() => {
         </div>
 
         <!-- ONGLET : GARDE -->
-        <div v-if="activeTab === 'cover'" class="animate-in space-y-6">
-          <div class="bg-white border border-gray-200 rounded-2xl p-6 space-y-6">
-            <div class="flex items-center justify-between">
-              <h3 class="text-xs font-black text-gray-800 uppercase tracking-widest">Page de garde</h3>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" v-model="config.show_splash" class="sr-only peer">
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C5A059]"></div>
+        <div v-if="activeTab === 'cover'" class="animate-in space-y-4 pb-4">
+
+          <!-- ── Activation ── -->
+          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <label class="flex items-center gap-4 p-5 cursor-pointer group">
+              <!-- Icône -->
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+                   :class="config.show_splash ? 'bg-[#1A1A1A]' : 'bg-gray-100'">
+                <svg class="w-5 h-5 transition-colors" :class="config.show_splash ? 'text-[#C5A059]' : 'text-gray-400'"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                        d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[11px] font-black uppercase tracking-widest text-gray-900">Page de garde</p>
+                <p class="text-[10px] text-gray-400 mt-0.5">Écran d'accueil avant l'invitation</p>
+              </div>
+              <!-- Toggle -->
+              <div class="relative shrink-0">
+                <input type="checkbox" v-model="config.show_splash" class="sr-only peer"
+                       @change="config.show_splash ? (selectedBlock = 'splash') : (selectedBlock = null)">
+                <div class="w-11 h-6 rounded-full transition-colors peer-checked:bg-[#1A1A1A] bg-gray-200
+                            after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                            after:bg-white after:rounded-full after:h-5 after:w-5
+                            after:transition-all peer-checked:after:translate-x-5 after:shadow-sm"></div>
+              </div>
+            </label>
+          </div>
+
+          <!-- ── Contenu (visible si activé) ── -->
+          <template v-if="config.show_splash">
+
+            <!-- Photo de fond -->
+            <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div class="px-5 pt-5 pb-3">
+                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3">Photo de fond</p>
+                <!-- Miniature cliquable -->
+                <label class="block relative group cursor-pointer">
+                  <div class="w-full h-28 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                    <img v-if="config.media.splash_url" :src="config.media.splash_url"
+                         class="w-full h-full object-cover" />
+                    <div v-else class="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-300">
+                      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                      <span class="text-[9px] uppercase tracking-widest">Choisir une photo</span>
+                    </div>
+                  </div>
+                  <!-- Overlay hover -->
+                  <div class="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span class="text-white text-[9px] font-bold uppercase tracking-widest">Changer</span>
+                  </div>
+                  <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event, 'media.splash_url')">
+                </label>
+              </div>
+              <!-- URL manuelle -->
+              <div class="px-5 pb-5">
+                <input type="text" v-model="config.media.splash_url"
+                       placeholder="ou coller une URL…"
+                       class="w-full p-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-600 placeholder-gray-300 focus:border-[#C5A059] focus:bg-white outline-none transition-colors" />
+              </div>
+            </div>
+
+            <!-- Textes -->
+            <div class="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+              <p class="px-5 pt-4 pb-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Textes</p>
+
+              <div v-for="field in [
+                { key: 'splash_top_text',    label: 'Texte haut',     placeholder: 'Save the Date' },
+                { key: 'splash_title',       label: 'Titre principal', placeholder: 'Prénom1 & Prénom2' },
+                { key: 'splash_subtitle',    label: 'Sous-titre',      placeholder: 'Une journée inoubliable…' },
+                { key: 'splash_button_text', label: 'Bouton entrer',   placeholder: 'Entrer dans l\'invitation' },
+              ]" :key="field.key" class="px-5 py-3.5 flex items-center gap-3">
+                <span class="text-[9px] text-gray-400 w-24 shrink-0 font-medium">{{ field.label }}</span>
+                <input type="text"
+                       v-model="config.content[field.key]"
+                       :placeholder="field.placeholder"
+                       class="flex-1 bg-gray-50 border border-transparent rounded-lg px-3 py-2 text-[11px] text-gray-800 placeholder-gray-300 focus:border-[#C5A059] focus:bg-white outline-none transition-colors" />
+              </div>
+            </div>
+
+            <!-- Options -->
+            <div class="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+              <p class="px-5 pt-4 pb-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Options</p>
+
+              <label class="flex items-center justify-between px-5 py-4 cursor-pointer group">
+                <div>
+                  <p class="text-[11px] font-bold text-gray-800">Compte à rebours</p>
+                  <p class="text-[9px] text-gray-400 mt-0.5">Afficher le décompte sur la garde</p>
+                </div>
+                <div class="relative">
+                  <input type="checkbox" v-model="config.show_countdown_splash" class="sr-only peer">
+                  <div class="w-9 h-5 rounded-full transition-colors peer-checked:bg-[#1A1A1A] bg-gray-200
+                              after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                              after:bg-white after:rounded-full after:h-4 after:w-4
+                              after:transition-all peer-checked:after:translate-x-4 after:shadow-sm"></div>
+                </div>
               </label>
             </div>
-            
-            <p class="text-[10px] text-gray-400 italic leading-relaxed">
-              La page de garde est la première chose que vos invités verront. Elle permet d'introduire l'invitation avec élégance.
-            </p>
 
-            <div v-if="config.show_splash" class="space-y-4 animate-in">
-              <button @click="selectedBlock = 'splash'" 
-                      class="w-full py-3 bg-gray-50 border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-[#C5A059] transition-all">
-                Configurer les textes
-              </button>
-              
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Image de fond (Splash)</label>
-                <div class="flex gap-2">
-                  <input type="text" v-model="config.media.splash_url" placeholder="URL de l'image..." class="flex-1 p-3 bg-gray-50 border border-transparent rounded-xl text-xs focus:border-[#C5A059] outline-none">
-                  <label class="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors flex items-center justify-center aspect-square">
-                    <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event, 'media.splash_url')">
-                  </label>
+            <!-- Couleurs de la garde -->
+            <div class="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+              <p class="px-5 pt-4 pb-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Couleurs</p>
+
+              <!-- Fond -->
+              <div class="px-5 py-3.5 flex items-center justify-between">
+                <div>
+                  <p class="text-[11px] font-bold text-gray-800">Couleur de fond</p>
+                  <p class="text-[9px] text-gray-400 mt-0.5">Si pas de photo, cette couleur est utilisée</p>
                 </div>
+                <label class="relative cursor-pointer">
+                  <div class="w-9 h-9 rounded-xl border-2 border-white shadow-md ring-1 ring-black/10 overflow-hidden"
+                       :style="{ backgroundColor: config.theme.background || '#0a0a0a' }">
+                    <input type="color" v-model="config.theme.background"
+                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  </div>
+                </label>
               </div>
 
-              <label class="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer">
-                <span class="text-xs font-bold text-gray-700">Décompte sur la garde</span>
-                <input type="checkbox" v-model="config.show_countdown_splash" class="w-5 h-5 accent-[#C5A059] rounded">
-              </label>
+              <!-- Accentuation -->
+              <div class="px-5 py-3.5 flex items-center justify-between">
+                <div>
+                  <p class="text-[11px] font-bold text-gray-800">Couleur d'accentuation</p>
+                  <p class="text-[9px] text-gray-400 mt-0.5">Titres, ornements, séparateurs</p>
+                </div>
+                <label class="relative cursor-pointer">
+                  <div class="w-9 h-9 rounded-xl border-2 border-white shadow-md ring-1 ring-black/10 overflow-hidden"
+                       :style="{ backgroundColor: config.theme.accent || '#C5A059' }">
+                    <input type="color" v-model="config.theme.accent"
+                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  </div>
+                </label>
+              </div>
             </div>
-          </div>
+
+            <!-- Info device actif -->
+            <div class="flex items-center gap-2 px-1">
+              <svg class="w-3.5 h-3.5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke-width="1.5"/>
+                <path d="M12 8v4m0 4h.01" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <p class="text-[9px] text-gray-400 leading-relaxed">
+                La garde s'affiche dans le cadre
+                <span class="font-bold text-gray-600">{{ previewDevice === 'mobile' ? 'téléphone' : 'ordinateur' }}</span>.
+                Changez le cadre via la barre en haut de la preview.
+              </p>
+            </div>
+
+          </template>
+
         </div>
 
         <!-- ONGLET : DESIGN -->
@@ -650,23 +1017,65 @@ onUnmounted(() => {
 
           <div class="space-y-4 pt-6 border-t border-gray-200">
             <h3 class="flex items-center text-xs font-black text-gray-800 uppercase tracking-widest">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 5v12m0 0H7m2 0h2M3 20h12M21 12h-6"></path></svg>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 5v12m0 0H7m2 0h2M3 20h12M21 12h-6"/></svg>
               Typographie
             </h3>
-            <div class="bg-white border border-gray-200 p-4 rounded-xl space-y-4">
-              <select v-model="config.theme.fontFamily" class="w-full bg-gray-50 border border-gray-100 rounded-lg p-2 text-xs font-bold text-gray-800 outline-none">
-                <option value="Playfair Display">Playfair Display</option>
-                <option value="Cormorant Garamond">Cormorant Garamond</option>
-                <option value="Jost">Jost</option>
-                <option value="Lato">Lato</option>
-                <option value="Cinzel">Cinzel</option>
-                <option value="Spectral">Spectral</option>
-                <option value="Anton">Anton</option>
-              </select>
-              
+            <div class="bg-white border border-gray-200 p-4 rounded-xl space-y-5">
+
+              <!-- Police -->
               <div class="space-y-1">
-                <div class="flex justify-between"><span class="text-[10px] font-bold uppercase text-gray-500">Taille Titres</span><span class="text-xs font-mono">{{ config.theme.titleSize }}</span></div>
-                <input type="range" v-model="config.theme.titleSize" min="2" max="10" step="0.5" class="w-full accent-[#1A1A1A]">
+                <span class="text-[10px] font-bold uppercase text-gray-500">Police de caractères</span>
+                <select v-model="config.theme.fontFamily" class="w-full bg-gray-50 border border-gray-100 rounded-lg p-2 text-xs font-bold text-gray-800 outline-none">
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Cormorant Garamond">Cormorant Garamond</option>
+                  <option value="Jost">Jost</option>
+                  <option value="Lato">Lato</option>
+                  <option value="Cinzel">Cinzel</option>
+                  <option value="Spectral">Spectral</option>
+                  <option value="Anton">Anton</option>
+                  <option value="Dancing Script">Dancing Script</option>
+                  <option value="Syne">Syne</option>
+                  <option value="Bodoni Moda">Bodoni Moda</option>
+                </select>
+              </div>
+
+              <!-- Taille Prénoms -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase text-gray-500">Taille prénoms</span>
+                  <span class="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded">{{ namesSize }}rem</span>
+                </div>
+                <input type="range" :value="namesSize" @input="namesSize = +$event.target.value"
+                       min="2" max="12" step="0.25" class="w-full accent-[#C5A059]">
+                <div class="flex justify-between text-[8px] text-gray-300 font-mono">
+                  <span>2rem</span><span>7rem</span><span>12rem</span>
+                </div>
+              </div>
+
+              <!-- Taille Titres de section -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase text-gray-500">Titres de section</span>
+                  <span class="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded">{{ titleSize }}rem</span>
+                </div>
+                <input type="range" :value="titleSize" @input="titleSize = +$event.target.value"
+                       min="1" max="7" step="0.25" class="w-full accent-[#C5A059]">
+                <div class="flex justify-between text-[8px] text-gray-300 font-mono">
+                  <span>1rem</span><span>4rem</span><span>7rem</span>
+                </div>
+              </div>
+
+              <!-- Taille corps de texte -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase text-gray-500">Corps du texte</span>
+                  <span class="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded">{{ bodySize }}rem</span>
+                </div>
+                <input type="range" :value="bodySize" @input="bodySize = +$event.target.value"
+                       min="0.7" max="2" step="0.05" class="w-full accent-[#C5A059]">
+                <div class="flex justify-between text-[8px] text-gray-300 font-mono">
+                  <span>0.7</span><span>1.35</span><span>2rem</span>
+                </div>
               </div>
             </div>
           </div>
@@ -692,6 +1101,16 @@ onUnmounted(() => {
                     <p class="text-[9px] font-mono text-gray-400 mt-0.5">id: {{ section }}</p>
                   </div>
                 </div>
+                <!-- Supprimer (masqué sur les blocs principaux hero/full) -->
+                <button v-if="!section.includes('hero') && !section.includes('full')"
+                        @click.stop="deleteBlock(index)"
+                        class="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                        title="Supprimer ce bloc">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
               </div>
             </div>
           </section>
@@ -709,23 +1128,70 @@ onUnmounted(() => {
           </section>
         </div>
 
-        <!-- ONGLET : CONTENU (Legacy, on redirige vers Context si possible, mais utile pour vue globale) -->
-        <div v-if="activeTab === 'content'" class="animate-in space-y-6">
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Paramètres globaux</p>
-            <div class="space-y-4">
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider" data-field="names">Noms des mariés</label>
-                    <input type="text" v-model="config.content.names" class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider" data-field="date_display">Date affichée</label>
-                    <input type="text" v-model="config.content.date_display" class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none">
-                </div>
-                 <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider" data-field="address">Lieu / Adresse</label>
-                    <input type="text" v-model="config.content.address" class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none">
-                </div>
+        <!-- ONGLET : TEXTES (dynamique par template) -->
+        <div v-if="activeTab === 'content'" class="animate-in space-y-5">
+          <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">
+            Tous les textes — {{ config.layout }}
+          </p>
+
+          <div v-for="field in currentTemplateFields" :key="field.key" class="space-y-1">
+            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{{ field.label }}</label>
+
+            <!-- Texte court -->
+            <input
+              v-if="field.type === 'text'"
+              type="text"
+              :value="config.content[field.key] ?? ''"
+              :placeholder="field.placeholder || ''"
+              @input="config.content[field.key] = $event.target.value"
+              class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] focus:ring-2 focus:ring-[#C5A059]/20 outline-none transition-all"
+            >
+
+            <!-- Texte long -->
+            <textarea
+              v-else-if="field.type === 'textarea'"
+              :value="config.content[field.key] ?? ''"
+              @input="config.content[field.key] = $event.target.value"
+              class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs h-24 resize-none focus:border-[#C5A059] outline-none transition-all"
+            ></textarea>
+
+            <!-- Image -->
+            <div v-else-if="field.type === 'image'" class="space-y-2">
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  :value="config.content[field.key] ?? ''"
+                  @input="config.content[field.key] = $event.target.value"
+                  placeholder="URL de l'image..."
+                  class="flex-1 p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none transition-all"
+                >
+                <label class="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors flex items-center justify-center aspect-square">
+                  <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                  </svg>
+                  <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event, 'content.' + field.key)">
+                </label>
+              </div>
+              <div v-if="config.content[field.key]" class="aspect-video rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                <img :src="config.content[field.key]" class="w-full h-full object-cover">
+              </div>
             </div>
+          </div>
+
+          <!-- Champs globaux toujours présents -->
+          <div class="pt-4 border-t border-gray-200 space-y-4">
+            <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Autres</p>
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pied de page</label>
+              <input type="text" v-model="config.content.footer_text"
+                     class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none">
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Titre RSVP</label>
+              <input type="text" v-model="config.content.rsvp_title"
+                     class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none">
+            </div>
+          </div>
         </div>
 
         <!-- ONGLET : MEDIA -->
@@ -742,13 +1208,57 @@ onUnmounted(() => {
       </div>
 
       <!-- FOOTER SIDEBAR -->
-      <div class="p-6 bg-white border-t border-gray-200 flex space-x-3">
-        <button @click="router.push('/dashboard')" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-colors">
-          Quitter
-        </button>
-        <button @click="saveCard" class="flex-1 py-3 bg-[#1A1A1A] text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-black transition-transform active:scale-[0.98]">
-          Publier
-        </button>
+      <div class="bg-white border-t border-gray-200">
+
+        <!-- Boutons principaux -->
+        <div class="p-4 flex space-x-3">
+          <button @click="router.push('/dashboard')" class="px-5 py-3 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-colors">
+            Quitter
+          </button>
+          <button
+            @click="publishCard"
+            :disabled="publishing"
+            class="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            :class="isPublished
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              : 'bg-[#1A1A1A] hover:bg-black text-white'"
+          >
+            <span v-if="publishing" class="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            <span v-else-if="isPublished">● En ligne</span>
+            <span v-else>Publier</span>
+          </button>
+        </div>
+
+        <!-- Lien public (visible si publié) -->
+        <div v-if="isPublished && publicUrl" class="px-4 pb-4 space-y-2">
+          <p class="text-[9px] font-bold uppercase tracking-[0.18em] text-gray-400">Lien de l'invitation</p>
+          <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+            <a :href="publicUrl" target="_blank"
+               class="flex-1 text-[10px] text-blue-600 font-medium truncate hover:underline">
+              {{ publicUrl }}
+            </a>
+            <button @click="copyPublicUrl" class="shrink-0 p-1.5 rounded-lg hover:bg-gray-200 transition-colors" title="Copier le lien">
+              <svg v-if="!showCopiedToast" class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2"/>
+              </svg>
+              <svg v-else class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+            </button>
+          </div>
+          <div class="flex gap-2">
+            <a :href="publicUrl" target="_blank"
+               class="flex-1 py-2 text-center text-[9px] font-bold uppercase tracking-widest bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+              Voir en ligne
+            </a>
+            <button @click="publishCard"
+                    class="flex-1 py-2 text-[9px] font-bold uppercase tracking-widest bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors">
+              Dépublier
+            </button>
+          </div>
+        </div>
+
       </div>
     </aside>
 
@@ -778,9 +1288,21 @@ onUnmounted(() => {
           
           <div v-if="previewDevice === 'mobile'" class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-2xl z-50"></div>
           
-          <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-white" @click.self="selectedBlock = null">
+          <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-white relative" @click.self="selectedBlock = null">
             <!-- INJECTION DU MOTEUR DE RENDU -->
             <CardRenderer :config="config" :event="eventData" :subEvents="subEvents" :selectedBlock="selectedBlock" @select-block="selectedBlock = $event" />
+
+            <!-- Bouton retour carte (visible uniquement en mode préview garde) -->
+            <Transition name="fade-up">
+              <button v-if="selectedBlock === 'splash'"
+                      @click="selectedBlock = null; activeTab = 'cover'"
+                      class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-2 px-5 py-2.5 bg-white/90 backdrop-blur-md border border-gray-200 rounded-full shadow-lg text-[10px] font-black uppercase tracking-widest text-gray-700 hover:bg-white hover:shadow-xl transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Retour à la carte
+              </button>
+            </Transition>
           </div>
         </div>
       </div>
@@ -812,6 +1334,10 @@ onUnmounted(() => {
 /* Transitions Toast */
 .toast-enter-active, .toast-leave-active { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 20px) scale(0.95); }
+
+/* Transition bouton retour carte */
+.fade-up-enter-active, .fade-up-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-up-enter-from, .fade-up-leave-to { opacity: 0; transform: translate(-50%, 12px); }
 
 /* --- CSS INJECTÉ POUR L'ÉDITION INLINE DANS LE PREVIEW --- */
 .editable-element {
