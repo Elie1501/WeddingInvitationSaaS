@@ -54,7 +54,7 @@ const containerClass = computed(() => `countdown-${props.templateId}`);
 </template>
 
 <style scoped>
-@reference "tailwindcss";
+@reference "../../style.css";
 
 .number-box {
   min-width: 60px;
@@ -62,35 +62,51 @@ const containerClass = computed(() => `countdown-${props.templateId}`);
 
 /* Style spécifique Rose Romantique */
 .countdown-romantic-pink .number-box {
-  @apply bg-rose-50 rounded-full w-16 h-16 shadow-inner border border-rose-100;
+  background-color: #fff1f2; /* rose-50 */
+  border-radius: 9999px;
+  width: 4rem;
+  height: 4rem;
+  box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+  border: 1px solid #ffe4e6; /* rose-100 */
 }
 @media (min-width: 768px) {
   .countdown-romantic-pink .number-box {
-    @apply w-24 h-24;
+    width: 6rem;
+    height: 6rem;
   }
 }
 
 /* Style spécifique Luxe Minimaliste */
 .countdown-luxury-minimal .number-box {
-  @apply border-b-2 border-black rounded-none w-14 h-14;
+  border-bottom: 2px solid black;
+  border-radius: 0;
+  width: 3.5rem;
+  height: 3.5rem;
 }
 @media (min-width: 768px) {
   .countdown-luxury-minimal .number-box {
-    @apply w-20 h-20;
+    width: 5rem;
+    height: 5rem;
   }
 }
 .countdown-luxury-minimal span {
   font-family: 'Montserrat', sans-serif;
-  @apply tracking-tighter;
+  letter-spacing: -0.05em;
 }
 
 /* Style spécifique Élégance Classique */
 .countdown-classic-elegance .number-box {
-  @apply bg-stone-50 border border-stone-200 rounded-lg shadow-sm w-16 h-16;
+  background-color: #fafaf9; /* stone-50 */
+  border: 1px solid #e7e5e4; /* stone-200 */
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  width: 4rem;
+  height: 4rem;
 }
 @media (min-width: 768px) {
   .countdown-classic-elegance .number-box {
-    @apply w-24 h-24;
+    width: 6rem;
+    height: 6rem;
   }
 }
 </style>

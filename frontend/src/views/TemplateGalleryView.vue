@@ -26,8 +26,10 @@ const styles = [
   { id: 'all', label: 'Toutes les inspirations', icon: '✨' },
   { id: 'minimal', label: 'Luxe Minimaliste', icon: '🕊️' },
   { id: 'classic', label: 'Classique Royal', icon: '👑' },
+  { id: 'art', label: 'Art & Culture', icon: '🎨' },
   { id: 'boho', label: 'Bohème Chic', icon: '🌿' }
 ];
+
 
 const fetchTemplates = async () => {
   try {
@@ -35,14 +37,28 @@ const fetchTemplates = async () => {
     templates.value = response.data;
   } catch (err) {
     console.error("Erreur templates", err);
+    templates.value = [];
   } finally {
     loading.value = false;
   }
 };
 
 const filteredTemplates = computed(() => {
-  // On montre TOUS les templates actifs sans aucune condition
-  return templates.value;
+  let result = templates.value;
+
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase();
+    result = result.filter(t =>
+      t.name.toLowerCase().includes(q) ||
+      (t.description || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (selectedStyle.value !== 'all') {
+    result = result.filter(t => t.category === selectedStyle.value);
+  }
+
+  return result;
 });
 
 const selectTemplate = async (template) =>
@@ -100,14 +116,17 @@ const selectTemplate = async (template) =>
     }
 
     // 4. Appliquer la config du template
-    let config = {};
+    let manifest = {};
     try {
-      config = typeof template.manifest_json === 'string' 
+      manifest = typeof template.manifest_json === 'string' 
         ? JSON.parse(template.manifest_json) 
         : template.manifest_json;
     } catch (e) {
-      config = template.manifest_json || {};
+      manifest = template.manifest_json || {};
     }
+
+    // Le manifest peut contenir un champ default_config ou être la config elle-même
+    let config = manifest.default_config || manifest;
 
     if (config.content) {
       config.content.names = `${wizardData.value.groomName} & ${wizardData.value.brideName}`;
@@ -124,7 +143,7 @@ const selectTemplate = async (template) =>
     router.push(`/cards/edit/${cardId}`);
   } catch (err) {
     console.error("Erreur complète :", err);
-    const msg = err.response?.data?.detail || "Une erreur est survenue lors de la création de votre univers.";
+    const msg = err.response?.data?.detail || err.message || "Une erreur est survenue lors de la création de votre univers.";
     alert(msg);
   } finally {
     loading.value = false;
@@ -148,7 +167,7 @@ onMounted(() => {
     
     <nav class="p-8 flex justify-between items-center border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
       <div class="flex items-center space-x-4">
-        <span class="text-2xl font-bold tracking-tighter uppercase">Studio Luxe</span>
+        <span class="text-2xl font-bold tracking-tighter uppercase">Saas Wedding</span>
         <div class="h-4 w-[1px] bg-gray-200"></div>
         <span class="text-xs uppercase tracking-widest text-[#C5A059]">
           Pour {{ wizardData.groomName }} & {{ wizardData.brideName }}
@@ -171,8 +190,17 @@ onMounted(() => {
 
     <main class="max-w-7xl mx-auto px-8 py-20">
       
-      <header class="mb-24 text-center space-y-6">
+      <header class="mb-24 text-center space-y-12">
         <h1 class="text-7xl text-[#1A1A1A] leading-none">Votre design idéal.</h1>
+        <div class="max-w-md mx-auto relative group">
+            <input 
+              v-model="searchQuery"
+              type="text" 
+              placeholder="Rechercher une inspiration..." 
+              class="w-full px-8 py-4 bg-white border border-gray-100 rounded-2xl text-xs uppercase tracking-widest outline-none shadow-sm focus:shadow-xl focus:ring-2 focus:ring-[#C5A059]/20 transition-all text-center"
+            />
+            <div class="absolute inset-x-0 -bottom-1 h-[2px] bg-gradient-to-r from-transparent via-[#C5A059] to-transparent scale-x-0 group-focus-within:scale-x-100 transition-transform duration-700"></div>
+        </div>
       </header>
 
       <div v-if="loading" class="flex flex-col items-center justify-center py-40 space-y-4">
