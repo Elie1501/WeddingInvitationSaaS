@@ -69,11 +69,20 @@ def create_card(
     template_id = card_in.template_id or "default-modern"
     
     # Si un template est spécifié, on peut optionnellement charger sa config par défaut
-    config_json = None
+    config_dict = {}
     template = db.query(CardTemplate).filter(CardTemplate.id == template_id).first()
     if template:
         manifest = json.loads(template.manifest_json)
-        config_json = json.dumps(manifest.get("default_config", {}))
+        config_dict = manifest.get("default_config", {})
+    
+    # Injection dynamique des noms
+    names_display = f"{event.groom_name} & {event.bride_name}"
+    config_dict["content"] = config_dict.get("content", {})
+    config_dict["content"]["names"] = names_display
+    config_dict["content"]["splash_title"] = names_display
+    
+    if "hebrew_names" in config_dict["content"]:
+        config_dict["content"]["hebrew_names"] = ""
 
     card = Card(
         event_id=card_in.event_id,
@@ -82,7 +91,7 @@ def create_card(
         theme_color=card_in.theme_color,
         media_url=card_in.media_url,
         music_url=card_in.music_url,
-        config_json=config_json,
+        config_json=json.dumps(config_dict),
         slug=f"wedding-{uuid.uuid4().hex[:8]}"
     )
     db.add(card)

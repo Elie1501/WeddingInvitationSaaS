@@ -1,694 +1,1396 @@
 <script setup>
-import { ref, onMounted, watch, reactive, computed } from 'vue';
+import { ref, reactive, watch, onMounted, onUnmounted, computed, provide, nextTick } from 'vue';
+
+// ── Champs texte par layout (source unique) ────────────────────────────
+
+const TEMPLATE_FIELDS = {
+  'aquarelle':        [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text', placeholder: 'ex: 15 Juin 2026' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+  ],
+  'monolithe':        [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'section_title',label: 'Titre section',        type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'quote',        label: 'Citation',             type: 'textarea' },
+    { key: 'dress_code',   label: 'Tenue vestimentaire',  type: 'text' },
+    { key: 'image_url',    label: 'Image de couverture',  type: 'image' },
+  ],
+  'noir-eternel':     [
+    { key: 'names',         label: 'Prénoms',              type: 'text' },
+    { key: 'monogram',      label: 'Monogramme',           type: 'text', placeholder: 'E & L' },
+    { key: 'date_display',  label: 'Date affichée',         type: 'text', placeholder: '15 JUIN 2026' },
+    { key: 'address',       label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',    label: 'Texte d\'introduction', type: 'textarea' },
+    { key: 'divider_symbol',label: 'Symbole décoratif',     type: 'text', placeholder: '✦' },
+  ],
+  'riviera-blanche':  [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'monogram',     label: 'Monogramme',          type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'divider_symbol',label: 'Symbole décoratif',   type: 'text' },
+  ],
+  'jardin-celeste':   [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'monogram',     label: 'Monogramme',          type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'divider_symbol',label: 'Symbole décoratif',   type: 'text' },
+  ],
+  'empire-abstrait':  [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'monogram',     label: 'Monogramme',          type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'divider_symbol',label: 'Symbole décoratif',   type: 'text' },
+  ],
+  'arch':             [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'section_title',label: 'Titre de cérémonie',   type: 'text', placeholder: 'Union Sacrée' },
+    { key: 'intro_text',   label: 'Citation / intro',     type: 'textarea' },
+  ],
+  'split':            [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'section_title',label: 'Titre section',        type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'image_url',    label: 'Photo principale',     type: 'image' },
+    { key: 'image_url_2',  label: 'Photo secondaire',     type: 'image' },
+  ],
+  'es':               [
+    { key: 'names',        label: 'Prénoms (séparés par & ou /)', type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
+    { key: 'image_url',    label: 'Image',                type: 'image' },
+  ],
+  'typography-focus': [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'section_title',label: 'Titre section',        type: 'text', placeholder: 'Première Mondiale' },
+    { key: 'intro_text',   label: 'Citation / intro',     type: 'textarea' },
+    { key: 'image_url',    label: 'Photo héro',           type: 'image' },
+    { key: 'image_url_2',  label: 'Photos pellicule',     type: 'image' },
+  ],
+  'couture':          [
+    { key: 'names',        label: 'Prénoms',             type: 'text' },
+    { key: 'date_display', label: 'Date affichée',        type: 'text' },
+    { key: 'address',      label: 'Lieu',                 type: 'text' },
+    { key: 'intro_text',   label: 'Citation lookbook',    type: 'textarea' },
+    { key: 'image_url',    label: 'Photo lookbook 1',     type: 'image' },
+    { key: 'image_url_2',  label: 'Photo lookbook 2',     type: 'image' },
+  ],
+  'ora':              [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'image_url',    label: 'Photo de couverture',  type: 'image' },
+    { key: 'intro_text',   label: "Texte d'invitation",   type: 'textarea' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+  ],
+  'japonais':         null, // alias → arch
+  'riviera':          null, // alias → split
+  'brutaliste':       null, // alias → es
+  'film':             null, // alias → typography-focus
+  'cinema': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Synopsis',              type: 'textarea' },
+    { key: 'image_url',    label: 'Photo héro',            type: 'image' },
+  ],
+  'celestial': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Citation céleste',      type: 'textarea' },
+  ],
+  'wabi-sabi': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Citation wabi-sabi',    type: 'textarea' },
+    { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
+  ],
+  'gatsby': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: "Texte d'invitation",    type: 'textarea' },
+    { key: 'dress_code',   label: 'Tenue vestimentaire',   type: 'text' },
+    { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
+  ],
+  'editorial': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Texte éditorial',       type: 'textarea' },
+    { key: 'image_url',    label: 'Photo éditoriale',      type: 'image' },
+  ],
+  'velvet-noir': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+    { key: 'intro_text',   label: 'Texte velours',         type: 'textarea' },
+    { key: 'dress_code',   label: 'Tenue vestimentaire',   type: 'text' },
+    { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
+  ],
+};
+// Résoudre les alias
+TEMPLATE_FIELDS['japonais']   = TEMPLATE_FIELDS['arch'];
+TEMPLATE_FIELDS['riviera']    = TEMPLATE_FIELDS['split'];
+TEMPLATE_FIELDS['brutaliste'] = TEMPLATE_FIELDS['es'];
+TEMPLATE_FIELDS['film']       = TEMPLATE_FIELDS['typography-focus'];
 import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
-import CardSplashScreen from '../components/card/CardSplashScreen.vue';
 
 const route = useRoute();
 const router = useRouter();
 const cardId = route.params.id;
 
-// UI States
-const activeTab = ref('design'); 
-const selectedBlock = ref(null); // Pour la mise en surbrillance
-const tabs = [
-  { id: 'design', label: 'Typographie' },
-  { id: 'cover', label: 'Page de garde' },
-  { id: 'structure', label: 'Structure' },
-  { id: 'content', label: 'Textes' },
-  { id: 'program', label: 'Planning' },
-  { id: 'media', label: 'Médias' },
-  { id: 'icons', label: 'Pictos' }
-];
-
-const weddingIcons = [
-  '💍', '🥂', '🍰', '⛪', '🕍', '🕊️', '🌸', '✨', '🎵', '🚗', '🍽️', '💃', '📸', '✉️', '🎁', '🎈', '🕍', '🕯️', '🍷', '🎻', '👰', '🤵', '🕍', '🕎', '🍷', '🥖', '🥣'
-];
-
-const selectIcon = (icon) => {
-  // Par défaut on l'utilise pour le symbole séparateur
-  config.content.divider_symbol = icon;
-  // Feedback visuel ou switch vers l'onglet contenu pour voir le changement
-  // activeTab.value = 'content';
-};
-
-const zoomLevel = ref(0.75);
+// ==========================================
+// 2. UI STATE
+// ==========================================
 const loading = ref(true);
 const saving = ref(false);
-const lastSaved = ref(null);
-
-// Data
-const card = ref(null);
-const subEvents = ref([]);
+const publishing = ref(false);
+const showSaveToast = ref(false);
+const hasUnsavedChanges = ref(false);
 const isPublished = ref(false);
-const slug = ref('');
-const eventData = reactive({ groom_name: '', bride_name: '', date: '', location: '' });
+const cardSlug = ref(null);
+const showCopiedToast = ref(false);
+const publicUrl = computed(() => cardSlug.value ? `${window.location.origin}/cards/${cardSlug.value}` : null);
 
-const config = reactive({
-  layout: 'arch',
-  sections: [],
-  show_splash: false,
-  show_countdown_splash: true,
-  theme: { background: '#F9F7F2', accent: '#C5A059', text: '#1A1A1A', fontFamily: 'Playfair Display' },
-  content: { 
-    names: '', 
-    show_petals: true,
-    splash_top_text: 'Save the Date',
-    splash_title: '',
-    splash_subtitle: '',
-    splash_button_text: 'Entrer dans l\'invitation',
-    s1_label: 'Union Civile', s1_title: 'La Mairie', 
-    s1_location: 'Hôtel de Ville, 75004 Paris',
-    s2_label: 'Cérémonie Religieuse', s2_title: 'Houppa & Soirée',
-    family_left_title: 'Famille du Marié', family_left_parents: '',
-    family_right_title: 'Famille de la Mariée', family_right_parents: '',
-    hebrew_names: '',
-    announcement_text: 'Ont la joie de vous faire part du mariage de leurs enfants',
-    intro_text_s2: 'Seront honorés de votre présence à la cérémonie religieuse...',
-    tribute_title: 'Une pensée très émue pour nos disparus',
-    tribute_text: '',
-    gallery_label: 'Nos Souvenirs',
-    footer_text: 'Fait avec amour • 2026'
-  },
-  media: {
-    splash_url: ''
-  },
-  show_countdown: true,
-  music_url: ''
+const activeTab = ref('context');
+const selectedBlock = ref(null);
+const editingField = ref(null);
+const quickUploadField = ref(null);
+const quickUploadInput = ref(null);
+const previewDevice = ref('mobile'); // 'mobile' | 'desktop'
+const zoomLevel = ref(100);
+
+const tabs = [
+  { id: 'context', label: '✦ Sélection' },
+  { id: 'design', label: 'Style' },
+  { id: 'cover', label: 'Garde' },
+  { id: 'structure', label: 'Blocs' },
+  { id: 'content', label: 'Textes' },
+  { id: 'media', label: 'Médias' }
+];
+
+provide('isEditorMode', true);
+provide('editingField', editingField);
+provide('triggerQuickUpload', (fieldPath) => {
+  quickUploadField.value = fieldPath;
+  quickUploadInput.value?.click();
 });
 
-const moveSection = (index, direction) => {
-  const newIndex = index + direction;
-  if (newIndex < 0 || newIndex >= config.sections.length) return;
-  const sections = [...config.sections];
-  const [removed] = sections.splice(index, 1);
-  sections.splice(newIndex, 0, removed);
-  config.sections = sections;
+const handleQuickUpload = async (event) => {
+  if (!quickUploadField.value) return;
+  await handleFileUpload(event, quickUploadField.value);
+  quickUploadField.value = null;
 };
 
-const sectionLabels = {
-  'hero': 'Bannière Classique',
-  'ora-hero': 'Bannière Ora (Pétales)',
-  'ora-section1': 'Bloc Mairie (Ora)',
-  'ora-parallax': 'Image Parallaxe',
-  'ora-section2': 'Bloc Religieux (Ora)',
-  'ora-tribute': 'Carte Hommage',
-  'ora-gallery': 'Galerie Photos',
-  countdown: 'Compte à rebours',
-  program: 'Programme',
-  footer: 'Pied de page'
+// ==========================================
+// 3. DATA STATE
+// ==========================================
+const config = reactive({
+  layout: 'riviera-blanche',
+  sections: [],
+  theme: {
+    background: '#FAFAF8', accent: '#2E6E8E', text: '#1C2B3A',
+    titleColor: '#1C2B3A', namesColor: '#2E6E8E',
+    fontFamily: 'Jost', fontSize: '1rem', titleSize: '4rem'
+  },
+  content: {
+    names: '', monogram: '', date_display: '', address: '',
+    intro_text: '', rsvp_title: 'Serez-vous des nôtres ?', rsvp_deadline_text: 'Réponse souhaitée avant le 1er Mai.',
+    divider_symbol: '✦', footer_text: 'Fait avec amour • 2026',
+    splash_title: '', splash_top_text: 'Save the Date', splash_button_text: 'Entrer dans l\'invitation'
+  },
+  media: { image_url: '', music_url: '', splash_url: '' },
+  show_countdown: true,
+  show_splash: false,
+  show_countdown_splash: true
+});
+
+const eventData = reactive({ date: '', location: '', groom_name: '', bride_name: '' });
+const subEvents = ref([]);
+
+// ==========================================
+// 4. HISTORIQUE UNDO / REDO
+// ==========================================
+const history = ref([]);
+const historyIndex = ref(-1);
+const isUndoRedo = ref(false);
+
+const snapshot = () => JSON.parse(JSON.stringify(config));
+
+let historyTimeout = null;
+watch(config, () => {
+  hasUnsavedChanges.value = true;
+  if (isUndoRedo.value) return;
+  
+  if (historyTimeout) clearTimeout(historyTimeout);
+  historyTimeout = setTimeout(() => {
+    history.value = history.value.slice(0, historyIndex.value + 1);
+    history.value.push(snapshot());
+    if (history.value.length > 30) history.value.shift();
+    historyIndex.value = history.value.length - 1;
+  }, 500);
+}, { deep: true });
+
+const undo = () => {
+  if (historyIndex.value <= 0) return;
+  isUndoRedo.value = true;
+  historyIndex.value--;
+  Object.assign(config, history.value[historyIndex.value]);
+  nextTick(() => { isUndoRedo.value = false; });
 };
 
-const fonts = [
-  { name: 'Playfair Display', label: 'Luxe (Serif)' },
-  { name: 'Montserrat', label: 'Moderne (Sans)' },
-  { name: 'Cormorant Garamond', label: 'Élégant (Serif)' },
-  { name: 'Inter', label: 'Minimal (Sans)' }
+const redo = () => {
+  if (historyIndex.value >= history.value.length - 1) return;
+  isUndoRedo.value = true;
+  historyIndex.value++;
+  Object.assign(config, history.value[historyIndex.value]);
+  nextTick(() => { isUndoRedo.value = false; });
+};
+
+// ==========================================
+// 5. DRAG & DROP (Structure)
+// ==========================================
+const dragIndex = ref(null);
+const dragOverIndex = ref(null);
+
+const dragStart = (index) => { dragIndex.value = index; };
+const dragOver = (index) => { dragOverIndex.value = index; };
+const dragEnd = () => {
+  if (dragIndex.value !== null && dragOverIndex.value !== null && dragIndex.value !== dragOverIndex.value) {
+    const sections = [...config.sections];
+    const [moved] = sections.splice(dragIndex.value, 1);
+    sections.splice(dragOverIndex.value, 0, moved);
+    config.sections = sections;
+  }
+  dragIndex.value = null;
+  dragOverIndex.value = null;
+};
+
+// ==========================================
+// 6. METHODES CRUD BLOCS
+// ==========================================
+const availableBlocks = [
+  { id: 'countdown', label: 'Compte à rebours', icon: '⏱️', desc: 'Anime l\'attente jusqu\'au jour J' },
+  { id: 'program', label: 'Programme', icon: '📅', desc: 'Détail des étapes de la journée' },
+  { id: 'rsvp', label: 'Formulaire RSVP', icon: '📩', desc: 'Collectez les présences' },
+  { id: 'footer', label: 'Pied de page', icon: '✨', desc: 'Message de fin et crédits' },
+  { id: 'custom-text', label: 'Texte libre', icon: '📝', desc: 'Un bloc de texte personnalisé' }
 ];
+
+const addBlock = (blockId) => {
+  let finalId = blockId;
+  
+  // Éviter les doublons pour les blocs uniques
+  if (['countdown', 'rsvp', 'footer', 'program'].includes(blockId)) {
+    if (config.sections.includes(blockId)) {
+      alert("Ce bloc est déjà présent sur votre invitation.");
+      return;
+    }
+  }
+
+  // Gérer les blocs de texte multiples
+  if (blockId === 'custom-text') {
+    const count = config.sections.filter(s => s.startsWith('custom-text-')).length;
+    finalId = `custom-text-${Date.now()}`;
+    config.content[finalId] = { title: 'Nouveau titre', content: 'Votre texte ici...' };
+  }
+
+  config.sections.push(finalId);
+  activeTab.value = 'structure';
+  selectedBlock.value = finalId;
+  
+  // Animation de scroll vers le nouveau bloc
+  nextTick(() => {
+    const el = document.querySelector(`[data-section-id="${finalId}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  });
+};
+
+const deleteBlock = (index) => {
+  const sec = config.sections[index];
+  if (sec.includes('hero') || sec.includes('full')) {
+    alert("Le bloc principal ne peut pas être supprimé.");
+    return;
+  }
+  config.sections.splice(index, 1);
+  selectedBlock.value = null;
+};
+
+const getBlockLabel = (id) => {
+  if (id.includes('hero') || id.includes('full')) return 'Bannière';
+  const labels = {
+    'countdown': 'Compte à rebours',
+    'program': 'Programme',
+    'rsvp': 'Formulaire RSVP',
+    'footer': 'Pied de page',
+    'gallery': 'Galerie Photo'
+  };
+  return labels[id] || 'Bloc personnalisé';
+};
+
+// ==========================================
+// 7. EDITION INLINE
+// ==========================================
+const startInlineEdit = (fieldPath) => {
+  editingField.value = fieldPath;
+  const tabMap = {
+    'names': 'content', 'intro_text': 'content', 'address': 'content',
+    'date_display': 'content', 'rsvp_title': 'content', 'footer_text': 'content',
+    'theme.accent': 'design', 'theme.background': 'design', 'theme.fontFamily': 'design'
+  };
+  if (tabMap[fieldPath]) activeTab.value = tabMap[fieldPath];
+  
+  nextTick(() => {
+    const field = document.querySelector(`[data-field="${fieldPath}"]`);
+    if (field) field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+};
+
+const commitInlineEdit = (fieldPath, event) => {
+  const newValue = event.target.innerText.trim();
+  if (fieldPath.includes('.')) {
+    const [obj, key] = fieldPath.split('.');
+    config[obj][key] = newValue;
+  } else {
+    config.content[fieldPath] = newValue;
+  }
+  editingField.value = null;
+};
+
+// Pour utilisation dans le template : <h1 @dblclick="startInlineEdit('names')" @blur="commitInlineEdit('names', $event)" ...>
+provide('startInlineEdit', startInlineEdit);
+provide('commitInlineEdit', commitInlineEdit);
+
+// Résolution de chemin pour les champs du context
+const resolveModel = (path) => {
+  const parts = path.split('.');
+  if (parts[0] === 'eventData') {
+    return { get: () => eventData[parts[1]], set: (v) => eventData[parts[1]] = v };
+  }
+  return {
+    get: () => parts.reduce((o, k) => o?.[k], config),
+    set: (v) => {
+      let target = config;
+      for (let i = 0; i < parts.length - 1; i++) target = target[parts[i]];
+      target[parts[parts.length - 1]] = v;
+    }
+  };
+};
+
+// ==========================================
+// 8. SIDEBAR CONTEXTUELLE
+// ==========================================
+const contextFields = computed(() => {
+  if (!selectedBlock.value) return null;
+  const maps = {
+    'hero': {
+      label: 'Bannière principale',
+      fields: [
+        { type: 'text', label: 'Noms des mariés', model: 'content.names' },
+        { type: 'text', label: 'Date affichée', model: 'content.date_display' },
+        { type: 'text', label: 'Monogramme', model: 'content.monogram' },
+        { type: 'text', label: 'Lieu', model: 'content.address' },
+        { type: 'textarea', label: 'Texte d\'intro', model: 'content.intro_text' },
+        { type: 'color', label: 'Couleur Noms', model: 'theme.namesColor' },
+        { type: 'image', label: 'Image de fond', model: 'media.image_url' }
+      ]
+    },
+    'splash': {
+      label: 'Page de garde',
+      fields: [
+        { type: 'text', label: 'Titre principal', model: 'content.splash_title' },
+        { type: 'text', label: 'Petit texte haut', model: 'content.splash_top_text' },
+        { type: 'text', label: 'Sous-titre', model: 'content.splash_subtitle' },
+        { type: 'text', label: 'Texte bouton', model: 'content.splash_button_text' },
+        { type: 'toggle', label: 'Afficher le décompte', model: 'show_countdown_splash' },
+        { type: 'image', label: 'Image de fond', model: 'media.splash_url' }
+      ]
+    },
+    'rsvp': {
+      label: 'Formulaire de confirmation',
+      fields: [
+        { type: 'text', label: 'Titre RSVP', model: 'content.rsvp_title' },
+        { type: 'text', label: 'Date limite', model: 'content.rsvp_deadline_text' }
+      ]
+    },
+    'countdown': {
+      label: 'Compte à rebours',
+      fields: [
+        { type: 'toggle', label: 'Afficher le compte à rebours', model: 'show_countdown' }
+      ]
+    },
+    'program': {
+      label: 'Programme du mariage',
+      isProgram: true
+    },
+    'footer': {
+      label: 'Pied de page',
+      fields: [
+        { type: 'text', label: 'Texte de fin', model: 'content.footer_text' }
+      ]
+    }
+  };
+
+  if (selectedBlock.value.startsWith('custom-text-')) {
+    return {
+      label: 'Bloc texte personnalisé',
+      fields: [
+        { type: 'text', label: 'Titre du bloc', model: `content.${selectedBlock.value}.title` },
+        { type: 'textarea', label: 'Contenu du texte', model: `content.${selectedBlock.value}.content` }
+      ]
+    };
+  }
+
+  const isHeroBlock = selectedBlock.value === 'hero'
+    || selectedBlock.value.includes('-full')
+    || selectedBlock.value.includes('-hero');
+
+  if (isHeroBlock) {
+    const tplFields = TEMPLATE_FIELDS[config.layout];
+    if (!tplFields) return maps['hero'];
+    return {
+      label: 'Bannière principale',
+      fields: [
+        ...tplFields.map(f => ({
+          type: f.type,
+          label: f.label,
+          model: 'content.' + f.key,
+          placeholder: f.placeholder || ''
+        })),
+        { type: 'color', label: 'Couleur Noms', model: 'theme.namesColor' }
+      ]
+    };
+  }
+
+  return maps[selectedBlock.value] || null;
+});
+
+const addProgramStep = () => {
+  subEvents.value.push({ time: '00:00', title: 'Nouvel événement', location: '', description: '' });
+};
+
+const removeProgramStep = (index) => {
+  subEvents.value.splice(index, 1);
+};
+
+// Auto-switch vers 'context' quand on sélectionne un bloc
+// (sauf si on est dans 'cover' — la garde gère sa propre preview)
+watch(selectedBlock, (newVal) => {
+  if (newVal && contextFields.value && activeTab.value !== 'cover') {
+    activeTab.value = 'context';
+  }
+});
+
+// Onglet Garde : sync preview ↔ onglet
+watch(activeTab, (newTab, oldTab) => {
+  if (newTab === 'cover') {
+    // Entrer → montrer la garde dans la preview si activée
+    selectedBlock.value = config.show_splash ? 'splash' : null;
+  }
+  if (oldTab === 'cover') {
+    // Quitter → retour carte normale
+    selectedBlock.value = null;
+  }
+});
+
+// ==========================================
+// 9. API & PERSISTENCE
+// ==========================================
+let saveTimeout = null;
+watch([config, subEvents], () => {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveCard, 2000);
+}, { deep: true });
 
 const fetchCard = async () => {
   try {
     loading.value = true;
     const response = await api.get(`/cards/${cardId}`);
-    card.value = response.data;
-    isPublished.value = card.value.is_published;
-    slug.value = card.value.slug;
-    if (card.value.event) Object.assign(eventData, card.value.event);
-    
-    if (card.value.config_json) {
-      const parsed = JSON.parse(card.value.config_json);
-      // Initialisation de la structure si vide, dépendante du template
-      if (!parsed.sections || parsed.sections.length === 0) {
-          if (card.value.template_id === 'ora-parallax') {
-            parsed.sections = ['ora-hero', 'ora-section1', 'ora-parallax', 'ora-section2', 'ora-tribute', 'ora-gallery', 'footer'];
-            parsed.layout = 'ora';
-          } else if (card.value.template_id === 'es-template') {
-            parsed.sections = ['hero', 'countdown', 'program', 'footer'];
-            parsed.layout = 'es';
-          } else {
-            parsed.sections = ['hero', 'countdown', 'program', 'footer'];
-          }
+    if (response.data.config_json) {
+      const parsed = typeof response.data.config_json === 'string' ? JSON.parse(response.data.config_json) : response.data.config_json;
+      Object.assign(config, parsed);
+      
+      // Initialiser l'historique
+      history.value = [snapshot()];
+      historyIndex.value = 0;
+    }
+    isPublished.value = response.data.is_published || false;
+    cardSlug.value = response.data.slug || null;
+
+    if (response.data.event) {
+      const ev = response.data.event;
+      eventData.date = ev.date?.split('T')[0] || '';
+      eventData.location = ev.location || '';
+      eventData.groom_name = ev.groom_name || '';
+      eventData.bride_name = ev.bride_name || '';
+
+      // Auto-remplir les noms depuis l'event si non définis dans la config
+      if (!config.content.names && ev.groom_name && ev.bride_name) {
+        config.content.names = `${ev.groom_name} & ${ev.bride_name}`;
+      }
+      if (!config.content.splash_title && ev.groom_name && ev.bride_name) {
+        config.content.splash_title = `${ev.groom_name} & ${ev.bride_name}`;
       }
       
-      // Fusion sécurisée du contenu pour ne pas perdre les champs par défaut
-      if (parsed.content) {
-        Object.assign(config.content, parsed.content);
-        delete parsed.content;
+      // Charger les sous-événements réels depuis l'API
+      if (response.data.sub_events) {
+        subEvents.value = response.data.sub_events.map(se => ({
+          time: se.time,
+          title: se.title,
+          location: se.location,
+          description: se.description
+        }));
       }
-      if (parsed.theme) {
-        Object.assign(config.theme, parsed.theme);
-        delete parsed.theme;
-      }
-      if (parsed.media) {
-        Object.assign(config.media, parsed.media);
-        delete parsed.media;
-      }
-      Object.assign(config, parsed);
     }
-    subEvents.value = card.value.sub_events || [];
-  } catch (err) { router.push('/dashboard'); } finally { loading.value = false; }
+  } catch (err) {
+    console.error("Fetch Error:", err);
+  } finally {
+    loading.value = false;
+  }
 };
 
-const saveCard = async (redirect = false) => {
-  if (saving.value && !redirect) return;
+const saveCard = async () => {
   try {
     saving.value = true;
-    const payload = {
-      config_json: JSON.stringify(config),
+    const payload = { 
+      config_json: JSON.stringify(config), 
       sub_events: subEvents.value,
-      ...eventData
+      ...eventData 
     };
     await api.put(`/cards/${cardId}/save`, payload);
-    lastSaved.value = new Date().toLocaleTimeString();
-    if (redirect) router.push('/dashboard');
-  } finally { saving.value = false; }
+    
+    saving.value = false;
+    hasUnsavedChanges.value = false;
+    showSaveToast.value = true;
+    setTimeout(() => showSaveToast.value = false, 2000);
+  } catch (err) {
+    console.error("Save Error:", err);
+    saving.value = false;
+  }
 };
 
 const publishCard = async () => {
   try {
-    saving.value = true;
+    publishing.value = true;
+    await saveCard();
     const response = await api.post(`/cards/${cardId}/publish`);
     isPublished.value = response.data.is_published;
-    slug.value = response.data.slug;
-  } finally { saving.value = false; }
+    cardSlug.value = response.data.slug;
+  } catch (err) {
+    console.error('Publish Error:', err);
+  } finally {
+    publishing.value = false;
+  }
 };
 
-let timeout = null;
-watch([config, eventData, subEvents], () => {
-  if (timeout) clearTimeout(timeout);
-  timeout = setTimeout(() => saveCard(), 2000);
-}, { deep: true });
+const copyPublicUrl = async () => {
+  if (!publicUrl.value) return;
+  await navigator.clipboard.writeText(publicUrl.value);
+  showCopiedToast.value = true;
+  setTimeout(() => showCopiedToast.value = false, 2000);
+};
 
-const handleFileUpload = async (e, type, field = null) => {
-  const file = e.target.files[0];
+const handleFileUpload = async (event, fieldPath) => {
+  const file = event.target.files[0];
   if (!file) return;
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('file_type', 'image');
+
   try {
-    saving.value = true;
-    const res = await api.post(`/cards/${cardId}/upload`, formData);
-    if (type === 'splash' && field) config.media[field] = res.data.url;
-    else if (field) config.content[field] = res.data.url;
-    else if (type === 'image') config.content.image_url = res.data.url;
-    else if (type === 'music') config.music_url = res.data.url;
-    setTimeout(() => saveCard(), 500);
-  } finally { saving.value = false; }
-};
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', 'image');
 
-const handleBlockSelection = (sectionId) => {
-  selectedBlock.value = sectionId;
-  // Si le bloc a des réglages de texte, on va dans l'onglet contenu
-  const contentBlocks = ['ora-section1', 'ora-section2', 'ora-tribute', 'hero', 'ora-hero', 'footer'];
-  if (contentBlocks.includes(sectionId)) {
-    activeTab.value = 'content';
-  } else if (sectionId === 'program') {
-    activeTab.value = 'program';
-  } else if (sectionId === 'ora-parallax' || sectionId === 'ora-gallery') {
-    activeTab.value = 'media';
+    const response = await api.post(`/cards/${cardId}/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    const url = response.data.url;
+    // Mise à jour du modèle
+    const model = resolveModel(fieldPath);
+    model.set(url);
+    
+    // Forcer la sauvegarde
+    saveCard();
+  } catch (err) {
+    console.error("Upload Error:", err);
+    alert("Erreur lors de l'envoi de l'image.");
   }
 };
 
-const applyTemplate = (type) => {
-  config.layout = type;
-  if (type === 'ora') {
-    config.sections = ['ora-hero', 'ora-section1', 'ora-parallax', 'ora-section2', 'program', 'ora-tribute', 'ora-gallery', 'footer'];
-    config.theme.fontFamily = 'Cormorant Garamond';
-    config.theme.accent = '#C5A059';
-    config.theme.background = '#F9F7F2';
-  } else if (type === 'arch') {
-    config.sections = ['hero', 'countdown', 'program', 'footer'];
-    config.theme.fontFamily = 'Playfair Display';
-    config.theme.accent = '#C5A059';
-    config.theme.background = '#F9F7F2';
-  } else if (type === 'typography-focus') {
-    config.sections = ['hero', 'program', 'footer'];
-    config.theme.fontFamily = 'Montserrat';
-    config.theme.accent = '#000000';
-    config.theme.background = '#ffffff';
-  } else if (type === 'split') {
-    config.sections = ['hero', 'countdown', 'footer'];
-    config.theme.fontFamily = 'Playfair Display';
-    config.theme.accent = '#ffffff';
-    config.theme.background = '#000000';
-  } else if (type === 'es') {
-    config.sections = ['hero', 'program', 'footer'];
-    config.theme.fontFamily = 'Inter';
-    config.theme.accent = '#000000';
-    config.theme.background = '#ffffff';
-  }
-};
-const addSubEvent = () => {
-  subEvents.value.push({
-    time: '18:00',
-    title: 'Nouvelle étape',
-    location: 'Lieu de l\'étape'
-  });
-};
+// ==========================================
+// 10. COMPUTED TEMPLATE FIELDS & TAILLES
+// ==========================================
+const currentTemplateFields = computed(() =>
+  TEMPLATE_FIELDS[config.layout] || [
+    { key: 'names',        label: 'Prénoms',      type: 'text' },
+    { key: 'date_display', label: 'Date affichée', type: 'text' },
+    { key: 'address',      label: 'Lieu',          type: 'text' },
+  ]
+);
 
-const removeSubEvent = (index) => {
-  subEvents.value.splice(index, 1);
+const namesSize = computed({
+  get: () => parseFloat(config.theme.namesSize) || 5,
+  set: v => { config.theme.namesSize = String(v); }
+});
+const titleSize = computed({
+  get: () => parseFloat(config.theme.titleSize) || 3.5,
+  set: v => { config.theme.titleSize = String(v); }
+});
+const bodySize = computed({
+  get: () => parseFloat(config.theme.fontSize) || 1,
+  set: v => { config.theme.fontSize = String(v); }
+});
+
+// ==========================================
+// 11. WATCHERS & FONTS
+// ==========================================
+const loadedFonts = new Set();
+const loadGoogleFont = (fontName) => {
+  if (!fontName || loadedFonts.has(fontName)) return;
+  const formatted = fontName.replace(/ /g, '+');
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${formatted}:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap`;
+  document.head.appendChild(link);
+  loadedFonts.add(fontName);
 };
 
-const moveSubEvent = (index, direction) => {
-  const newIndex = index + direction;
-  if (newIndex < 0 || newIndex >= subEvents.value.length) return;
-  const events = [...subEvents.value];
-  const [removed] = events.splice(index, 1);
-  events.splice(newIndex, 0, removed);
-  subEvents.value = events;
+watch(() => config.theme.fontFamily, (newFont) => { loadGoogleFont(newFont); }, { immediate: true });
+
+// ==========================================
+// 11. LIFECYCLE
+// ==========================================
+const handleKeyboard = (e) => {
+  const isMac = navigator.platform.includes('Mac');
+  const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+  if (ctrlOrCmd && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+  if (ctrlOrCmd && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
 };
 
-const previewMode = ref('card'); // 'card' or 'splash'
-const previewDevice = ref('mobile'); // 'mobile' or 'desktop'
+onMounted(() => {
+  fetchCard();
+  document.addEventListener('keydown', handleKeyboard);
+});
 
-onMounted(fetchCard);
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyboard);
+  if (saveTimeout) clearTimeout(saveTimeout);
+});
 </script>
 
 <template>
-  <div class="h-screen flex flex-col bg-[#FDFCFB] overflow-hidden font-serif">
-    <div class="flex-1 flex overflow-hidden">
-      <aside :class="previewDevice === 'desktop' ? 'w-[450px]' : 'w-[500px]'" class="bg-white border-r border-gray-100 flex flex-col shadow-2xl z-20 transition-all duration-500">
-        <!-- TABS SANS EMOJI -->
-        <nav class="flex px-4 pt-4 border-b border-gray-50 bg-gray-50/50 justify-between overflow-x-auto no-scrollbar">
-          <button v-for="t in tabs" :key="t.id" @click="activeTab = t.id"
-            :class="activeTab === t.id ? 'text-[#C5A059] border-b-2 border-[#C5A059] bg-white' : 'text-gray-400 hover:text-gray-600'"
-            class="pb-4 text-[9px] font-black uppercase tracking-widest transition-all px-4 whitespace-nowrap"
-          >
-            {{ t.label }}
-          </button>
-        </nav>
+  <div v-if="!loading" class="flex h-screen bg-[#F3F4F6] font-sans overflow-hidden">
+    
+    <!-- BARRE DE PROGRESSION AUTO-SAVE -->
+    <div class="fixed top-0 left-0 right-0 h-[2px] z-50 bg-transparent">
+      <div class="h-full bg-[#C5A059] transition-all duration-100"
+           :style="{ width: saving ? '100%' : hasUnsavedChanges ? '60%' : '0%',
+                     opacity: saving || hasUnsavedChanges ? 1 : 0,
+                     transition: saving ? 'width 2s linear' : 'width 0.3s ease, opacity 0.3s ease' }">
+      </div>
+    </div>
 
-        <div class="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar pb-32">
-          
-          <!-- DESIGN TAB -->
-          <div v-if="activeTab === 'design'" class="space-y-10 animate-in">
-             <section class="space-y-6">
-                <label class="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Style de l'en-tête</label>
-                <div class="grid grid-cols-2 gap-3">
-                  <button
-                    v-for="tpl in [{id:'ora', l:'ORA PARALLAX'}, {id:'arch', l:'STYLE ARCH'}, {id:'typography-focus', l:'EDITORIAL'}, {id:'split', l:'SPLIT'}, {id:'es', l:'LUXE ES'}]"
-                    :key="tpl.id"
-                    @click="applyTemplate(tpl.id)"
-                    :class="config.layout === tpl.id ? 'bg-[#1A1A1A] text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'"
-                    class="py-3 text-[9px] font-black uppercase rounded-xl transition-all"
-                  >{{ tpl.l }}</button>
-                </div>
-             </section>
-             <section class="space-y-6">
-                <label class="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Typographie globale</label>
-                <select v-model="config.theme.fontFamily" class="w-full p-4 bg-gray-50 rounded-2xl text-xs font-bold border-none outline-none shadow-sm focus:ring-2 focus:ring-[#C5A059]/20 transition-all">
-                  <option v-for="f in fonts" :key="f.name" :value="f.name">{{ f.label }}</option>
-                </select>
-             </section>
-             <section class="grid grid-cols-2 gap-6">
-                <div class="space-y-3">
-                  <label class="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Accent</label>
-                  <div class="relative group">
-                    <input type="color" v-model="config.theme.accent" class="w-full h-14 rounded-2xl cursor-pointer bg-gray-50 p-1 border-none outline-none">
-                    <div class="absolute inset-0 pointer-events-none rounded-2xl border-2 border-white/50"></div>
-                  </div>
-                </div>
-                <div class="space-y-3">
-                  <label class="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Fond</label>
-                  <div class="relative group">
-                    <input type="color" v-model="config.theme.background" class="w-full h-14 rounded-2xl cursor-pointer bg-gray-50 p-1 border-none outline-none">
-                    <div class="absolute inset-0 pointer-events-none rounded-2xl border-2 border-white/50"></div>
-                  </div>
-                </div>
-             </section>
-             <section class="flex items-center justify-between p-6 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm">
-                <div class="space-y-1">
-                  <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Compte à rebours</p>
-                  <p class="text-[9px] text-gray-400 italic">Afficher sur l'invitation</p>
-                </div>
-                <input type="checkbox" v-model="config.show_countdown" class="w-6 h-6 accent-[#1A1A1A]">
-             </section>
+    <!-- TOAST DE SAUVEGARDE -->
+    <Transition name="toast">
+      <div v-if="showSaveToast"
+           class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#1A1A1A] text-white px-6 py-3 rounded-full flex items-center space-x-3 shadow-2xl shadow-black/30">
+        <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+        <span class="text-[10px] font-black uppercase tracking-widest">Invitation sauvegardée</span>
+      </div>
+    </Transition>
+
+    <!-- SIDEBAR GAUCHE -->
+    <aside class="w-[400px] flex flex-col bg-white border-r border-gray-200 shadow-xl z-30">
+      
+      <!-- HEADER TOOLBAR -->
+      <div class="flex items-center justify-between p-4 border-b border-gray-100">
+        <div class="flex items-center space-x-3">
+          <button @click="router.push('/templates')" class="p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-all text-gray-400 hover:text-[#C5A059]" title="Retour aux modèles">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
+          <h1 class="text-xs font-black uppercase tracking-widest text-gray-800">Studio</h1>
+        </div>
+        
+        <!-- Undo / Redo -->
+        <div class="flex items-center space-x-1">
+          <button @click="undo" :disabled="historyIndex <= 0" class="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Annuler (Ctrl+Z)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 10h10a5 5 0 010 10H9" stroke-linecap="round"/><path d="M3 10l4-4M3 10l4 4" stroke-linecap="round"/></svg>
+          </button>
+          <button @click="redo" :disabled="historyIndex >= history.length - 1" class="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Rétablir (Ctrl+Y)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10H11a5 5 0 000 10h4" stroke-linecap="round"/><path d="M21 10l-4-4M21 10l-4 4" stroke-linecap="round"/></svg>
+          </button>
+          <span class="text-[8px] text-gray-400 font-mono pl-2">{{ historyIndex + 1 }}/{{ history.length }}</span>
+        </div>
+      </div>
+
+      <!-- ONGLETS -->
+      <div class="flex overflow-x-auto custom-scrollbar border-b border-gray-100 bg-gray-50/50">
+        <button v-for="tab in tabs" :key="tab.id"
+                @click="activeTab = tab.id"
+                class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors border-b-2"
+                :class="activeTab === tab.id ? 'border-[#C5A059] text-[#1A1A1A] bg-white' : 'border-transparent text-gray-400 hover:text-gray-600'">
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <!-- CONTENU DES ONGLETS -->
+      <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#FAFAFA]">
+        
+        <!-- ONGLET : CONTEXTE -->
+        <div v-if="activeTab === 'context'" class="animate-in space-y-6">
+          <div v-if="!selectedBlock || !contextFields" class="py-20 text-center space-y-4">
+            <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto">
+              <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+            </div>
+            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">
+              Cliquez sur un bloc<br>dans l'aperçu à droite
+            </p>
           </div>
 
-          <!-- COVER TAB -->
-          <div v-if="activeTab === 'cover'" class="space-y-8 animate-in">
-             <section class="flex items-center justify-between p-6 bg-[#1A1A1A] text-white rounded-3xl shadow-xl">
-                <div class="space-y-1">
-                  <p class="text-[10px] font-black uppercase tracking-widest opacity-60">Page de garde</p>
-                  <p class="text-xs font-bold">Activer l'écran d'accueil</p>
+          <template v-else>
+            <div class="flex items-center space-x-3 pb-4 border-b border-gray-200">
+              <div class="w-2 h-8 rounded-full" :style="{ backgroundColor: config.theme.accent }"></div>
+              <div>
+                <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Bloc sélectionné</p>
+                <p class="text-sm font-bold text-gray-900">{{ contextFields.label }}</p>
+              </div>
+            </div>
+
+            <!-- Cas particulier : Programme -->
+            <div v-if="contextFields.isProgram" class="space-y-6">
+               <div v-for="(step, idx) in subEvents" :key="idx" class="p-4 bg-white border border-gray-100 rounded-2xl space-y-3 relative group">
+                  <button @click="removeProgramStep(idx)" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-lg">×</button>
+                  <div class="flex gap-2">
+                    <input v-model="step.time" type="time" class="w-24 p-2 bg-gray-50 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#C5A059]">
+                    <input v-model="step.title" type="text" placeholder="Titre de l'étape" class="flex-1 p-2 bg-gray-50 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#C5A059]">
+                  </div>
+                  <input v-model="step.location" type="text" placeholder="Lieu" class="w-full p-2 bg-gray-50 rounded-lg text-[10px] outline-none focus:ring-1 focus:ring-[#C5A059]">
+                  <textarea v-model="step.description" placeholder="Description courte" class="w-full p-2 bg-gray-50 rounded-lg text-[10px] outline-none focus:ring-1 focus:ring-[#C5A059] h-16 resize-none"></textarea>
+               </div>
+               <button @click="addProgramStep" class="w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl text-[10px] font-bold uppercase text-gray-400 hover:border-[#C5A059] hover:text-[#C5A059] transition-all">
+                 + Ajouter une étape
+               </button>
+            </div>
+
+            <!-- Rendu générique des champs -->
+            <div v-else class="space-y-4">
+              <div v-for="field in contextFields.fields" :key="field.model" class="space-y-1">
+                <label class="text-[10px] font-bold uppercase text-gray-500 tracking-wider" :data-field="field.model">{{ field.label }}</label>
+                
+                <input v-if="field.type === 'text'" :value="resolveModel(field.model).get()" @input="resolveModel(field.model).set($event.target.value)"
+                       :placeholder="field.placeholder || ''"
+                       class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] focus:ring-2 focus:ring-[#C5A059]/20 outline-none transition-all">
+                
+                <textarea v-else-if="field.type === 'textarea'" :value="resolveModel(field.model).get()" @input="resolveModel(field.model).set($event.target.value)"
+                          class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs h-32 resize-none focus:border-[#C5A059] outline-none transition-all"></textarea>
+                
+                <div v-else-if="field.type === 'color'" class="flex items-center bg-white border border-gray-200 rounded-xl p-1 pr-3">
+                  <input type="color" :value="resolveModel(field.model).get()" @input="resolveModel(field.model).set($event.target.value)"
+                         class="w-10 h-10 border-0 p-0 bg-transparent cursor-pointer rounded-lg">
+                  <span class="ml-3 text-xs font-mono text-gray-500 uppercase">{{ resolveModel(field.model).get() }}</span>
                 </div>
-                <input type="checkbox" v-model="config.show_splash" class="w-6 h-6 accent-[#C5A059]">
-             </section>
 
-             <div v-if="config.show_splash" class="space-y-8 animate-in">
-                <section class="space-y-4">
-                  <label class="text-[10px] font-black uppercase text-gray-400">Contenu de la page de garde</label>
-                  <div class="space-y-3">
-                    <input v-model="config.content.splash_top_text" placeholder="Texte du haut (ex: Save the Date)" class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-100">
-                    <input v-model="config.content.splash_title" :placeholder="eventData.groom_name + ' & ' + eventData.bride_name" class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-100">
-                    <input v-model="config.content.splash_subtitle" placeholder="Sous-titre (ex: Nous nous marions !)" class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-100">
-                  </div>
-                </section>
+                <label v-else-if="field.type === 'toggle'" class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-xl cursor-pointer">
+                  <span class="text-xs font-bold text-gray-700">{{ resolveModel(field.model).get() ? 'Affiché' : 'Masqué' }}</span>
+                  <input type="checkbox" :checked="resolveModel(field.model).get()" @change="resolveModel(field.model).set($event.target.checked)"
+                         class="w-5 h-5 accent-[#C5A059] rounded">
+                </label>
 
-                <section class="space-y-4">
-                  <label class="text-[10px] font-black uppercase text-gray-400">Bouton d'entrée</label>
-                  <input v-model="config.content.splash_button_text" placeholder="Texte du bouton" class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-100">
-                </section>
-
-                <section class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                  <label class="text-[10px] font-black uppercase text-gray-400">Compte à rebours</label>
-                  <input type="checkbox" v-model="config.show_countdown_splash" class="w-5 h-5 accent-black">
-                </section>
-
-                <section class="space-y-4">
-                  <label class="text-[10px] font-black uppercase text-gray-400">Image de fond (Splash)</label>
-                  <div v-if="config.media.splash_url" class="w-full h-40 rounded-2xl overflow-hidden mb-2 bg-gray-100 border border-gray-100 relative group">
-                    <img :src="config.media.splash_url" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                       <button @click="config.media.splash_url = ''" class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase text-white">Changer l'image</button>
-                    </div>
-                  </div>
-                  <div v-else class="w-full">
-                    <input type="file" @change="e => handleFileUpload(e, 'splash', 'splash_url')" class="hidden" id="splash_upload">
-                    <label for="splash_upload" class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50 transition-all">
-                      <span class="text-[9px] font-black uppercase text-gray-400">Cliquez pour uploader une photo</span>
+                <div v-else-if="field.type === 'image'" class="space-y-2">
+                  <div class="flex gap-2">
+                    <input type="text" :value="resolveModel(field.model).get()" @input="resolveModel(field.model).set($event.target.value)"
+                           placeholder="URL de l'image..."
+                           class="flex-1 p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none transition-all">
+                    <label class="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors flex items-center justify-center aspect-square">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                      <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event, field.model)">
                     </label>
                   </div>
-                </section>
-             </div>
-             
-             <div v-else class="p-8 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-                <p class="text-[10px] font-black uppercase text-gray-400">La page de garde est désactivée. L'invitation s'ouvrira directement.</p>
-             </div>
-          </div>
-
-          <!-- STRUCTURE TAB -->
-          <div v-if="activeTab === 'structure'" class="space-y-6 animate-in">
-            <p class="text-[10px] text-gray-400 uppercase font-black mb-4">Ordre des blocs</p>
-            <div class="space-y-3">
-              <div v-for="(section, index) in config.sections" :key="index" 
-                   @click="selectedBlock = section"
-                   :class="selectedBlock === section ? 'border-[#C5A059] ring-1 ring-[#C5A059]' : 'border-gray-100'"
-                   class="flex items-center justify-between p-4 bg-white border rounded-2xl shadow-sm transition-all cursor-pointer">
-                <div class="flex items-center space-x-3">
-                  <div class="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-400">{{ index + 1 }}</div>
-                  <span class="text-xs font-bold text-gray-700">{{ sectionLabels[section] || section }}</span>
-                </div>
-                <div class="flex space-x-1">
-                  <button @click.stop="moveSection(index, -1)" :disabled="index === 0" class="p-1 text-[#C5A059] disabled:opacity-20">Haut</button>
-                  <button @click.stop="moveSection(index, 1)" :disabled="index === config.sections.length - 1" class="p-1 text-[#C5A059] disabled:opacity-20">Bas</button>
-                  <button @click.stop="config.sections.splice(index, 1)" class="p-1 text-red-300 hover:text-red-500">Suppr</button>
+                  <div v-if="resolveModel(field.model).get()" class="aspect-video rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                    <img :src="resolveModel(field.model).get()" class="w-full h-full object-cover">
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="pt-6 border-t space-y-2">
-               <p class="text-[9px] font-black uppercase text-gray-400 mb-3">Ajouter un bloc</p>
-               <div class="grid grid-cols-1 gap-2">
-                  <button v-for="(label, id) in sectionLabels" :key="id" 
-                          v-show="!config.sections.includes(id) && 
-                                 (id.startsWith('ora-') ? config.layout === 'ora' : 
-                                  id.startsWith('es-') ? config.layout === 'es' : 
-                                  !id.startsWith('ora-') && !id.startsWith('es-'))"
-                          @click="config.sections.push(id)" 
-                          class="text-left px-4 py-3 bg-gray-50 hover:bg-[#C5A059] hover:text-white rounded-xl text-[10px] font-bold uppercase transition-all">
-                    + {{ label }}
-                  </button>
-               </div>
+
+            <div class="pt-6 mt-6 border-t border-gray-200">
+              <button v-if="!selectedBlock.includes('full') && !selectedBlock.includes('hero')" 
+                      @click="deleteBlock(config.sections.indexOf(selectedBlock))"
+                      class="w-full py-3 text-[10px] font-black uppercase text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-colors tracking-widest">
+                Supprimer ce bloc
+              </button>
+            </div>
+          </template>
+        </div>
+
+        <!-- ONGLET : GARDE -->
+        <div v-if="activeTab === 'cover'" class="animate-in space-y-4 pb-4">
+
+          <!-- ── Activation ── -->
+          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <label class="flex items-center gap-4 p-5 cursor-pointer group">
+              <!-- Icône -->
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+                   :class="config.show_splash ? 'bg-[#1A1A1A]' : 'bg-gray-100'">
+                <svg class="w-5 h-5 transition-colors" :class="config.show_splash ? 'text-[#C5A059]' : 'text-gray-400'"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                        d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[11px] font-black uppercase tracking-widest text-gray-900">Page de garde</p>
+                <p class="text-[10px] text-gray-400 mt-0.5">Écran d'accueil avant l'invitation</p>
+              </div>
+              <!-- Toggle -->
+              <div class="relative shrink-0">
+                <input type="checkbox" v-model="config.show_splash" class="sr-only peer"
+                       @change="config.show_splash ? (selectedBlock = 'splash') : (selectedBlock = null)">
+                <div class="w-11 h-6 rounded-full transition-colors peer-checked:bg-[#1A1A1A] bg-gray-200
+                            after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                            after:bg-white after:rounded-full after:h-5 after:w-5
+                            after:transition-all peer-checked:after:translate-x-5 after:shadow-sm"></div>
+              </div>
+            </label>
+          </div>
+
+          <!-- ── Contenu (visible si activé) ── -->
+          <template v-if="config.show_splash">
+
+            <!-- Photo de fond -->
+            <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div class="px-5 pt-5 pb-3">
+                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3">Photo de fond</p>
+                <!-- Miniature cliquable -->
+                <label class="block relative group cursor-pointer">
+                  <div class="w-full h-28 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                    <img v-if="config.media.splash_url" :src="config.media.splash_url"
+                         class="w-full h-full object-cover" />
+                    <div v-else class="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-300">
+                      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                      <span class="text-[9px] uppercase tracking-widest">Choisir une photo</span>
+                    </div>
+                  </div>
+                  <!-- Overlay hover -->
+                  <div class="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span class="text-white text-[9px] font-bold uppercase tracking-widest">Changer</span>
+                  </div>
+                  <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event, 'media.splash_url')">
+                </label>
+              </div>
+              <!-- URL manuelle -->
+              <div class="px-5 pb-5">
+                <input type="text" v-model="config.media.splash_url"
+                       placeholder="ou coller une URL…"
+                       class="w-full p-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-600 placeholder-gray-300 focus:border-[#C5A059] focus:bg-white outline-none transition-colors" />
+              </div>
+            </div>
+
+            <!-- Textes -->
+            <div class="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+              <p class="px-5 pt-4 pb-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Textes</p>
+
+              <div v-for="field in [
+                { key: 'splash_top_text',    label: 'Texte haut',     placeholder: 'Save the Date' },
+                { key: 'splash_title',       label: 'Titre principal', placeholder: 'Prénom1 & Prénom2' },
+                { key: 'splash_subtitle',    label: 'Sous-titre',      placeholder: 'Une journée inoubliable…' },
+                { key: 'splash_button_text', label: 'Bouton entrer',   placeholder: 'Entrer dans l\'invitation' },
+              ]" :key="field.key" class="px-5 py-3.5 flex items-center gap-3">
+                <span class="text-[9px] text-gray-400 w-24 shrink-0 font-medium">{{ field.label }}</span>
+                <input type="text"
+                       v-model="config.content[field.key]"
+                       :placeholder="field.placeholder"
+                       class="flex-1 bg-gray-50 border border-transparent rounded-lg px-3 py-2 text-[11px] text-gray-800 placeholder-gray-300 focus:border-[#C5A059] focus:bg-white outline-none transition-colors" />
+              </div>
+            </div>
+
+            <!-- Options -->
+            <div class="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+              <p class="px-5 pt-4 pb-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Options</p>
+
+              <label class="flex items-center justify-between px-5 py-4 cursor-pointer group">
+                <div>
+                  <p class="text-[11px] font-bold text-gray-800">Compte à rebours</p>
+                  <p class="text-[9px] text-gray-400 mt-0.5">Afficher le décompte sur la garde</p>
+                </div>
+                <div class="relative">
+                  <input type="checkbox" v-model="config.show_countdown_splash" class="sr-only peer">
+                  <div class="w-9 h-5 rounded-full transition-colors peer-checked:bg-[#1A1A1A] bg-gray-200
+                              after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                              after:bg-white after:rounded-full after:h-4 after:w-4
+                              after:transition-all peer-checked:after:translate-x-4 after:shadow-sm"></div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Couleurs de la garde -->
+            <div class="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+              <p class="px-5 pt-4 pb-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Couleurs</p>
+
+              <!-- Fond -->
+              <div class="px-5 py-3.5 flex items-center justify-between">
+                <div>
+                  <p class="text-[11px] font-bold text-gray-800">Couleur de fond</p>
+                  <p class="text-[9px] text-gray-400 mt-0.5">Si pas de photo, cette couleur est utilisée</p>
+                </div>
+                <label class="relative cursor-pointer">
+                  <div class="w-9 h-9 rounded-xl border-2 border-white shadow-md ring-1 ring-black/10 overflow-hidden"
+                       :style="{ backgroundColor: config.theme.background || '#0a0a0a' }">
+                    <input type="color" v-model="config.theme.background"
+                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  </div>
+                </label>
+              </div>
+
+              <!-- Accentuation -->
+              <div class="px-5 py-3.5 flex items-center justify-between">
+                <div>
+                  <p class="text-[11px] font-bold text-gray-800">Couleur d'accentuation</p>
+                  <p class="text-[9px] text-gray-400 mt-0.5">Titres, ornements, séparateurs</p>
+                </div>
+                <label class="relative cursor-pointer">
+                  <div class="w-9 h-9 rounded-xl border-2 border-white shadow-md ring-1 ring-black/10 overflow-hidden"
+                       :style="{ backgroundColor: config.theme.accent || '#C5A059' }">
+                    <input type="color" v-model="config.theme.accent"
+                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Info device actif -->
+            <div class="flex items-center gap-2 px-1">
+              <svg class="w-3.5 h-3.5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke-width="1.5"/>
+                <path d="M12 8v4m0 4h.01" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <p class="text-[9px] text-gray-400 leading-relaxed">
+                La garde s'affiche dans le cadre
+                <span class="font-bold text-gray-600">{{ previewDevice === 'mobile' ? 'téléphone' : 'ordinateur' }}</span>.
+                Changez le cadre via la barre en haut de la preview.
+              </p>
+            </div>
+
+          </template>
+
+        </div>
+
+        <!-- ONGLET : DESIGN -->
+        <div v-if="activeTab === 'design'" class="animate-in space-y-8">
+          
+          <div class="space-y-4">
+            <h3 class="flex items-center text-xs font-black text-gray-800 uppercase tracking-widest">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.172-1.172a4 4 0 115.656 5.656L15 13"></path></svg>
+              Palette de couleurs
+            </h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div v-for="(label, key) in { background: 'Fond', text: 'Texte', titleColor: 'Titres', namesColor: 'Prénoms', accent: 'Accentuation' }" :key="key"
+                   class="bg-white border border-gray-200 p-2 rounded-xl flex items-center">
+                <input type="color" v-model="config.theme[key]" class="w-8 h-8 rounded-lg cursor-pointer border-0 p-0 bg-transparent">
+                <span class="ml-2 text-[10px] font-bold uppercase text-gray-500">{{ label }}</span>
+              </div>
             </div>
           </div>
 
-          <!-- CONTENT TAB (Dynamique selon la structure) -->
-          <div v-if="activeTab === 'content'" class="space-y-8 animate-in pb-20">
-             <section class="space-y-4">
-                <label class="text-[10px] font-black uppercase text-gray-400">Identité</label>
-                <div class="grid grid-cols-2 gap-3">
-                  <input v-model="eventData.groom_name" placeholder="Lui" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
-                  <input v-model="eventData.bride_name" placeholder="Elle" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
+          <div class="space-y-4 pt-6 border-t border-gray-200">
+            <h3 class="flex items-center text-xs font-black text-gray-800 uppercase tracking-widest">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 5v12m0 0H7m2 0h2M3 20h12M21 12h-6"/></svg>
+              Typographie
+            </h3>
+            <div class="bg-white border border-gray-200 p-4 rounded-xl space-y-5">
+
+              <!-- Police -->
+              <div class="space-y-1">
+                <span class="text-[10px] font-bold uppercase text-gray-500">Police de caractères</span>
+                <select v-model="config.theme.fontFamily" class="w-full bg-gray-50 border border-gray-100 rounded-lg p-2 text-xs font-bold text-gray-800 outline-none">
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Cormorant Garamond">Cormorant Garamond</option>
+                  <option value="Jost">Jost</option>
+                  <option value="Lato">Lato</option>
+                  <option value="Cinzel">Cinzel</option>
+                  <option value="Spectral">Spectral</option>
+                  <option value="Anton">Anton</option>
+                  <option value="Dancing Script">Dancing Script</option>
+                  <option value="Syne">Syne</option>
+                  <option value="Bodoni Moda">Bodoni Moda</option>
+                </select>
+              </div>
+
+              <!-- Taille Prénoms -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase text-gray-500">Taille prénoms</span>
+                  <span class="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded">{{ namesSize }}rem</span>
                 </div>
-                <input v-model="config.content.names" placeholder="Affichage (ex: O & S)" class="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs italic">
-             </section>
-
-             <section v-if="config.sections.includes('ora-hero')" class="space-y-4 border-t pt-8">
-                <label class="text-[10px] font-black uppercase text-[#C5A059]">Bannière Ora</label>
-                <input v-model="config.content.divider_symbol" placeholder="Symbole séparateur (ex: ✧)" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
-                <div class="flex items-center space-x-2">
-                  <input type="checkbox" v-model="config.content.show_petals" id="petals">
-                  <label for="petals" class="text-[10px] font-black uppercase text-gray-400">Afficher les pétales</label>
+                <input type="range" :value="namesSize" @input="namesSize = +$event.target.value"
+                       min="2" max="12" step="0.25" class="w-full accent-[#C5A059]">
+                <div class="flex justify-between text-[8px] text-gray-300 font-mono">
+                  <span>2rem</span><span>7rem</span><span>12rem</span>
                 </div>
-             </section>
+              </div>
 
-             <!-- CHAMPS CONDITIONNELS À LA STRUCTURE -->
-             <section v-if="config.sections.includes('ora-section1')" class="space-y-4 border-t pt-8">
-                <div class="flex items-center justify-between">
-                  <label class="text-[10px] font-black uppercase text-[#C5A059]">Union Civile</label>
-                  <input v-model="config.content.s1_label" placeholder="Libellé" class="text-[9px] bg-transparent border-none text-right">
+              <!-- Taille Titres de section -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase text-gray-500">Titres de section</span>
+                  <span class="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded">{{ titleSize }}rem</span>
                 </div>
-                <input v-model="config.content.s1_title" placeholder="Titre (ex: La Mairie)" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
-                <input v-model="config.content.s1_date" placeholder="Date spécifique (optionnel)" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
-                <textarea v-model="config.content.s1_location" placeholder="Adresse" class="w-full p-3 bg-gray-50 rounded-lg text-xs h-20"></textarea>
-                
-                <div class="pt-4 border-t border-dashed border-gray-100 space-y-3">
-                  <div class="flex items-center justify-between">
-                    <label class="text-[9px] font-black uppercase text-gray-300">Option: Cocktail</label>
-                    <input v-model="config.content.s1_extra_label" placeholder="Libellé (ex: Cocktail)" class="text-[8px] bg-transparent border-none text-right">
-                  </div>
-                  <input v-model="config.content.s1_extra_title" placeholder="Titre (ex: Cocktail à 19h)" class="w-full p-2 bg-gray-50 rounded text-[10px]">
-                  <input v-model="config.content.s1_extra_location" placeholder="Lieu (si différent)" class="w-full p-2 bg-gray-50 rounded text-[10px]">
+                <input type="range" :value="titleSize" @input="titleSize = +$event.target.value"
+                       min="1" max="7" step="0.25" class="w-full accent-[#C5A059]">
+                <div class="flex justify-between text-[8px] text-gray-300 font-mono">
+                  <span>1rem</span><span>4rem</span><span>7rem</span>
                 </div>
-             </section>
+              </div>
 
-             <section v-if="config.sections.includes('ora-section2')" class="space-y-4 border-t pt-8">
-                <div class="flex items-center justify-between">
-                  <label class="text-[10px] font-black uppercase text-[#C5A059]">Cérémonie & Familles</label>
-                  <input v-model="config.content.s2_label" placeholder="Libellé" class="text-[9px] bg-transparent border-none text-right">
+              <!-- Taille corps de texte -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase text-gray-500">Corps du texte</span>
+                  <span class="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded">{{ bodySize }}rem</span>
                 </div>
-                <input v-model="config.content.s2_title" placeholder="Titre (ex: Houppa & Soirée)" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
-                <input v-model="config.content.s2_date" placeholder="Date spécifique (optionnel)" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
-                
-                <div class="grid grid-cols-2 gap-2">
-                  <div class="space-y-1">
-                    <input v-model="config.content.family_left_title" placeholder="Titre (ex: Famille...)" class="w-full p-2 bg-gray-50 rounded text-[9px]">
-                    <textarea v-model="config.content.family_left_parents" placeholder="Parents..." class="w-full p-2 bg-gray-50 rounded text-[9px] h-20"></textarea>
-                  </div>
-                  <div class="space-y-1">
-                    <input v-model="config.content.family_right_title" placeholder="Titre (ex: Famille...)" class="w-full p-2 bg-gray-50 rounded text-[9px]">
-                    <textarea v-model="config.content.family_right_parents" placeholder="Parents..." class="w-full p-2 bg-gray-50 rounded text-[9px] h-20"></textarea>
-                  </div>
+                <input type="range" :value="bodySize" @input="bodySize = +$event.target.value"
+                       min="0.7" max="2" step="0.05" class="w-full accent-[#C5A059]">
+                <div class="flex justify-between text-[8px] text-gray-300 font-mono">
+                  <span>0.7</span><span>1.35</span><span>2rem</span>
                 </div>
-
-                <div class="space-y-2">
-                  <label class="text-[9px] font-black uppercase text-gray-300">Textes d'annonce</label>
-                  <textarea v-model="config.content.announcement_text" placeholder="Ont la joie de..." class="w-full p-2 bg-gray-50 rounded text-[10px] h-16"></textarea>
-                  <input v-model="config.content.hebrew_names" placeholder="Prénoms en Hébreu" class="w-full p-3 bg-gray-50 text-right text-sm">
-                  <textarea v-model="config.content.intro_text_s2" placeholder="Seront honorés de votre présence..." class="w-full p-2 bg-gray-50 rounded text-[10px] h-16"></textarea>
-                </div>
-
-                <textarea v-model="config.content.s2_location" placeholder="Adresse" class="w-full p-3 bg-gray-50 rounded-lg text-xs h-20"></textarea>
-             </section>
-
-             <section v-if="config.sections.includes('ora-tribute')" class="space-y-4 border-t pt-8">
-                <label class="text-[10px] font-black uppercase text-gray-400">Hommage</label>
-                <input v-model="config.content.tribute_title" class="w-full p-3 bg-gray-50 rounded-lg text-xs" placeholder="Titre hommage">
-                <textarea v-model="config.content.tribute_text" placeholder="Noms des disparus..." class="w-full p-3 bg-gray-50 rounded-lg text-xs h-24"></textarea>
-                <input v-model="config.content.tribute_blessing" placeholder="Bénédiction (ex: Zal)" class="w-full p-2 bg-gray-50 rounded text-[10px]">
-             </section>
-
-             <section v-if="config.sections.includes('ora-gallery')" class="space-y-4 border-t pt-8">
-                <label class="text-[10px] font-black uppercase text-gray-400">Galerie</label>
-                <input v-model="config.content.gallery_label" placeholder="Titre galerie" class="w-full p-2 bg-gray-50 rounded text-xs">
-             </section>
-
-             <section class="space-y-4 border-t pt-8">
-                <label class="text-[10px] font-black uppercase text-gray-400">Date & Lieu Global</label>
-                <input type="date" v-model="eventData.date" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
-                <input v-model="eventData.location" placeholder="Lieu général" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
-             </section>
-
-             <section v-if="config.sections.includes('footer')" class="space-y-4 border-t pt-8">
-                <label class="text-[10px] font-black uppercase text-gray-400">Pied de page</label>
-                <input v-model="config.content.footer_text" placeholder="Fait avec amour • 2026" class="w-full p-3 bg-gray-50 rounded-lg text-xs">
-             </section>
-          </div>
-
-          <!-- PLANNING / PROGRAMME -->
-          <div v-if="activeTab === 'program'" class="space-y-6 animate-in">
-             <div v-if="!config.sections.includes('program')" class="p-8 text-center bg-amber-50 rounded-3xl border border-amber-100">
-                <p class="text-[10px] font-black uppercase text-amber-600 mb-4">Le bloc Programme n'est pas activé</p>
-                <button @click="config.sections.push('program')" class="px-6 py-3 bg-amber-600 text-white rounded-xl text-[9px] font-black uppercase shadow-lg shadow-amber-200">Activer le bloc</button>
-             </div>
-
-             <template v-else>
-               <div class="flex items-center justify-between border-b border-gray-100 pb-4">
-                 <h3 class="text-[11px] font-black uppercase text-gray-400">Programme de la journée</h3>
-                 <button @click="addSubEvent" class="px-4 py-2 bg-black text-white rounded-full text-[9px] font-black uppercase hover:scale-105 transition-all">+ Ajouter</button>
-               </div>
-  
-               <div class="space-y-4">
-                  <div v-for="(se, idx) in subEvents" :key="idx" class="p-6 bg-gray-50 rounded-3xl space-y-4 relative group border border-transparent hover:border-gray-200 transition-all">
-                      <!-- CONTROLES DE DEPLACEMENT -->
-                      <div class="absolute -right-2 top-1/2 -translate-y-1/2 flex flex-col space-y-1 opacity-0 group-hover:opacity-100 transition-all">
-                         <button @click="moveSubEvent(idx, -1)" :disabled="idx === 0" class="p-2 bg-white shadow-md rounded-full text-xs hover:bg-gray-50 disabled:opacity-30">↑</button>
-                         <button @click="moveSubEvent(idx, 1)" :disabled="idx === subEvents.length - 1" class="p-2 bg-white shadow-md rounded-full text-xs hover:bg-gray-50 disabled:opacity-30">↓</button>
-                      </div>
-  
-                      <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-black text-gray-300 uppercase">Étape {{ idx + 1 }}</span>
-                        <button @click="removeSubEvent(idx)" class="text-[9px] uppercase font-black text-red-300 hover:text-red-500">Supprimer</button>
-                      </div>
-  
-                      <div class="flex space-x-2">
-                        <input v-model="se.icon" class="w-12 bg-white p-3 rounded-xl text-center text-lg border-none outline-none shadow-sm" placeholder="✨">
-                        <input v-model="se.time" type="time" class="bg-white p-3 rounded-xl text-[10px] border-none outline-none shadow-sm">
-                        <input v-model="se.title" class="flex-1 bg-white p-3 rounded-xl text-[10px] font-bold border-none outline-none shadow-sm" placeholder="Titre (ex: Cocktail)">
-                      </div>
-                      <input v-model="se.location" class="w-full bg-white p-3 rounded-xl text-[10px] border-none outline-none shadow-sm" placeholder="Lieu">
-                      <textarea v-model="se.description" class="w-full bg-white p-3 rounded-xl text-[10px] border-none outline-none shadow-sm h-16" placeholder="Description courte (optionnel)"></textarea>
-                  </div>
-               </div>
-  
-               <div v-if="subEvents.length === 0" class="py-20 text-center border-2 border-dashed border-gray-100 rounded-3xl">
-                  <p class="text-[10px] font-black uppercase text-gray-300">Aucune étape pour le moment</p>
-               </div>
-             </template>
-          </div>
-
-          <!-- PICTOGRAMMES -->
-          <div v-if="activeTab === 'icons'" class="space-y-8 animate-in">
-             <section class="space-y-4">
-                <label class="text-[10px] font-black uppercase text-gray-400">Bibliothèque d'icônes</label>
-                <div class="grid grid-cols-5 gap-3">
-                  <button v-for="icon in weddingIcons" :key="icon" 
-                          @click="selectIcon(icon)"
-                          class="aspect-square flex items-center justify-center bg-gray-50 hover:bg-white hover:shadow-md rounded-xl text-2xl transition-all">
-                    {{ icon }}
-                  </button>
-                </div>
-                <p class="text-[9px] text-gray-400 italic">Cliquez sur une icône pour l'utiliser comme séparateur global.</p>
-             </section>
-          </div>
-
-          <!-- MEDIAS -->
-          <div v-if="activeTab === 'media'" class="space-y-8 animate-in">
-             <section v-if="config.sections.includes('hero') || config.sections.includes('ora-hero')" class="space-y-4">
-                <label class="text-[10px] font-black uppercase text-gray-400">Image Principale</label>
-                <div v-if="config.content.image_url" class="w-full h-32 rounded-xl overflow-hidden mb-2 bg-gray-100 border border-gray-100">
-                  <img :src="config.content.image_url" class="w-full h-full object-cover">
-                </div>
-                <input type="file" @change="e => handleFileUpload(e, 'image')" class="text-[10px] w-full">
-             </section>
-             <section v-if="config.sections.includes('ora-parallax')" class="space-y-4 border-t pt-6">
-                <label class="text-[10px] font-black uppercase text-gray-400">Image Parallaxe</label>
-                <div v-if="config.content.parallax_image_url" class="w-full h-32 rounded-xl overflow-hidden mb-2 bg-gray-100 border border-gray-100">
-                  <img :src="config.content.parallax_image_url" class="w-full h-full object-cover">
-                </div>
-                <input type="file" @change="e => handleFileUpload(e, 'parallax', 'parallax_image_url')" class="text-[10px] w-full">
-             </section>
-             <section v-if="config.sections.includes('ora-gallery')" class="space-y-4 border-t pt-6">
-                <label class="text-[10px] font-black uppercase text-gray-400">Galerie</label>
-                <div class="grid grid-cols-3 gap-2 mb-3">
-                  <div v-for="i in [1,2,3]" :key="i" class="aspect-square rounded-lg bg-gray-50 overflow-hidden border border-gray-100">
-                    <img v-if="config.content[`gal_img${i}`]" :src="config.content[`gal_img${i}`]" class="w-full h-full object-cover">
-                  </div>
-                </div>
-                <div class="grid grid-cols-1 gap-2">
-                    <input v-for="i in [1,2,3]" :key="i" type="file" @change="e => handleFileUpload(e, 'gallery', `gal_img${i}`)" class="text-[8px]">
-                </div>
-             </section>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- FOOTER ACTIONS -->
-        <div class="p-8 border-t border-gray-50 bg-white space-y-4 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
-          <div class="flex items-center justify-between">
-            <span class="text-[9px] font-black uppercase" :class="saving ? 'text-amber-500' : 'text-green-500'">{{ saving ? 'Sync...' : 'Sauvegardé' }}</span>
-            <span class="text-[9px] font-black uppercase text-gray-400">{{ isPublished ? 'En ligne' : 'Brouillon' }}</span>
+        <!-- ONGLET : STRUCTURE (Drag & Drop + Ajout) -->
+        <div v-if="activeTab === 'structure'" class="animate-in space-y-8">
+          
+          <section class="space-y-4">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Structure actuelle</p>
+            <div class="space-y-2">
+              <div v-for="(section, index) in config.sections" :key="section"
+                   draggable="true" @dragstart="dragStart(index)" @dragover.prevent="dragOver(index)" @dragend="dragEnd"
+                   class="flex items-center justify-between p-4 bg-white border rounded-xl shadow-sm transition-all cursor-grab active:cursor-grabbing"
+                   :class="[dragOverIndex === index ? 'border-[#C5A059] bg-amber-50 scale-[1.02]' : 'border-gray-200', selectedBlock === section ? 'ring-2 ring-[#C5A059] border-transparent' : '']"
+                   @click="selectedBlock = section">
+                <div class="flex items-center">
+                  <div class="mr-3 text-gray-300 hover:text-gray-500">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-gray-800 uppercase tracking-wide">{{ getBlockLabel(section) }}</p>
+                    <p class="text-[9px] font-mono text-gray-400 mt-0.5">id: {{ section }}</p>
+                  </div>
+                </div>
+                <!-- Supprimer (masqué sur les blocs principaux hero/full) -->
+                <button v-if="!section.includes('hero') && !section.includes('full')"
+                        @click.stop="deleteBlock(index)"
+                        class="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                        title="Supprimer ce bloc">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="pt-8 border-t border-gray-200">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mb-6">Ajouter une section</p>
+            <div class="grid grid-cols-2 gap-3">
+               <button v-for="block in availableBlocks" :key="block.id"
+                       @click="addBlock(block.id)"
+                       class="p-4 bg-white border border-gray-100 rounded-2xl hover:border-[#C5A059] hover:shadow-md transition-all text-center group">
+                  <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">{{ block.icon }}</div>
+                  <p class="text-[10px] font-bold text-gray-800 uppercase leading-tight">{{ block.label }}</p>
+               </button>
+            </div>
+          </section>
+        </div>
+
+        <!-- ONGLET : TEXTES (dynamique par template) -->
+        <div v-if="activeTab === 'content'" class="animate-in space-y-5">
+          <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">
+            Tous les textes — {{ config.layout }}
+          </p>
+
+          <div v-for="field in currentTemplateFields" :key="field.key" class="space-y-1">
+            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{{ field.label }}</label>
+
+            <!-- Texte court -->
+            <input
+              v-if="field.type === 'text'"
+              type="text"
+              :value="config.content[field.key] ?? ''"
+              :placeholder="field.placeholder || ''"
+              @input="config.content[field.key] = $event.target.value"
+              class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] focus:ring-2 focus:ring-[#C5A059]/20 outline-none transition-all"
+            >
+
+            <!-- Texte long -->
+            <textarea
+              v-else-if="field.type === 'textarea'"
+              :value="config.content[field.key] ?? ''"
+              @input="config.content[field.key] = $event.target.value"
+              class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs h-24 resize-none focus:border-[#C5A059] outline-none transition-all"
+            ></textarea>
+
+            <!-- Image -->
+            <div v-else-if="field.type === 'image'" class="space-y-2">
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  :value="config.content[field.key] ?? ''"
+                  @input="config.content[field.key] = $event.target.value"
+                  placeholder="URL de l'image..."
+                  class="flex-1 p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none transition-all"
+                >
+                <label class="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors flex items-center justify-center aspect-square">
+                  <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                  </svg>
+                  <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event, 'content.' + field.key)">
+                </label>
+              </div>
+              <div v-if="config.content[field.key]" class="aspect-video rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                <img :src="config.content[field.key]" class="w-full h-full object-cover">
+              </div>
+            </div>
           </div>
-          <div class="flex space-x-2">
-            <button @click="publishCard" :class="isPublished ? 'bg-white border-2 border-black text-black' : 'bg-black text-white'" class="flex-1 py-4 text-[10px] font-black uppercase rounded-2xl transition-all shadow-xl">
-              {{ isPublished ? 'Dépublier' : 'Publier' }}
-            </button>
-            <a v-if="isPublished" :href="`/cards/${slug}`" target="_blank" class="px-6 py-4 bg-gray-50 text-gray-700 rounded-2xl text-[10px] font-black uppercase border border-gray-100 flex items-center justify-center">
-              Voir
-            </a>
+
+          <!-- Champs globaux toujours présents -->
+          <div class="pt-4 border-t border-gray-200 space-y-4">
+            <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Autres</p>
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pied de page</label>
+              <input type="text" v-model="config.content.footer_text"
+                     class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none">
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Titre RSVP</label>
+              <input type="text" v-model="config.content.rsvp_title"
+                     class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none">
+            </div>
           </div>
-          <button @click="router.push('/dashboard')" class="w-full py-3 text-[10px] font-black uppercase text-gray-400 hover:text-black transition-all">
-            Retour au Dashboard
+        </div>
+
+        <!-- ONGLET : MEDIA -->
+        <div v-if="activeTab === 'media'" class="animate-in space-y-6">
+           <div class="bg-white border border-gray-200 rounded-xl p-4 space-y-4">
+              <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Image de couverture (URL)</label>
+              <input type="text" v-model="config.media.image_url" placeholder="https://..." class="w-full p-3 bg-gray-50 border border-transparent rounded-xl text-xs focus:border-[#C5A059] outline-none">
+              <div v-if="config.media.image_url" class="aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                  <img :src="config.media.image_url" class="w-full h-full object-cover">
+              </div>
+           </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER SIDEBAR -->
+      <div class="bg-white border-t border-gray-200">
+
+        <!-- Boutons principaux -->
+        <div class="p-4 flex space-x-3">
+          <button @click="router.push('/dashboard')" class="px-5 py-3 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-colors">
+            Quitter
+          </button>
+          <button
+            @click="publishCard"
+            :disabled="publishing"
+            class="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            :class="isPublished
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              : 'bg-[#1A1A1A] hover:bg-black text-white'"
+          >
+            <span v-if="publishing" class="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            <span v-else-if="isPublished">● En ligne</span>
+            <span v-else>Publier</span>
           </button>
         </div>
-      </aside>
 
-      <!-- APERÇU -->
-      <main class="flex-1 bg-[#F9F7F2] relative flex flex-col items-center justify-center p-12 transition-all duration-500">
-        <div class="absolute top-8 left-8 right-8 flex justify-between items-center z-30">
-          <!-- Toggle Preview Mode (Splash vs Card) -->
-          <div class="bg-white/50 backdrop-blur-md rounded-2xl p-1 border border-white shadow-sm flex space-x-1">
-            <button 
-              @click="previewMode = 'card'"
-              :class="previewMode === 'card' ? 'bg-[#1A1A1A] text-white' : 'text-gray-400 hover:text-black'"
-              class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all"
-            >Invitation</button>
-            <button 
-              @click="previewMode = 'splash'"
-              :class="previewMode === 'splash' ? 'bg-[#1A1A1A] text-white' : 'text-gray-400 hover:text-black'"
-              class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all"
-            >Page de garde</button>
-          </div>
-
-          <!-- Toggle Device Mode (Mobile vs Desktop) -->
-          <div class="bg-white/50 backdrop-blur-md rounded-2xl p-1 border border-white shadow-sm flex space-x-1">
-            <button 
-              @click="previewDevice = 'mobile'"
-              :class="previewDevice === 'mobile' ? 'bg-[#1A1A1A] text-white' : 'text-gray-400 hover:text-black'"
-              class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all flex items-center"
-            >
-              <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-              Mobile
-            </button>
-            <button 
-              @click="previewDevice = 'desktop'"
-              :class="previewDevice === 'desktop' ? 'bg-[#1A1A1A] text-white' : 'text-gray-400 hover:text-black'"
-              class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all flex items-center"
-            >
-              <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-              Ordi
+        <!-- Lien public (visible si publié) -->
+        <div v-if="isPublished && publicUrl" class="px-4 pb-4 space-y-2">
+          <p class="text-[9px] font-bold uppercase tracking-[0.18em] text-gray-400">Lien de l'invitation</p>
+          <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+            <a :href="publicUrl" target="_blank"
+               class="flex-1 text-[10px] text-blue-600 font-medium truncate hover:underline">
+              {{ publicUrl }}
+            </a>
+            <button @click="copyPublicUrl" class="shrink-0 p-1.5 rounded-lg hover:bg-gray-200 transition-colors" title="Copier le lien">
+              <svg v-if="!showCopiedToast" class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2"/>
+              </svg>
+              <svg v-else class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
             </button>
           </div>
-
-          <div class="bg-white/50 backdrop-blur-md rounded-full px-6 py-3 border border-white shadow-sm flex items-center space-x-3">
-            <span class="text-[9px] font-black uppercase text-gray-400">Zoom</span>
-            <input type="range" v-model="zoomLevel" min="0.4" max="1" step="0.05" class="w-32 accent-black cursor-pointer">
+          <div class="flex gap-2">
+            <a :href="publicUrl" target="_blank"
+               class="flex-1 py-2 text-center text-[9px] font-bold uppercase tracking-widest bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+              Voir en ligne
+            </a>
+            <button @click="publishCard"
+                    class="flex-1 py-2 text-[9px] font-bold uppercase tracking-widest bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors">
+              Dépublier
+            </button>
           </div>
         </div>
 
-        <!-- Preview Container -->
-        <div 
-          class="bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.2)] transition-all duration-700 origin-center relative border-[#1A1A1A]" 
-          :style="{ 
-            width: previewDevice === 'mobile' ? '450px' : '100%',
-            maxWidth: previewDevice === 'mobile' ? '450px' : '1100px',
-            height: previewDevice === 'mobile' ? '800px' : '80%',
-            transform: `scale(${zoomLevel})`, 
-            borderRadius: previewDevice === 'mobile' ? '48px' : '24px', 
-            borderWidth: previewDevice === 'mobile' ? '14px' : '8px', 
-            overflow: 'hidden' 
-          }"
-        >
-          <div class="h-full overflow-y-auto custom-scrollbar bg-white">
-            <CardSplashScreen 
-              v-if="previewMode === 'splash'" 
-              :config="config" 
-              :event="eventData" 
-              :template-id="card.template_id"
-              :is-preview="true"
-            />
-            <CardRenderer v-else :config="config" :event="eventData" :sub-events="subEvents" :selected-block="selectedBlock" @select-block="handleBlockSelection" />
+      </div>
+    </aside>
+
+    <!-- ZONE PREVIEW -->
+    <main class="flex-1 relative flex flex-col items-center justify-center p-8 bg-[#F3F4F6]">
+      
+      <!-- Toolbar flottante Preview -->
+      <div class="absolute top-6 flex items-center space-x-2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 shadow-sm z-20">
+        <button @click="previewDevice = 'mobile'" :class="previewDevice === 'mobile' ? 'text-black' : 'text-gray-400'" class="p-1 hover:text-black transition-colors" title="Vue Mobile">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" stroke-width="2"/><path d="M12 18h.01" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button @click="previewDevice = 'desktop'" :class="previewDevice === 'desktop' ? 'text-black' : 'text-gray-400'" class="p-1 hover:text-black transition-colors" title="Vue Ordinateur">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" stroke-width="2"/><path d="M8 21h8M12 17v4" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="w-[1px] h-4 bg-gray-300 mx-2"></div>
+        <button @click="zoomLevel = Math.max(50, zoomLevel - 10)" class="p-1 text-gray-400 hover:text-black">-</button>
+        <span class="text-[10px] font-mono font-bold w-10 text-center">{{ zoomLevel }}%</span>
+        <button @click="zoomLevel = Math.min(150, zoomLevel + 10)" class="p-1 text-gray-400 hover:text-black">+</button>
+      </div>
+
+      <!-- Container Rendu -->
+      <div class="transition-all duration-500 ease-out origin-top flex items-center justify-center h-full w-full"
+           :style="{ transform: `scale(${zoomLevel / 100})` }">
+        
+        <div :class="previewDevice === 'mobile' ? 'w-[400px] h-[850px] rounded-[3rem] ring-[12px] ring-gray-900 shadow-2xl' : 'w-full max-w-5xl h-[800px] rounded-xl shadow-2xl'"
+             class="bg-white overflow-hidden relative flex flex-col transition-all duration-500 border border-gray-200">
+          
+          <div v-if="previewDevice === 'mobile'" class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-2xl z-50"></div>
+          
+          <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-white relative" @click.self="selectedBlock = null">
+            <!-- INJECTION DU MOTEUR DE RENDU -->
+            <CardRenderer :config="config" :event="eventData" :subEvents="subEvents" :selectedBlock="selectedBlock" @select-block="selectedBlock = $event" />
+
+            <!-- Bouton retour carte (visible uniquement en mode préview garde) -->
+            <Transition name="fade-up">
+              <button v-if="selectedBlock === 'splash'"
+                      @click="selectedBlock = null; activeTab = 'cover'"
+                      class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-2 px-5 py-2.5 bg-white/90 backdrop-blur-md border border-gray-200 rounded-full shadow-lg text-[10px] font-black uppercase tracking-widest text-gray-700 hover:bg-white hover:shadow-xl transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Retour à la carte
+              </button>
+            </Transition>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+      
+    </main>
   </div>
+  
+  <div v-else class="h-screen flex items-center justify-center bg-[#F9F7F2]">
+     <div class="text-center space-y-6">
+        <div class="w-12 h-1 bg-gray-200 mx-auto overflow-hidden"><div class="w-full h-full bg-[#C5A059] animate-pulse"></div></div>
+        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#C5A059]">Ouverture du Studio</p>
+     </div>
+  </div>
+
+  <!-- INPUT CACHÉ POUR LES TÉLÉCHARGEMENTS RAPIDES (CLIC SUR IMAGE) -->
+  <input ref="quickUploadInput" type="file" class="hidden" accept="image/*" @change="handleQuickUpload">
 </template>
 
 <style>
-.custom-scrollbar::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
-.animate-in { animation: fadeIn 0.4s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* Utilities animations */
+.animate-in { animation: fadeSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Scrollbars */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 4px; }
+
+/* Transitions Toast */
+.toast-enter-active, .toast-leave-active { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 20px) scale(0.95); }
+
+/* Transition bouton retour carte */
+.fade-up-enter-active, .fade-up-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-up-enter-from, .fade-up-leave-to { opacity: 0; transform: translate(-50%, 12px); }
+
+/* --- CSS INJECTÉ POUR L'ÉDITION INLINE DANS LE PREVIEW --- */
+.editable-element {
+  cursor: default;
+  border-radius: 4px;
+  transition: outline 0.15s ease, background 0.15s ease;
+  position: relative;
+}
+.editable-element:hover {
+  outline: 1.5px dashed rgba(197, 160, 89, 0.5);
+  outline-offset: 4px;
+  cursor: text;
+}
+[contenteditable="true"].inline-editing {
+  outline: 2px solid #C5A059;
+  outline-offset: 4px;
+  background: rgba(197, 160, 89, 0.05);
+  border-radius: 4px;
+  min-width: 20px;
+  min-height: 1em;
+  caret-color: #C5A059;
+}
+.editable-element:hover::after {
+  content: 'Double-clic pour modifier';
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1A1A1A;
+  color: white;
+  font-size: 9px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  animation: tooltipFade 0.2s 0.5s ease forwards;
+  z-index: 100;
+}
+@keyframes tooltipFade { to { opacity: 1; } }
+
+/* Selection d'un bloc dans CardRenderer */
+.card-engine > div:hover {
+  outline: 1px dashed rgba(197, 160, 89, 0.4);
+  outline-offset: -1px;
+}
+.card-engine > div.ring-4 {
+  outline: 2px solid #C5A059;
+  outline-offset: -2px;
+  box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.15);
+}
 </style>

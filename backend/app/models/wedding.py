@@ -45,6 +45,7 @@ class CardTemplate(Base):
     required_plan = Column(String, default="classic")
     manifest_json = Column(Text, nullable=False)
     thumbnail_url = Column(String)
+    category = Column(String, default="minimal")
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
