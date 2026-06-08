@@ -20,7 +20,6 @@ Cette commande :
 4. Insère les templates et les comptes de test
 
 ---
-
 ## Démarrage étape par étape
 
 ### 1. Lancer les services

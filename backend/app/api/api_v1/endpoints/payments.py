@@ -41,6 +41,7 @@ def create_checkout_session(
     plan_data = prices[request.plan_name]
 
     try:
+        frontend = settings.FRONTEND_URL.rstrip("/")
         checkout_session = stripe.checkout.Session.create(
             customer_email=current_user.email,
             payment_method_types=['card'],
@@ -57,8 +58,8 @@ def create_checkout_session(
                 },
             ],
             mode='payment',
-            success_url=f"http://localhost:5173/dashboard?payment_success=true&plan={request.plan_name}&session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url="http://localhost:5173/dashboard?payment_cancel=true",
+            success_url=f"{frontend}/dashboard?payment_success=true&plan={request.plan_name}&session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{frontend}/templates?payment_cancel=true",
             metadata={
                 "user_id": current_user.id,
                 "plan": request.plan_name

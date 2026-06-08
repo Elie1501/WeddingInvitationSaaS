@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     S3_SECRET_KEY: str = ""
     
     STRIPE_SECRET_KEY: str = ""
-    STRIPE_WEBHOOK_SECRET: str = "" # Clé pour vérifier les webhooks Stripe
+    STRIPE_WEBHOOK_SECRET: str = ""
+    FRONTEND_URL: str = "http://localhost:5173"
 
     # Configuration pour charger le fichier .env
     model_config = SettingsConfigDict(env_file=".env")

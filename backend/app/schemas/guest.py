@@ -21,6 +21,14 @@ class GuestCreate(GuestBase):
     rsvp_status: Optional[str] = "pending"
     sub_guests: Optional[List[GuestSubCreate]] = []
 
+class GuestUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    rsvp_status: Optional[str] = None
+    dietary_restrictions: Optional[str] = None
+    message: Optional[str] = None
+
 class GuestRSVP(BaseModel):
     presence: bool
     plus_ones: int = 0

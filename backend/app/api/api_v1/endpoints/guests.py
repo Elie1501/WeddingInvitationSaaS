@@ -6,8 +6,8 @@ import csv
 import io
 from app.db.session import get_db
 from app.api import deps
-from app.models.wedding import Guest, Event, User, Card, RSVP
-from app.schemas.guest import GuestCreate, GuestResponse, GuestRSVP
+from app.models.wedding import Guest, Event, User, Card, RSVP, guest_table_association
+from app.schemas.guest import GuestCreate, GuestResponse, GuestRSVP, GuestUpdate, RSVPResponse
 from app.api.plans import get_limits
 
 router = APIRouter()
@@ -18,14 +18,33 @@ router = APIRouter()
 def list_guests(
     event_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
+    status: Optional[str] = None,
+    q: Optional[str] = None,
+    table_id: Optional[int] = None
 ):
-    """Liste tous les invités (parents et enfants) d'un événement."""
+    """Liste les invités d'un événement avec filtres optionnels (status, q, table_id)."""
     event = db.query(Event).filter(Event.id == event_id, Event.owner_id == current_user.id).first()
     if not event:
         raise HTTPException(status_code=403, detail="Accès refusé")
 
-    return db.query(Guest).filter(Guest.event_id == event_id).order_by(Guest.id.asc()).all()
+    query = db.query(Guest).filter(Guest.event_id == event_id)
+
+    if status:
+        query = query.filter(Guest.rsvp_status == status)
+
+    if q:
+        search = f"%{q.lower()}%"
+        query = query.filter(
+            (Guest.first_name.ilike(search)) | (Guest.last_name.ilike(search))
+        )
+
+    if table_id:
+        query = query.join(guest_table_association, Guest.id == guest_table_association.c.guest_id).filter(
+            guest_table_association.c.table_id == table_id
+        )
+
+    return query.order_by(Guest.id.asc()).all()
 
 @router.post("/", response_model=GuestResponse)
 def add_guest(
@@ -67,6 +86,46 @@ def add_guest(
     db.commit()
     db.refresh(main_guest)
     return main_guest
+
+@router.patch("/{guest_id}", response_model=GuestResponse)
+def update_guest(
+    guest_id: int,
+    guest_in: GuestUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Modifie les informations d'un invité existant."""
+    guest = db.query(Guest).join(Event).filter(Guest.id == guest_id, Event.owner_id == current_user.id).first()
+    if not guest:
+        raise HTTPException(status_code=404, detail="Invité non trouvé")
+
+    update_data = guest_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(guest, field, value)
+
+    db.commit()
+    db.refresh(guest)
+    return guest
+
+@router.get("/event/{event_id}/rsvps", response_model=List[RSVPResponse])
+def list_event_rsvps(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Retourne toutes les réponses RSVP enregistrées pour un événement."""
+    event = db.query(Event).filter(Event.id == event_id, Event.owner_id == current_user.id).first()
+    if not event:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+
+    rsvps = (
+        db.query(RSVP)
+        .join(Guest, RSVP.guest_id == Guest.id)
+        .filter(Guest.event_id == event_id)
+        .order_by(RSVP.created_at.desc())
+        .all()
+    )
+    return rsvps
 
 @router.delete("/{guest_id}")
 def delete_guest(
@@ -189,6 +248,17 @@ def public_rsvp(
         for table in guest.assigned_tables:
             table.remaining_seats += 1
         guest.assigned_tables = []
+
+    # Enregistrer la réponse RSVP dans l'historique
+    rsvp_record = RSVP(
+        guest_id=guest.id,
+        presence=bool(rsvp_data.get("presence")),
+        plus_ones=len(rsvp_data.get("sub_guests", [])) if rsvp_data.get("sub_guests") else max(0, int(rsvp_data.get("adults", 1)) - 1),
+        dietary_restrictions=rsvp_data.get("dietary_restrictions"),
+        message=rsvp_data.get("message"),
+        created_at=datetime.datetime.utcnow()
+    )
+    db.add(rsvp_record)
 
     db.commit()
     return guest
