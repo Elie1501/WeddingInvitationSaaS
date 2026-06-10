@@ -155,6 +155,10 @@ TEMPLATE_FIELDS['film']       = TEMPLATE_FIELDS['typography-focus'];
 import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
+import { useAuthStore } from '../stores/auth';
+
+const authStore = useAuthStore();
+const isPremium = computed(() => authStore.user?.plan === 'premium');
 
 const route = useRoute();
 const router = useRouter();
@@ -187,7 +191,8 @@ const tabs = [
   { id: 'cover', label: 'Garde' },
   { id: 'structure', label: 'Blocs' },
   { id: 'content', label: 'Textes' },
-  { id: 'media', label: 'Médias' }
+  { id: 'media', label: 'Médias' },
+  { id: 'music', label: '♪ Musique' }
 ];
 
 provide('isEditorMode', true);
@@ -628,13 +633,41 @@ const handleFileUpload = async (event, fieldPath) => {
     // Mise à jour du modèle
     const model = resolveModel(fieldPath);
     model.set(url);
-    
+
     // Forcer la sauvegarde
     saveCard();
   } catch (err) {
     console.error("Upload Error:", err);
     alert("Erreur lors de l'envoi de l'image.");
   }
+};
+
+const uploadingMusic = ref(false);
+
+const handleMusicUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  uploadingMusic.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', 'music');
+    const response = await api.post(`/cards/${cardId}/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    config.media.music_url = response.data.url;
+    saveCard();
+  } catch (err) {
+    const msg = err.response?.data?.detail || "Erreur lors de l'envoi de la musique.";
+    alert(msg);
+  } finally {
+    uploadingMusic.value = false;
+  }
+};
+
+const removeMusic = () => {
+  config.media.music_url = '';
+  saveCard();
 };
 
 // ==========================================
@@ -723,23 +756,32 @@ onUnmounted(() => {
     <aside class="w-[400px] flex flex-col bg-white border-r border-gray-200 shadow-xl z-30">
       
       <!-- HEADER TOOLBAR -->
-      <div class="flex items-center justify-between p-4 border-b border-gray-100">
-        <div class="flex items-center space-x-3">
-          <button @click="router.push('/templates')" class="p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-all text-gray-400 hover:text-[#C5A059]" title="Retour aux modèles">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      <div class="border-b border-gray-100">
+        <!-- Navigation persistante -->
+        <div class="flex items-stretch border-b border-gray-100">
+          <button @click="router.push('/templates')"
+                  class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[9px] font-black uppercase tracking-[0.15em] text-gray-500 hover:text-[#C5A059] hover:bg-amber-50/60 transition-all border-r border-gray-100">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+            Galerie
           </button>
-          <h1 class="text-xs font-black uppercase tracking-widest text-gray-800">Studio</h1>
+          <div class="flex items-center px-3">
+            <span class="text-[10px] font-black uppercase tracking-widest text-gray-300">Studio</span>
+          </div>
+          <button @click="router.push('/dashboard')"
+                  class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[9px] font-black uppercase tracking-[0.15em] text-gray-500 hover:text-[#C5A059] hover:bg-amber-50/60 transition-all border-l border-gray-100">
+            Mon espace
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          </button>
         </div>
-        
         <!-- Undo / Redo -->
-        <div class="flex items-center space-x-1">
-          <button @click="undo" :disabled="historyIndex <= 0" class="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Annuler (Ctrl+Z)">
+        <div class="flex items-center justify-end px-3 py-2 space-x-1">
+          <button @click="undo" :disabled="historyIndex <= 0" class="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Annuler (Ctrl+Z)">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 10h10a5 5 0 010 10H9" stroke-linecap="round"/><path d="M3 10l4-4M3 10l4 4" stroke-linecap="round"/></svg>
           </button>
-          <button @click="redo" :disabled="historyIndex >= history.length - 1" class="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Rétablir (Ctrl+Y)">
+          <button @click="redo" :disabled="historyIndex >= history.length - 1" class="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Rétablir (Ctrl+Y)">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10H11a5 5 0 000 10h4" stroke-linecap="round"/><path d="M21 10l-4-4M21 10l-4 4" stroke-linecap="round"/></svg>
           </button>
-          <span class="text-[8px] text-gray-400 font-mono pl-2">{{ historyIndex + 1 }}/{{ history.length }}</span>
+          <span class="text-[8px] text-gray-400 font-mono pl-1">{{ historyIndex + 1 }}/{{ history.length }}</span>
         </div>
       </div>
 
@@ -1205,6 +1247,68 @@ onUnmounted(() => {
            </div>
         </div>
 
+        <!-- ONGLET : MUSIQUE -->
+        <div v-if="activeTab === 'music'" class="animate-in space-y-6">
+
+          <!-- Bloc Premium requis -->
+          <div v-if="!isPremium" class="rounded-2xl overflow-hidden border border-amber-200 bg-amber-50">
+            <div class="p-5 space-y-3 text-center">
+              <div class="w-12 h-12 rounded-full bg-[#C5A059]/15 flex items-center justify-center mx-auto">
+                <svg class="w-6 h-6 text-[#C5A059]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs font-black uppercase tracking-widest text-[#8B6914]">Fonctionnalité Premium</p>
+                <p class="text-[11px] text-amber-700 mt-1">Ajoutez une musique d'ambiance à votre invitation. Disponible avec le forfait Premium.</p>
+              </div>
+              <button @click="router.push('/pricing')" class="w-full py-2.5 bg-[#C5A059] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#b08c47] transition-colors">
+                Passer Premium
+              </button>
+            </div>
+          </div>
+
+          <!-- Interface upload si Premium -->
+          <template v-else>
+            <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-[#C5A059]"></div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-gray-700">Musique d'ambiance</p>
+              </div>
+
+              <!-- Lecteur si musique chargée -->
+              <div v-if="config.media.music_url" class="space-y-3">
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <svg class="w-4 h-4 text-[#C5A059] shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+                  </svg>
+                  <audio :src="config.media.music_url" controls class="flex-1 h-8 w-full" style="min-width:0"></audio>
+                </div>
+                <button @click="removeMusic" class="w-full py-2 text-[10px] font-bold uppercase tracking-wider text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
+                  Supprimer la musique
+                </button>
+              </div>
+
+              <!-- Zone d'upload -->
+              <label v-else class="flex flex-col items-center gap-3 p-6 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#C5A059] hover:bg-amber-50/40 transition-all group">
+                <div class="w-10 h-10 rounded-full bg-gray-100 group-hover:bg-amber-100 flex items-center justify-center transition-colors">
+                  <svg class="w-5 h-5 text-gray-400 group-hover:text-[#C5A059] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                  </svg>
+                </div>
+                <div class="text-center">
+                  <p class="text-[11px] font-bold text-gray-600">Importer un fichier audio</p>
+                  <p class="text-[10px] text-gray-400 mt-0.5">MP3, AAC, OGG — max 20 Mo</p>
+                </div>
+                <span v-if="uploadingMusic" class="w-4 h-4 border-2 border-[#C5A059]/30 border-t-[#C5A059] rounded-full animate-spin"></span>
+                <input type="file" class="hidden" accept="audio/*" @change="handleMusicUpload" :disabled="uploadingMusic">
+              </label>
+
+              <p class="text-[10px] text-gray-400 leading-relaxed">La musique est jouée en fond lors de la consultation de l'invitation par vos invités.</p>
+            </div>
+          </template>
+        </div>
+
       </div>
 
       <!-- FOOTER SIDEBAR -->
@@ -1212,9 +1316,6 @@ onUnmounted(() => {
 
         <!-- Boutons principaux -->
         <div class="p-4 flex space-x-3">
-          <button @click="router.push('/dashboard')" class="px-5 py-3 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-colors">
-            Quitter
-          </button>
           <button
             @click="publishCard"
             :disabled="publishing"

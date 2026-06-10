@@ -6,7 +6,7 @@ import uuid
 import datetime
 from app.db.session import get_db
 from app.api import deps
-from app.models.wedding import Card, CardVersion, Event, User, SubEvent
+from app.models.wedding import Card, CardVersion, CardTemplate, Event, User, SubEvent
 from app.schemas.card import CardResponse, CardUpdate, CardVersionResponse, CardCreate, SubEventCreate
 from app.core import storage
 
@@ -67,10 +67,12 @@ def create_card(
         raise HTTPException(status_code=400, detail="Une carte existe déjà pour cet événement")
 
     template_id = card_in.template_id or "default-modern"
-    
-    # Si un template est spécifié, on peut optionnellement charger sa config par défaut
+
+    # Vérification que l'utilisateur a accès au template demandé
     config_dict = {}
     template = db.query(CardTemplate).filter(CardTemplate.id == template_id).first()
+    if template and getattr(template, "required_plan", None) == "premium" and current_user.plan != "premium":
+        raise HTTPException(status_code=403, detail="Ce template est réservé au forfait Premium.")
     if template:
         manifest = json.loads(template.manifest_json)
         config_dict = manifest.get("default_config", {})
@@ -135,7 +137,8 @@ def import_card_json(
 ):
     """Importe une configuration JSON pour la carte."""
     card = check_card_ownership(db, card_id, current_user.id)
-    
+    limits = get_limits(current_user.plan)
+
     if "intro_text" in import_data:
         card.intro_text = import_data["intro_text"]
     if "theme_color" in import_data:
@@ -143,6 +146,8 @@ def import_card_json(
     if "media_url" in import_data:
         card.media_url = import_data["media_url"]
     if "music_url" in import_data:
+        if not limits.get("can_upload_music"):
+            raise HTTPException(status_code=403, detail="L'import d'une musique est réservé au forfait Premium.")
         card.music_url = import_data["music_url"]
     if "config_json" in import_data:
         card.config_json = json.dumps(import_data["config_json"])
@@ -171,8 +176,14 @@ def auto_save_card(
                 detail=f"Votre forfait {current_user.plan} est limité à {limits['max_pages']} page(s)."
             )
 
+    # Vérification du required_plan si le template change
+    if card_in.template_id is not None and card_in.template_id != card.template_id:
+        tpl = db.query(CardTemplate).filter(CardTemplate.id == card_in.template_id).first()
+        if tpl and getattr(tpl, "required_plan", None) == "premium" and current_user.plan != "premium":
+            raise HTTPException(status_code=403, detail="Ce template est réservé au forfait Premium.")
+
     update_data = card_in.model_dump(exclude_unset=True)
-    
+
     # Gestion des sous-événements
     if "sub_events" in update_data:
         sub_events_data = update_data.pop("sub_events")
@@ -324,9 +335,16 @@ async def upload_media(
     file_type: str = Form("image"),
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.get_current_user),
-    _permission = Depends(deps.check_plan_permission("can_customize_extensively"))
 ):
     """Upload un fichier vers S3 avec optimisation."""
+    limits = get_limits(current_user.plan)
+    if file_type == "music":
+        if not limits.get("can_upload_music"):
+            raise HTTPException(status_code=403, detail="L'upload de musique est réservé au forfait Premium.")
+    else:
+        if not limits.get("can_customize_extensively"):
+            raise HTTPException(status_code=403, detail="La personnalisation de médias n'est pas disponible avec votre forfait.")
+
     card = check_card_ownership(db, card_id, current_user.id)
     
     file_content = await file.read()
