@@ -71,6 +71,12 @@ const router = createRouter({
           meta: { requiresAuth: true, requiresAdmin: true }
         },
         {
+          path: '/admin/stats',
+          name: 'admin-stats',
+          component: () => import('../views/AdminStatsView.vue'),
+          meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
             path: '/cards/:slug',
             name: 'public-card',
             component: () => import('../views/PublicCardView.vue')
