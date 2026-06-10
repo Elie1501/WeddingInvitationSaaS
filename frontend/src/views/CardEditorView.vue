@@ -155,6 +155,7 @@ TEMPLATE_FIELDS['film']       = TEMPLATE_FIELDS['typography-focus'];
 import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
+import UpgradeModal from '../components/UpgradeModal.vue';
 import { useAuthStore } from '../stores/auth';
 
 const authStore = useAuthStore();
@@ -177,6 +178,7 @@ const cardSlug = ref(null);
 const showCopiedToast = ref(false);
 const publicUrl = computed(() => cardSlug.value ? `${window.location.origin}/cards/${cardSlug.value}` : null);
 
+const showUpgradeModal = ref(false);
 const activeTab = ref('context');
 const selectedBlock = ref(null);
 const editingField = ref(null);
@@ -296,11 +298,12 @@ const dragEnd = () => {
 // 6. METHODES CRUD BLOCS
 // ==========================================
 const availableBlocks = [
-  { id: 'countdown', label: 'Compte à rebours', icon: '⏱️', desc: 'Anime l\'attente jusqu\'au jour J' },
-  { id: 'program', label: 'Programme', icon: '📅', desc: 'Détail des étapes de la journée' },
-  { id: 'rsvp', label: 'Formulaire RSVP', icon: '📩', desc: 'Collectez les présences' },
-  { id: 'footer', label: 'Pied de page', icon: '✨', desc: 'Message de fin et crédits' },
-  { id: 'custom-text', label: 'Texte libre', icon: '📝', desc: 'Un bloc de texte personnalisé' }
+  { id: 'countdown',   label: 'Compte à rebours', icon: '⏱️', desc: 'Anime l\'attente jusqu\'au jour J', premium: true  },
+  { id: 'program',     label: 'Programme',         icon: '📅', desc: 'Détail des étapes de la journée',  premium: true  },
+  { id: 'custom-text', label: 'Texte libre',        icon: '📝', desc: 'Un bloc de texte personnalisé',    premium: true  },
+  { id: 'image',       label: 'Image',              icon: '🖼️', desc: 'Ajoutez une photo pleine largeur',  premium: true  },
+  { id: 'rsvp',        label: 'Formulaire RSVP',   icon: '📩', desc: 'Collectez les présences',           premium: false },
+  { id: 'footer',      label: 'Pied de page',       icon: '✨', desc: 'Message de fin et crédits',         premium: false },
 ];
 
 const addBlock = (blockId) => {
@@ -1061,8 +1064,14 @@ onUnmounted(() => {
             <h3 class="flex items-center text-xs font-black text-gray-800 uppercase tracking-widest">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 5v12m0 0H7m2 0h2M3 20h12M21 12h-6"/></svg>
               Typographie
+              <span v-if="!isPremium" class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-[#C5A059] text-[9px] font-bold uppercase">
+                <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6A5 5 0 007 6v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zM12 17a2 2 0 110-4 2 2 0 010 4zm3.1-9H8.9V6a3.1 3.1 0 016.2 0v2z"/></svg>
+                Premium
+              </span>
             </h3>
-            <div class="bg-white border border-gray-200 p-4 rounded-xl space-y-5">
+            <div class="relative">
+              <div class="bg-white border border-gray-200 p-4 rounded-xl space-y-5"
+                   :class="!isPremium ? 'opacity-50 pointer-events-none select-none' : ''">
 
               <!-- Police -->
               <div class="space-y-1">
@@ -1120,8 +1129,17 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
+            <div v-if="!isPremium"
+                 class="absolute inset-0 rounded-xl flex items-center justify-center cursor-pointer"
+                 @click="showUpgradeModal = true">
+              <span class="px-3 py-2 bg-amber-100 text-[#C5A059] rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6A5 5 0 007 6v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zM12 17a2 2 0 110-4 2 2 0 010 4zm3.1-9H8.9V6a3.1 3.1 0 016.2 0v2z"/></svg>
+                Débloquer Premium
+              </span>
+            </div>
           </div>
         </div>
+      </div>
 
         <!-- ONGLET : STRUCTURE (Drag & Drop + Ajout) -->
         <div v-if="activeTab === 'structure'" class="animate-in space-y-8">
@@ -1160,12 +1178,25 @@ onUnmounted(() => {
           <section class="pt-8 border-t border-gray-200">
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mb-6">Ajouter une section</p>
             <div class="grid grid-cols-2 gap-3">
-               <button v-for="block in availableBlocks" :key="block.id"
-                       @click="addBlock(block.id)"
-                       class="p-4 bg-white border border-gray-100 rounded-2xl hover:border-[#C5A059] hover:shadow-md transition-all text-center group">
-                  <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">{{ block.icon }}</div>
-                  <p class="text-[10px] font-bold text-gray-800 uppercase leading-tight">{{ block.label }}</p>
-               </button>
+              <button
+                v-for="block in availableBlocks" :key="block.id"
+                @click="block.premium && !isPremium ? showUpgradeModal = true : addBlock(block.id)"
+                class="relative p-4 bg-white border border-gray-100 rounded-2xl hover:border-[#C5A059] hover:shadow-md transition-all text-center group"
+                :class="block.premium && !isPremium ? 'opacity-70' : ''"
+              >
+                <!-- Verrou pour blocs Premium si Classic -->
+                <span
+                  v-if="block.premium && !isPremium"
+                  class="absolute top-2 right-2 w-5 h-5 flex items-center justify-center bg-amber-100 rounded-full"
+                  title="Forfait Premium requis"
+                >
+                  <svg class="w-3 h-3 text-[#C5A059]" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18 8h-1V6A5 5 0 007 6v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zM12 17a2 2 0 110-4 2 2 0 010 4zm3.1-9H8.9V6a3.1 3.1 0 016.2 0v2z"/>
+                  </svg>
+                </span>
+                <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">{{ block.icon }}</div>
+                <p class="text-[10px] font-bold text-gray-800 uppercase leading-tight">{{ block.label }}</p>
+              </button>
             </div>
           </section>
         </div>
@@ -1262,7 +1293,7 @@ onUnmounted(() => {
                 <p class="text-xs font-black uppercase tracking-widest text-[#8B6914]">Fonctionnalité Premium</p>
                 <p class="text-[11px] text-amber-700 mt-1">Ajoutez une musique d'ambiance à votre invitation. Disponible avec le forfait Premium.</p>
               </div>
-              <button @click="router.push('/pricing')" class="w-full py-2.5 bg-[#C5A059] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#b08c47] transition-colors">
+              <button @click="showUpgradeModal = true" class="w-full py-2.5 bg-[#C5A059] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#b08c47] transition-colors">
                 Passer Premium
               </button>
             </div>
@@ -1420,6 +1451,8 @@ onUnmounted(() => {
 
   <!-- INPUT CACHÉ POUR LES TÉLÉCHARGEMENTS RAPIDES (CLIC SUR IMAGE) -->
   <input ref="quickUploadInput" type="file" class="hidden" accept="image/*" @change="handleQuickUpload">
+
+  <UpgradeModal v-model="showUpgradeModal" />
 </template>
 
 <style>

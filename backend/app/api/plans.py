@@ -1,36 +1,54 @@
-from enum import Enum
-from typing import Dict, Any
+from typing import Dict, Any, FrozenSet
 
-class PlanType(str, Enum):
-    CLASSIC = "classic"
-    PREMIUM = "premium"
-
-PLAN_LIMITS: Dict[PlanType, Dict[str, Any]] = {
-    PlanType.CLASSIC: {
-        "max_pages": 3,
-        "max_sites": 1,
-        "has_cover_page": True,
-        "has_rsvp_form": True,
-        "can_use_tables": True,
-        "can_customize_extensively": True,
-        "can_import_export": False,
-        "can_upload_music": False
-    },
-    PlanType.PREMIUM: {
-        "max_pages": 20,
-        "max_sites": 5,
-        "has_cover_page": True,
-        "has_rsvp_form": True,
-        "can_use_tables": True,
-        "can_customize_extensively": True,
-        "can_import_export": True,
-        "can_upload_music": True
-    }
+# ─── Prix en centimes d'euro ───────────────────────────────────────────────────
+PLAN_PRICES: Dict[str, int] = {
+    "classic": 2900,   # 29,00 €
+    "premium": 7900,   # 79,00 €
 }
 
-def get_limits(plan_name: str):
-    try:
-        plan = PlanType(plan_name)
-    except ValueError:
-        plan = PlanType.CLASSIC
-    return PLAN_LIMITS[plan]
+# ─── Sections/blocs réservés au forfait Premium ────────────────────────────────
+# Ces IDs sont comparés avec config_json.sections lors de chaque auto-save.
+PREMIUM_SECTION_IDS: FrozenSet[str] = frozenset({
+    "countdown",
+    "program",
+    "custom-text",
+    "image",
+})
+
+# ─── Limites par forfait ──────────────────────────────────────────────────────
+PLAN_LIMITS: Dict[str, Dict[str, Any]] = {
+    "classic": {
+        "max_pages":                3,
+        "max_sites":                1,
+        "has_cover_page":           True,
+        "has_rsvp_form":            True,
+        "can_use_tables":           True,
+        "can_customize_extensively": True,
+        "can_import_export":        False,
+        "can_upload_music":         False,
+        "can_edit_typography":      False,
+        "can_export_csv":           False,
+    },
+    "premium": {
+        "max_pages":                20,
+        "max_sites":                5,
+        "has_cover_page":           True,
+        "has_rsvp_form":            True,
+        "can_use_tables":           True,
+        "can_customize_extensively": True,
+        "can_import_export":        True,
+        "can_upload_music":         True,
+        "can_edit_typography":      True,
+        "can_export_csv":           True,
+    },
+}
+
+
+def get_limits(plan_name: str) -> Dict[str, Any]:
+    plan_name = (plan_name or "classic").lower()
+    return PLAN_LIMITS.get(plan_name, PLAN_LIMITS["classic"])
+
+
+def get_upgrade_amount() -> int:
+    """Montant de l'upgrade Classic → Premium en centimes (différence uniquement)."""
+    return PLAN_PRICES["premium"] - PLAN_PRICES["classic"]  # 5000 = 50,00 €
