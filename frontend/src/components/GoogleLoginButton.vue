@@ -23,7 +23,11 @@ const handleGoogleLogin = async () => {
     emit('success', { isNewUser });
   } catch (err: any) {
     console.error("Google Auth Error:", err);
-    error.value = "Une erreur est survenue lors de la connexion avec Google.";
+    if (err.response?.status === 403) {
+      error.value = err.response.data?.detail || "Votre compte a été désactivé. Veuillez contacter l'administrateur.";
+    } else {
+      error.value = "Une erreur est survenue lors de la connexion avec Google.";
+    }
   } finally {
     loading.value = false;
   }
