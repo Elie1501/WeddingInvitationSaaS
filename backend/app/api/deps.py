@@ -44,8 +44,18 @@ def check_plan_permission(permission: str):
         limits = get_limits(current_user.plan)
         if not limits.get(permission, False):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, 
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Cette fonctionnalité nécessite un forfait supérieur (votre forfait actuel : {current_user.plan})"
             )
         return True
     return _check
+
+
+def require_premium(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency pour toute route réservée exclusivement au forfait Premium."""
+    if current_user.plan != "premium":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cette fonctionnalité est réservée au forfait Premium."
+        )
+    return current_user

@@ -143,7 +143,7 @@ def export_table_plan_csv(
     event_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.get_current_user),
-    _permission = Depends(deps.check_plan_permission("can_export"))
+    _permission = Depends(deps.check_plan_permission("can_export_csv"))
 ):
     event = db.query(Event).filter(Event.id == event_id, Event.owner_id == current_user.id).first()
     if not event:

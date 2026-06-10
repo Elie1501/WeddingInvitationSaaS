@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
+import UpgradeModal from '../components/UpgradeModal.vue';
 
 const authStore = useAuthStore();
 const isPremium = computed(() => authStore.user?.plan === 'premium');
@@ -64,28 +65,11 @@ const filteredTemplates = computed(() => {
   return result;
 });
 
-const upgradingToPremium = ref(false);
-
-const upgradeToPremium = async () => {
-  if (upgradingToPremium.value) return;
-  upgradingToPremium.value = true;
-  try {
-    const res = await api.post('/payments/create-checkout-session', { plan_name: 'premium' });
-    if (res.data.checkout_url) {
-      window.location.href = res.data.checkout_url;
-    }
-  } catch (err) {
-    console.error("Erreur paiement:", err);
-    alert("Impossible d'initialiser le paiement. Veuillez réessayer.");
-  } finally {
-    upgradingToPremium.value = false;
-  }
-};
+const showUpgradeModal = ref(false);
 
 const selectTemplate = async (template) => {
-  // Bloquer les templates premium pour les utilisateurs Classic → Stripe
   if (template.required_plan === 'premium' && !isPremium.value) {
-    await upgradeToPremium();
+    showUpgradeModal.value = true;
     return;
   }
 
@@ -317,6 +301,8 @@ onMounted(() => {
       </div>
     </main>
   </div>
+
+  <UpgradeModal v-model="showUpgradeModal" />
 </template>
 
 <style scoped>

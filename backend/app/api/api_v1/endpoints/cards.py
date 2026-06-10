@@ -10,7 +10,7 @@ from app.models.wedding import Card, CardVersion, CardTemplate, Event, User, Sub
 from app.schemas.card import CardResponse, CardUpdate, CardVersionResponse, CardCreate, SubEventCreate
 from app.core import storage
 
-from app.api.plans import get_limits
+from app.api.plans import get_limits, PREMIUM_SECTION_IDS
 
 router = APIRouter()
 
@@ -33,6 +33,33 @@ def sign_media_urls(card: Card) -> Card:
     if card.music_url and not card.music_url.startswith("http"):
         card.music_url = storage.generate_signed_url(card.music_url)
     return card
+
+def _enforce_plan_features(card_in: CardUpdate, user_plan: str) -> None:
+    """Bloque les features Premium pour un utilisateur Classic, quelle que soit l'origine de la requête."""
+    if user_plan == "premium":
+        return
+
+    if card_in.config_json is not None:
+        try:
+            cfg = json.loads(card_in.config_json)
+            sections = cfg.get("sections", [])
+            forbidden = sorted(s for s in sections if s in PREMIUM_SECTION_IDS)
+            if forbidden:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Les blocs suivants sont réservés au forfait Premium : {', '.join(forbidden)}"
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+
+    if card_in.music_url is not None:
+        raise HTTPException(
+            status_code=403,
+            detail="La musique est réservée au forfait Premium."
+        )
+
 
 def check_card_ownership(db: Session, card_id: int, user_id: int) -> Card:
     card = db.query(Card).join(Event).filter(Card.id == card_id, Event.owner_id == user_id).first()
@@ -166,6 +193,7 @@ def auto_save_card(
 ):
     """Sauvegarde rapide de la carte (auto-save)."""
     card = check_card_ownership(db, card_id, current_user.id)
+    _enforce_plan_features(card_in, current_user.plan)
 
     if card_in.config_json is not None:
         limits = get_limits(current_user.plan)
@@ -215,6 +243,7 @@ def update_card(
 ):
     """Met à jour une carte et crée une nouvelle version."""
     card = check_card_ownership(db, card_id, current_user.id)
+    _enforce_plan_features(card_in, current_user.plan)
 
     if card_in.config_json is not None:
         limits = get_limits(current_user.plan)

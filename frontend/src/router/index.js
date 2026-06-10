@@ -5,6 +5,7 @@ import MagicWizard from '../components/MagicWizard.vue';
 
 const router = createRouter({
     history: createWebHistory(),
+    scrollBehavior: () => ({ top: 0 }),
     routes: [
         {
             path: '/',
@@ -80,6 +81,12 @@ const router = createRouter({
             path: '/cards/:slug',
             name: 'public-card',
             component: () => import('../views/PublicCardView.vue')
+        },
+        {
+            path: '/demo/:slug',
+            name: 'demo-card',
+            component: () => import('../views/DemoCardView.vue')
+            // Aucune meta requiresAuth — accessible sans connexion
         }
     ]
 });
