@@ -160,6 +160,11 @@ import { useAuthStore } from '../stores/auth';
 
 const authStore = useAuthStore();
 const isPremium = computed(() => authStore.user?.plan === 'premium');
+const eventTitle = computed(() =>
+  eventData.groom_name && eventData.bride_name
+    ? `${eventData.groom_name} & ${eventData.bride_name}`
+    : 'Mon Mariage'
+);
 
 const route = useRoute();
 const router = useRouter();
@@ -176,7 +181,7 @@ const hasUnsavedChanges = ref(false);
 const isPublished = ref(false);
 const cardSlug = ref(null);
 const showCopiedToast = ref(false);
-const publicUrl = computed(() => cardSlug.value ? `${window.location.origin}/cards/${cardSlug.value}` : null);
+const publicUrl = computed(() => cardSlug.value ? `${window.location.origin}/i/${cardSlug.value}` : null);
 
 const showUpgradeModal = ref(false);
 const activeTab = ref('cover');
@@ -316,9 +321,14 @@ const addBlock = (blockId) => {
 
   // Gérer les blocs de texte multiples
   if (blockId === 'custom-text') {
-    const count = config.sections.filter(s => s.startsWith('custom-text-')).length;
     finalId = `custom-text-${Date.now()}`;
     config.content[finalId] = { title: 'Nouveau titre', content: 'Votre texte ici...' };
+  }
+
+  // Bloc image avec placeholder immédiat
+  if (blockId === 'image') {
+    finalId = `image-${Date.now()}`;
+    config.content[finalId] = { image_url: '/placeholder-mariage.svg', caption: '' };
   }
 
   config.sections.push(finalId);
@@ -344,6 +354,8 @@ const deleteBlock = (index) => {
 
 const getBlockLabel = (id) => {
   if (id.includes('hero') || id.includes('full')) return 'Bannière';
+  if (id.startsWith('custom-text-')) return 'Texte libre';
+  if (id.startsWith('image-')) return 'Image';
   const labels = {
     'countdown': 'Compte à rebours',
     'program': 'Programme',
@@ -467,6 +479,16 @@ const contextFields = computed(() => {
     };
   }
 
+  if (selectedBlock.value.startsWith('image-')) {
+    return {
+      label: 'Bloc Image',
+      fields: [
+        { type: 'image', label: 'Image', model: `content.${selectedBlock.value}.image_url` },
+        { type: 'text', label: 'Légende (optionnel)', model: `content.${selectedBlock.value}.caption` },
+      ]
+    };
+  }
+
   const isHeroBlock = selectedBlock.value === 'hero'
     || selectedBlock.value.includes('-full')
     || selectedBlock.value.includes('-hero');
@@ -553,12 +575,20 @@ const fetchCard = async () => {
       eventData.groom_name = ev.groom_name || '';
       eventData.bride_name = ev.bride_name || '';
 
-      // Auto-remplir les noms depuis l'event si non définis dans la config
-      if (!config.content.names && ev.groom_name && ev.bride_name) {
-        config.content.names = `${ev.groom_name} & ${ev.bride_name}`;
+      // Auto-remplir depuis l'event si les champs sont absents dans le config
+      if (ev.groom_name && ev.bride_name) {
+        const namesFromEvent = `${ev.groom_name} & ${ev.bride_name}`;
+        if (!config.content.names) config.content.names = namesFromEvent;
+        if (!config.content.splash_title) config.content.splash_title = namesFromEvent;
+        if (!config.content.monogram) {
+          config.content.monogram = `${ev.groom_name[0].toUpperCase()} & ${ev.bride_name[0].toUpperCase()}`;
+        }
       }
-      if (!config.content.splash_title && ev.groom_name && ev.bride_name) {
-        config.content.splash_title = `${ev.groom_name} & ${ev.bride_name}`;
+      if (ev.date && !config.content.date_display) {
+        config.content.date_display = new Date(ev.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      if (ev.location && !config.content.address) {
+        config.content.address = ev.location;
       }
       
       // Charger les sous-événements réels depuis l'API
@@ -723,9 +753,26 @@ const handleKeyboard = (e) => {
   if (ctrlOrCmd && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // Migration silencieuse une fois par session — corrige les cartes existantes avec demo data
+  if (!sessionStorage.getItem('cards_synced')) {
+    try { await api.post('/events/admin/sync-cards-data'); } catch {}
+    sessionStorage.setItem('cards_synced', '1');
+  }
+
   fetchCard();
   document.addEventListener('keydown', handleKeyboard);
+
+  // Retour depuis Stripe Checkout → confirmer le paiement et rafraîchir le plan
+  const sessionId = route.query.session_id;
+  const paymentSuccess = route.query.payment_success;
+  if (paymentSuccess === 'true' && sessionId) {
+    try {
+      await api.post('/payments/confirm-payment', { session_id: sessionId });
+      await authStore.fetchMe();
+    } catch { /* le webhook a peut-être déjà mis à jour le plan */ }
+    router.replace({ query: {} });
+  }
 });
 
 onUnmounted(() => {
@@ -735,10 +782,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="!loading" class="flex h-screen bg-[#F3F4F6] font-sans overflow-hidden">
-    
-    <!-- BARRE DE PROGRESSION AUTO-SAVE -->
-    <div class="fixed top-0 left-0 right-0 h-[2px] z-50 bg-transparent">
+  <div v-if="!loading" class="flex flex-col h-screen bg-[#F3F4F6] font-sans overflow-hidden">
+
+    <!-- BARRE DE PROGRESSION AUTO-SAVE (fine ligne au-dessus de tout) -->
+    <div class="fixed top-0 left-0 right-0 h-[2px] z-50 bg-transparent pointer-events-none">
       <div class="h-full bg-[#C5A059] transition-all duration-100"
            :style="{ width: saving ? '100%' : hasUnsavedChanges ? '60%' : '0%',
                      opacity: saving || hasUnsavedChanges ? 1 : 0,
@@ -755,38 +802,105 @@ onUnmounted(() => {
       </div>
     </Transition>
 
-    <!-- SIDEBAR GAUCHE -->
-    <aside class="w-[400px] flex flex-col bg-white border-r border-gray-200 shadow-xl z-30">
-      
-      <!-- HEADER TOOLBAR -->
-      <div class="border-b border-gray-100">
-        <!-- Navigation persistante -->
-        <div class="flex items-stretch border-b border-gray-100">
-          <button @click="router.push('/templates')"
-                  class="flex-1 flex flex-col items-center justify-center gap-1 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-gray-500 hover:text-[#C5A059] hover:bg-amber-50/60 transition-all border-r border-gray-100">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-            Galerie
+    <!-- ═══ HEADER PLEINE LARGEUR ═══ -->
+    <header class="h-14 flex-shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-40 shadow-sm">
+
+      <!-- LEFT : ← Galerie -->
+      <div class="flex items-center min-w-[140px]">
+        <button @click="router.push('/templates')"
+                class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-gray-500 hover:text-[#C5A059] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Galerie
+        </button>
+      </div>
+
+      <!-- CENTER : nom événement + undo/redo -->
+      <div class="flex items-center gap-3 flex-1 justify-center px-4 min-w-0">
+        <span class="text-sm font-semibold text-gray-800 truncate max-w-[200px]">{{ eventTitle }}</span>
+        <div class="flex items-center gap-1 border-l border-gray-200 pl-3">
+          <button @click="undo" :disabled="historyIndex <= 0"
+                  class="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Annuler (Ctrl+Z)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M3 10h10a5 5 0 010 10H9" stroke-linecap="round"/>
+              <path d="M3 10l4-4M3 10l4 4" stroke-linecap="round"/>
+            </svg>
           </button>
-          <div class="flex items-center px-3">
-            <span class="text-[10px] font-black uppercase tracking-widest text-gray-300">Studio</span>
-          </div>
-          <button @click="router.push('/dashboard')"
-                  class="flex-1 flex flex-col items-center justify-center gap-1 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-gray-500 hover:text-[#C5A059] hover:bg-amber-50/60 transition-all border-l border-gray-100">
-            Mon espace
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          <button @click="redo" :disabled="historyIndex >= history.length - 1"
+                  class="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Rétablir (Ctrl+Y)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 10H11a5 5 0 000 10h4" stroke-linecap="round"/>
+              <path d="M21 10l-4-4M21 10l-4 4" stroke-linecap="round"/>
+            </svg>
           </button>
-        </div>
-        <!-- Undo / Redo -->
-        <div class="flex items-center justify-end px-3 py-2 space-x-1">
-          <button @click="undo" :disabled="historyIndex <= 0" class="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Annuler (Ctrl+Z)">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 10h10a5 5 0 010 10H9" stroke-linecap="round"/><path d="M3 10l4-4M3 10l4 4" stroke-linecap="round"/></svg>
-          </button>
-          <button @click="redo" :disabled="historyIndex >= history.length - 1" class="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Rétablir (Ctrl+Y)">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10H11a5 5 0 000 10h4" stroke-linecap="round"/><path d="M21 10l-4-4M21 10l-4 4" stroke-linecap="round"/></svg>
-          </button>
-          <span class="text-[8px] text-gray-400 font-mono pl-1">{{ historyIndex + 1 }}/{{ history.length }}</span>
+          <span class="text-[8px] text-gray-400 font-mono pl-1 tabular-nums">{{ historyIndex + 1 }}/{{ history.length }}</span>
         </div>
       </div>
+
+      <!-- RIGHT : statut + actions publication + Mon espace -->
+      <div class="flex items-center gap-3 min-w-[320px] justify-end">
+
+        <!-- Statut de publication -->
+        <div class="flex items-center gap-1.5">
+          <span v-if="isPublished" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+          <span v-else class="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0"></span>
+          <span class="text-[10px] font-bold uppercase tracking-widest"
+                :class="isPublished ? 'text-emerald-600' : 'text-gray-400'">
+            {{ isPublished ? 'En ligne' : 'Hors ligne' }}
+          </span>
+        </div>
+
+        <!-- Voir en ligne (si publié) -->
+        <a v-if="isPublished && publicUrl" :href="publicUrl" target="_blank"
+           class="text-[10px] font-bold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1 whitespace-nowrap">
+          Voir en ligne
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+          </svg>
+        </a>
+
+        <!-- Copier le lien (si publié) -->
+        <button v-if="isPublished && publicUrl" @click="copyPublicUrl"
+                class="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Copier le lien d'invitation">
+          <svg v-if="!showCopiedToast" class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2"/>
+          </svg>
+          <svg v-else class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </button>
+
+        <!-- Bouton Publier / Dépublier -->
+        <button @click="publishCard" :disabled="publishing"
+                class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm flex-shrink-0"
+                :class="isPublished
+                  ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100'
+                  : 'bg-[#1A1A1A] text-white hover:bg-black'">
+          <span v-if="publishing" class="w-3 h-3 border-2 border-current/40 border-t-current rounded-full animate-spin flex-shrink-0"/>
+          <span v-else>{{ isPublished ? 'Dépublier' : 'Publier' }}</span>
+        </button>
+
+        <!-- Séparateur -->
+        <div class="w-px h-6 bg-gray-200 flex-shrink-0"></div>
+
+        <!-- Mon espace -->
+        <button @click="router.push('/dashboard')"
+                class="text-[10px] font-black uppercase tracking-[0.12em] text-gray-500 hover:text-[#C5A059] transition-colors flex items-center gap-1.5 whitespace-nowrap">
+          Mon espace
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══ CORPS : SIDEBAR + PREVIEW ═══ -->
+    <div class="flex flex-1 overflow-hidden">
+
+    <!-- SIDEBAR GAUCHE -->
+    <aside class="w-[360px] flex flex-col bg-white border-r border-gray-200 shadow-sm z-30 flex-shrink-0">
 
       <!-- ONGLETS -->
       <div class="flex overflow-x-auto custom-scrollbar border-b border-gray-100 bg-gray-50/50">
@@ -1309,60 +1423,10 @@ onUnmounted(() => {
 
       </div>
 
-      <!-- FOOTER SIDEBAR -->
-      <div class="bg-white border-t border-gray-200">
-
-        <!-- Boutons principaux -->
-        <div class="p-4 flex space-x-3">
-          <button
-            @click="publishCard"
-            :disabled="publishing"
-            class="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-            :class="isPublished
-              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-              : 'bg-[#1A1A1A] hover:bg-black text-white'"
-          >
-            <span v-if="publishing" class="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            <span v-else-if="isPublished">● En ligne</span>
-            <span v-else>Publier</span>
-          </button>
-        </div>
-
-        <!-- Lien public (visible si publié) -->
-        <div v-if="isPublished && publicUrl" class="px-4 pb-4 space-y-2">
-          <p class="text-[9px] font-bold uppercase tracking-[0.18em] text-gray-400">Lien de l'invitation</p>
-          <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
-            <a :href="publicUrl" target="_blank"
-               class="flex-1 text-[10px] text-blue-600 font-medium truncate hover:underline">
-              {{ publicUrl }}
-            </a>
-            <button @click="copyPublicUrl" class="shrink-0 p-1.5 rounded-lg hover:bg-gray-200 transition-colors" title="Copier le lien">
-              <svg v-if="!showCopiedToast" class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/>
-                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2"/>
-              </svg>
-              <svg v-else class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-              </svg>
-            </button>
-          </div>
-          <div class="flex gap-2">
-            <a :href="publicUrl" target="_blank"
-               class="flex-1 py-2 text-center text-[9px] font-bold uppercase tracking-widest bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
-              Voir en ligne
-            </a>
-            <button @click="publishCard"
-                    class="flex-1 py-2 text-[9px] font-bold uppercase tracking-widest bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors">
-              Dépublier
-            </button>
-          </div>
-        </div>
-
-      </div>
     </aside>
 
     <!-- ZONE PREVIEW -->
-    <main class="flex-1 relative flex flex-col items-center justify-center p-8 bg-[#F3F4F6]">
+    <main class="flex-1 relative flex flex-col items-center justify-center p-8 bg-[#F3F4F6] overflow-hidden">
       
       <!-- Toolbar flottante Preview -->
       <div class="absolute top-6 flex items-center space-x-2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 shadow-sm z-20">
@@ -1407,8 +1471,10 @@ onUnmounted(() => {
       </div>
       
     </main>
+
+    </div><!-- fin corps sidebar+preview -->
   </div>
-  
+
   <div v-else class="h-screen flex items-center justify-center bg-[#F9F7F2]">
      <div class="text-center space-y-6">
         <div class="w-12 h-1 bg-gray-200 mx-auto overflow-hidden"><div class="w-full h-full bg-[#C5A059] animate-pulse"></div></div>
@@ -1419,7 +1485,7 @@ onUnmounted(() => {
   <!-- INPUT CACHÉ POUR LES TÉLÉCHARGEMENTS RAPIDES (CLIC SUR IMAGE) -->
   <input ref="quickUploadInput" type="file" class="hidden" accept="image/*" @change="handleQuickUpload">
 
-  <UpgradeModal v-model="showUpgradeModal" />
+  <UpgradeModal v-model="showUpgradeModal" :cardId="cardId" />
 </template>
 
 <style>

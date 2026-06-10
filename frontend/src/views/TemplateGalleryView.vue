@@ -15,8 +15,8 @@ const auth = useAuthStore();
 const templates = ref([]);
 const loading = ref(true);
 const wizardData = ref({
-  groomName: 'Lui',
-  brideName: 'Elle',
+  groomName: '',
+  brideName: '',
   date: '',
   location: '',
   style: 'all'
@@ -84,18 +84,18 @@ const selectTemplate = async (template) => {
     try {
       const myEvents = await api.get('/events/');
       if (myEvents.data && myEvents.data.length > 0) {
-        // Utiliser le dernier événement créé
         const existingEvent = myEvents.data[myEvents.data.length - 1];
         eventId = existingEvent.id;
-        console.log("Réutilisation de l'événement existant:", eventId);
-        
-        // Mettre à jour l'événement avec les nouvelles infos du Wizard (si présentes)
+
+        // N'écraser les noms que si le wizard en a de vrais — sinon garder ceux de l'event existant
+        const finalGroom = wizardData.value.groomName || existingEvent.groom_name || '';
+        const finalBride = wizardData.value.brideName || existingEvent.bride_name || '';
         await api.put(`/events/${eventId}`, {
-          title: `Mariage de ${wizardData.value.groomName} & ${wizardData.value.brideName}`,
+          title: `Mariage de ${finalGroom} & ${finalBride}`,
           date: wizardData.value.date || existingEvent.date,
           location: wizardData.value.location || existingEvent.location,
-          groom_name: wizardData.value.groomName,
-          bride_name: wizardData.value.brideName
+          groom_name: finalGroom,
+          bride_name: finalBride
         });
       }
     } catch (e) {
@@ -135,13 +135,33 @@ const selectTemplate = async (template) => {
       manifest = template.manifest_json || {};
     }
 
-    // Le manifest peut contenir un champ default_config ou être la config elle-même
     let config = manifest.default_config || manifest;
 
-    if (config.content) {
-      config.content.names = `${wizardData.value.groomName} & ${wizardData.value.brideName}`;
-      config.content.date = wizardData.value.date || eventDetail.data.date;
-      config.content.location = wizardData.value.location || eventDetail.data.location;
+    // Noms finaux : wizard > event > vide
+    const finalGroom = wizardData.value.groomName || eventDetail.data.groom_name || '';
+    const finalBride = wizardData.value.brideName || eventDetail.data.bride_name || '';
+    const namesDisplay = finalGroom && finalBride ? `${finalGroom} & ${finalBride}` : (finalGroom || finalBride);
+
+    // Date formatée en français (pour le champ date_display lu par les templates)
+    const rawDate = wizardData.value.date || eventDetail.data.date;
+    let dateDisplay = '';
+    if (rawDate) {
+      try {
+        dateDisplay = new Date(rawDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      } catch {}
+    }
+
+    const finalLocation = wizardData.value.location || eventDetail.data.location || '';
+
+    if (!config.content) config.content = {};
+    config.content.names = namesDisplay;
+    config.content.splash_title = namesDisplay;
+    // Clés correctes lues par tous les templates
+    if (dateDisplay) config.content.date_display = dateDisplay;
+    if (finalLocation) config.content.address = finalLocation;
+    // Monogramme auto si absent ou toujours celui du démo
+    if (finalGroom && finalBride) {
+      config.content.monogram = `${finalGroom[0].toUpperCase()} & ${finalBride[0].toUpperCase()}`;
     }
 
     await api.put(`/cards/${cardId}/save`, {
@@ -160,14 +180,28 @@ const selectTemplate = async (template) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   const savedData = localStorage.getItem('wizard_data');
-  console.log("Données Wizard récupérées dans Gallery:", savedData);
   if (savedData) {
     const parsed = JSON.parse(savedData);
     wizardData.value = { ...wizardData.value, ...parsed };
     selectedStyle.value = wizardData.value.style || 'all';
   }
+
+  // Si pas de noms dans le wizard, charger depuis l'événement existant
+  if (!wizardData.value.groomName || !wizardData.value.brideName) {
+    try {
+      const res = await api.get('/events/');
+      if (res.data && res.data.length > 0) {
+        const ev = res.data[res.data.length - 1];
+        if (!wizardData.value.groomName) wizardData.value.groomName = ev.groom_name || '';
+        if (!wizardData.value.brideName) wizardData.value.brideName = ev.bride_name || '';
+        if (!wizardData.value.date) wizardData.value.date = ev.date ? ev.date.split('T')[0] : '';
+        if (!wizardData.value.location) wizardData.value.location = ev.location || '';
+      }
+    } catch {}
+  }
+
   fetchTemplates();
 });
 </script>
