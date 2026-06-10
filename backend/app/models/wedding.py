@@ -34,9 +34,9 @@ class Event(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="events")
-    card = relationship("Card", back_populates="event", uselist=False)
+    card = relationship("Card", back_populates="event", uselist=False, cascade="all, delete")
     guests = relationship("Guest", back_populates="event", cascade="all, delete-orphan")
-    tables = relationship("WeddingTable", back_populates="event")
+    tables = relationship("WeddingTable", back_populates="event", cascade="all, delete-orphan")
 
 class CardTemplate(Base):
     __tablename__ = "card_templates"

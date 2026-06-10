@@ -150,18 +150,31 @@ def export_table_plan_csv(
         raise HTTPException(status_code=403, detail="Accès refusé")
 
     tables = db.query(WeddingTable).filter(WeddingTable.event_id == event_id).all()
-    
+
     output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Table", "Capacité", "Places occupées", "Membres"])
-    
+    writer = csv.writer(output, delimiter=';')
+    writer.writerow(["Table", "Capacité", "Places utilisées", "Prénom", "Nom", "Régime alimentaire"])
+
     for table in tables:
         seated = table.capacity - table.remaining_seats
-        members = [f"{g.first_name} {g.last_name}" for g in table.guests]
-        writer.writerow([table.name, table.capacity, seated, ", ".join(members)])
-    
+        if table.guests:
+            for guest in table.guests:
+                writer.writerow([
+                    table.name,
+                    table.capacity,
+                    seated,
+                    guest.first_name,
+                    guest.last_name,
+                    guest.dietary_restrictions or '',
+                ])
+        else:
+            writer.writerow([table.name, table.capacity, 0, '', '', ''])
+
+    # UTF-8 BOM pour compatibilité Excel français (accents corrects)
+    content = '﻿'.encode('utf-8') + output.getvalue().encode('utf-8')
+
     return Response(
-        content=output.getvalue(),
-        media_type="text/csv",
+        content=content,
+        media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f"attachment; filename=plan_de_table_{event_id}.csv"}
     )

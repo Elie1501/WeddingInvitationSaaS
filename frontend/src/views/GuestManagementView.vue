@@ -18,18 +18,17 @@ const filterStatus = ref('all');
 const planInfo = computed(() => getPlanInfo(auth.user?.plan || 'classic'));
 const showAddGuest = ref(false);
 
-const newGuest = ref({ 
-  first_name: '', 
-  last_name: '', 
-  email: '', 
-  rsvp_status: 'pending',
+const newGuest = ref({
+  first_name: '',
+  last_name: '',
+  email: '',
+  rsvp_status: 'confirmed',
   plus_ones: 0,
   sub_guests: [],
   dietary_restrictions: '',
   message: ''
 });
 
-// Synchroniser les labels d'accompagnants
 watch(() => newGuest.value.plus_ones, (newVal) => {
   const currentLen = newGuest.value.sub_guests.length;
   if (newVal > currentLen) {
@@ -55,10 +54,10 @@ const fetchGuests = async () => {
 
 const addGuest = async () => {
   try {
-    const res = await api.post('/guests', { ...newGuest.value, event_id: parseInt(eventId) });
+    await api.post('/guests', { ...newGuest.value, event_id: parseInt(eventId) });
     showAddGuest.value = false;
-    newGuest.value = { first_name: '', last_name: '', email: '', rsvp_status: 'pending', plus_ones: 0, sub_guests: [], dietary_restrictions: '', message: '' };
-    fetchGuests(); // Recharger pour voir la hiérarchie
+    newGuest.value = { first_name: '', last_name: '', email: '', rsvp_status: 'confirmed', plus_ones: 0, sub_guests: [], dietary_restrictions: '', message: '' };
+    fetchGuests();
   } catch (err) {
     alert(err.response?.data?.detail || "Erreur lors de l'ajout");
   }
@@ -74,15 +73,22 @@ const deleteGuest = async (id) => {
   }
 };
 
-// Logique d'affichage hiérarchique
+const updateGuestStatus = async (guestId, newStatus) => {
+  try {
+    await api.patch(`/guests/${guestId}`, { rsvp_status: newStatus });
+    const guest = guests.value.find(g => g.id === guestId);
+    if (guest) guest.rsvp_status = newStatus;
+  } catch (err) {
+    console.error("Erreur mise à jour statut", err);
+  }
+};
+
 const sortedGuests = computed(() => {
   const mainGuests = guests.value.filter(g => !g.parent_id);
   const result = [];
 
   mainGuests.forEach(parent => {
-    // Ajouter le parent
     result.push({ ...parent, isChild: false });
-    // Ajouter ses enfants
     const children = guests.value.filter(g => g.parent_id === parent.id);
     children.forEach(child => {
       result.push({ ...child, isChild: true, parentName: parent.first_name });
@@ -97,14 +103,19 @@ const sortedGuests = computed(() => {
 });
 
 const stats = computed(() => {
-  const confirmed = guests.value.filter(g => g.rsvp_status === 'confirmed');
+  const main = guests.value.filter(g => !g.parent_id);
   return {
-    total: guests.value.length,
-    confirmed: confirmed.length,
-    pending: guests.value.filter(g => g.rsvp_status === 'pending').length,
-    declined: guests.value.filter(g => g.rsvp_status === 'declined').length,
+    total: main.length,
+    confirmed: main.filter(g => g.rsvp_status === 'confirmed').length,
+    declined: main.filter(g => g.rsvp_status === 'declined').length,
   };
 });
+
+const statusLabel = { confirmed: 'Confirmé', declined: 'Absent' };
+const statusClass = {
+  confirmed: 'bg-green-100 text-green-700',
+  declined:  'bg-red-100 text-red-700',
+};
 
 onMounted(fetchGuests);
 </script>
@@ -126,22 +137,18 @@ onMounted(fetchGuests);
     </nav>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-      <!-- Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <!-- Stats — 3 cartes : Total réponses, Confirmés, Absents -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Personnes</p>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total de Réponses</p>
           <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-green-600">
-          <p class="text-xs font-bold uppercase tracking-widest mb-1">Confirmés</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <p class="text-xs font-bold text-green-500 uppercase tracking-widest mb-1">Confirmés</p>
           <p class="text-2xl font-bold text-gray-900">{{ stats.confirmed }}</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-yellow-500">
-          <p class="text-xs font-bold uppercase tracking-widest mb-1">En attente</p>
-          <p class="text-2xl font-bold text-gray-900">{{ stats.pending }}</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-red-500">
-          <p class="text-xs font-bold uppercase tracking-widest mb-1">Absents</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <p class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Absents</p>
           <p class="text-2xl font-bold text-gray-900">{{ stats.declined }}</p>
         </div>
       </div>
@@ -152,8 +159,7 @@ onMounted(fetchGuests);
         <select v-model="filterStatus" class="bg-gray-50 border border-gray-100 rounded-xl text-sm px-4 py-2">
           <option value="all">Tous les statuts</option>
           <option value="confirmed">Confirmés</option>
-          <option value="pending">En attente</option>
-          <option value="declined">Déclinés</option>
+          <option value="declined">Absents</option>
         </select>
       </div>
 
@@ -174,7 +180,7 @@ onMounted(fetchGuests);
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center" :class="guest.isChild ? 'ml-8' : ''">
                   <span v-if="guest.isChild" class="text-gray-300 mr-2">└─</span>
-                  <div class="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold mr-3" 
+                  <div class="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold mr-3"
                        :class="guest.isChild ? 'bg-gray-100 text-gray-500' : 'bg-primary-100 text-primary-700'">
                     {{ guest.first_name[0] }}{{ guest.last_name[0] }}
                   </div>
@@ -185,18 +191,21 @@ onMounted(fetchGuests);
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                 <span class="text-[10px] font-bold uppercase tracking-widest" :class="guest.isChild ? 'text-gray-400' : 'text-primary-500'">
-                    {{ guest.isChild ? 'Accompagnant' : 'Principal' }}
-                 </span>
+                <span class="text-[10px] font-bold uppercase tracking-widest" :class="guest.isChild ? 'text-gray-400' : 'text-primary-500'">
+                  {{ guest.isChild ? 'Accompagnant' : 'Principal' }}
+                </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="{
-                  'bg-green-100 text-green-700': guest.rsvp_status === 'confirmed',
-                  'bg-yellow-100 text-yellow-700': guest.rsvp_status === 'pending',
-                  'bg-red-100 text-red-700': guest.rsvp_status === 'declined'
-                }" class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                  {{ guest.rsvp_status }}
-                </span>
+                <!-- Select inline pour modifier le statut -->
+                <select
+                  :value="guest.rsvp_status"
+                  @change="updateGuestStatus(guest.id, $event.target.value)"
+                  class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border-0 outline-none cursor-pointer"
+                  :class="statusClass[guest.rsvp_status] || 'bg-gray-100 text-gray-500'"
+                >
+                  <option value="confirmed">Confirmé</option>
+                  <option value="declined">Absent</option>
+                </select>
               </td>
               <td class="px-6 py-4">
                 <p v-if="guest.dietary_restrictions" class="text-xs text-red-400">🍴 {{ guest.dietary_restrictions }}</p>
@@ -208,6 +217,10 @@ onMounted(fetchGuests);
                 </button>
               </td>
             </tr>
+
+            <tr v-if="!loading && sortedGuests.length === 0">
+              <td colspan="5" class="px-6 py-16 text-center text-sm text-gray-400">Aucun invité trouvé.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -217,7 +230,7 @@ onMounted(fetchGuests);
     <div v-if="showAddGuest" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white rounded-[2.5rem] p-10 max-w-xl w-full shadow-2xl overflow-y-auto max-h-[90vh]">
         <h2 class="text-3xl font-serif text-gray-900 mb-8">Ajouter un Invité</h2>
-        
+
         <div class="space-y-6">
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -236,11 +249,19 @@ onMounted(fetchGuests);
               <input v-model="newGuest.email" type="email" class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all">
             </div>
             <div>
-              <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Accompagnants</label>
-              <select v-model.number="newGuest.plus_ones" class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white outline-none">
-                <option v-for="n in 7" :key="n-1" :value="n-1">{{ n-1 === 0 ? 'Vient seul' : '+ ' + (n-1) + ' personnes' }}</option>
+              <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Statut</label>
+              <select v-model="newGuest.rsvp_status" class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white outline-none">
+                <option value="confirmed">Confirmé</option>
+                <option value="declined">Absent</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Accompagnants</label>
+            <select v-model.number="newGuest.plus_ones" class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white outline-none">
+              <option v-for="n in 7" :key="n-1" :value="n-1">{{ n-1 === 0 ? 'Vient seul' : '+ ' + (n-1) + ' personnes' }}</option>
+            </select>
           </div>
 
           <!-- Labels Dynamiques pour Accompagnants -->

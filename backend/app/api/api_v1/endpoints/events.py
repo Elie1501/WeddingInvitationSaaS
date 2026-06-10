@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import uuid
 import json
+import secrets
 from app.db.session import get_db
 from app.api import deps
 from app.models.wedding import Event, User, Card, CardTemplate
@@ -46,7 +47,7 @@ def create_event(
     db.add(new_event)
     db.flush() 
 
-    slug = f"wedding-{uuid.uuid4().hex[:8]}"
+    slug = secrets.token_urlsafe(8)
 
     # Charger la config du template par défaut et appliquer les choix
     config_dict = {}
@@ -63,12 +64,25 @@ def create_event(
     config_dict["content"]["splash_top_text"] = "Save the Date"
     config_dict["content"]["splash_button_text"] = "Ouvrir l'invitation"
     
-    # Injection dynamique des noms
+    # Injection dynamique des données de l'événement
     names_display = f"{new_event.groom_name} & {new_event.bride_name}"
     config_dict["content"]["names"] = names_display
     config_dict["content"]["splash_title"] = names_display
-    
-    # On vide les noms hébreux par défaut s'ils existent (pour éviter "Ora & Samuel" sur un autre mariage)
+
+    if new_event.groom_name and new_event.bride_name:
+        config_dict["content"]["monogram"] = (
+            f"{new_event.groom_name[0].upper()} & {new_event.bride_name[0].upper()}"
+        )
+
+    MONTHS_FR = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                 "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+    if new_event.date:
+        d = new_event.date
+        config_dict["content"]["date_display"] = f"{d.day} {MONTHS_FR[d.month]} {d.year}"
+
+    if new_event.location:
+        config_dict["content"]["address"] = new_event.location
+
     if "hebrew_names" in config_dict["content"]:
         config_dict["content"]["hebrew_names"] = ""
 
@@ -112,16 +126,25 @@ def update_event(
 
 @router.get("/public/card/{slug}")
 def get_public_card(
-    slug: str, 
+    slug: str,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(deps.get_current_user_optional)
 ):
-    card = db.query(Card).filter(Card.slug == slug, Card.is_published == True).first()
+    # 1) Chercher la carte sans filtre is_published pour permettre la préview propriétaire
+    card = db.query(Card).filter(Card.slug == slug).first()
     if not card:
-        raise HTTPException(status_code=404, detail="Invitation non trouvée ou non publiée")
+        raise HTTPException(status_code=404, detail="Invitation introuvable")
 
     event = card.event
-    is_owner = current_user and event.owner_id == current_user.id
+    if not event:
+        raise HTTPException(status_code=404, detail="Invitation introuvable")
+
+    # 2) Calculer is_owner avant le check is_published
+    is_owner = current_user is not None and event.owner_id == current_user.id
+
+    # 3) Carte non publiée : seul le propriétaire peut la prévisualiser
+    if not card.is_published and not is_owner:
+        raise HTTPException(status_code=404, detail="Invitation introuvable")
 
     # Signer les URLs si nécessaire
     media_url = card.media_url
@@ -191,19 +214,18 @@ def get_latest_event(
             manifest = json.loads(template.manifest_json)
             config_dict = manifest.get("default_config", {"canvas": {"width": 1080, "height": 1920, "background_color": "#ffffff"}, "elements": []})
         
-        # Injection dynamique des noms
         names_display = f"{event.groom_name} & {event.bride_name}"
         config_dict["content"] = config_dict.get("content", {})
         config_dict["content"]["names"] = names_display
         config_dict["content"]["splash_title"] = names_display
-        
+
         if "hebrew_names" in config_dict["content"]:
             config_dict["content"]["hebrew_names"] = ""
 
         card = Card(
             event_id=event.id,
             template_id=t_id,
-            slug=f"wedding-{uuid.uuid4().hex[:8]}",
+            slug=secrets.token_urlsafe(8),
             config_json=json.dumps(config_dict)
         )
         db.add(card)
@@ -215,6 +237,57 @@ def get_latest_event(
         "event_id": event.id,
         "card_id": card.id if card else None
     }
+
+@router.post("/admin/sync-cards-data")
+def sync_all_cards_data(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Re-synchronise le config_json de toutes les cartes de l'utilisateur avec les données
+    de leur événement (noms, date, lieu). Corrige les cartes créées avant le fix.
+    """
+    MONTHS_FR = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                 "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+
+    events = db.query(Event).filter(Event.owner_id == current_user.id).all()
+    updated = 0
+
+    for event in events:
+        card = event.card
+        if not card or not card.config_json:
+            continue
+
+        try:
+            cfg = json.loads(card.config_json)
+        except Exception:
+            continue
+
+        if "content" not in cfg:
+            cfg["content"] = {}
+
+        names_display = f"{event.groom_name} & {event.bride_name}"
+        cfg["content"]["names"] = names_display
+        cfg["content"]["splash_title"] = names_display
+
+        if event.groom_name and event.bride_name:
+            cfg["content"]["monogram"] = (
+                f"{event.groom_name[0].upper()} & {event.bride_name[0].upper()}"
+            )
+
+        if event.date:
+            d = event.date
+            cfg["content"]["date_display"] = f"{d.day} {MONTHS_FR[d.month]} {d.year}"
+
+        if event.location:
+            cfg["content"]["address"] = event.location
+
+        card.config_json = json.dumps(cfg)
+        updated += 1
+
+    db.commit()
+    return {"synced": updated, "message": f"{updated} carte(s) re-synchronisée(s)"}
+
 
 @router.get("/", response_model=List[EventResponse])
 def list_my_events(

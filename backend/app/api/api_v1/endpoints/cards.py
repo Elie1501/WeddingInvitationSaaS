@@ -104,12 +104,25 @@ def create_card(
         manifest = json.loads(template.manifest_json)
         config_dict = manifest.get("default_config", {})
     
-    # Injection dynamique des noms
     names_display = f"{event.groom_name} & {event.bride_name}"
     config_dict["content"] = config_dict.get("content", {})
     config_dict["content"]["names"] = names_display
     config_dict["content"]["splash_title"] = names_display
-    
+
+    if event.groom_name and event.bride_name:
+        config_dict["content"]["monogram"] = (
+            f"{event.groom_name[0].upper()} & {event.bride_name[0].upper()}"
+        )
+
+    MONTHS_FR = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                 "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+    if event.date:
+        d = event.date
+        config_dict["content"]["date_display"] = f"{d.day} {MONTHS_FR[d.month]} {d.year}"
+
+    if event.location:
+        config_dict["content"]["address"] = event.location
+
     if "hebrew_names" in config_dict["content"]:
         config_dict["content"]["hebrew_names"] = ""
 

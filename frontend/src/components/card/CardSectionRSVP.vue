@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import api from '../../service/api';
 
 const props = defineProps({
@@ -8,43 +8,52 @@ const props = defineProps({
 });
 
 // --- ÉTAT DU FORMULAIRE ---
-const rsvp = ref({
-  name: '',
-  email: '',
-  attending: 'yes',
-  guests_count: 0,
-  diet: 'Aucun',
-  message: ''
-});
+const persons = ref([{ first_name: '', last_name: '', dietary_restrictions: '' }]);
+const rsvp = ref({ email: '', attending: 'yes', message: '' });
 
 const isSubmitted = ref(false);
 const isLoading = ref(false);
 const error = ref('');
 
+// Vider les personnes supplémentaires quand on bascule sur "absent"
+watch(() => rsvp.value.attending, (val) => {
+  if (val === 'no') persons.value = [persons.value[0]];
+});
+
 // --- LOGIQUE D'AFFICHAGE ET CONTRASTE ---
 const theme = computed(() => props.config.theme);
 const content = computed(() => props.config.content);
 
-// Calcul de luminance pour le bouton (WCAG AA)
 function isDark(hex) {
   if (!hex) return false;
   const r = parseInt(hex.slice(1,3), 16) / 255;
   const g = parseInt(hex.slice(3,5), 16) / 255;
   const b = parseInt(hex.slice(5,7), 16) / 255;
-  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return L < 0.5;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.5;
 }
 
-const labelColor = computed(() => (theme.value.text || '#1A1A1A') + 'B3'); // 70% opacité hex
+const labelColor = computed(() => (theme.value.text || '#1A1A1A') + 'B3');
 const buttonTextColor = computed(() => isDark(theme.value.accent) ? '#FFFFFF' : '#1A1A1A');
 
-// --- ACTIONS ---
+// --- Gestion liste personnes ---
+const addPerson = () => {
+  if (persons.value.length < 30) {
+    persons.value.push({ first_name: '', last_name: '', dietary_restrictions: '' });
+  }
+};
+const removePerson = (i) => { if (persons.value.length > 1) persons.value.splice(i, 1); };
+
+// --- VALIDATION ---
 const validate = () => {
-  if (rsvp.value.name.trim().length < 2) return "Veuillez entrer votre nom complet.";
-  if (rsvp.value.email && !/^\S+@\S+\.\S+$/.test(rsvp.value.email)) return "Format d'email invalide.";
+  for (let i = 0; i < persons.value.length; i++) {
+    const p = persons.value[i];
+    if (!p.first_name.trim()) return i === 0 ? 'Veuillez entrer votre prénom.' : `Prénom requis pour la personne ${i + 1}.`;
+    if (!p.last_name.trim())  return i === 0 ? 'Veuillez entrer votre nom.' : `Nom requis pour la personne ${i + 1}.`;
+  }
   return null;
 };
 
+// --- SOUMISSION ---
 const submitRSVP = async () => {
   error.value = '';
   const validationError = validate();
@@ -52,23 +61,30 @@ const submitRSVP = async () => {
 
   try {
     isLoading.value = true;
-    const nameParts = rsvp.value.name.trim().split(' ');
-    const first = nameParts[0] || '';
-    const last = nameParts.slice(1).join(' ') || '.';
-    
+    const attending = rsvp.value.attending === 'yes';
+    const main = persons.value[0];
+
     await api.post('/guests/public/rsvp', {
       event_id: props.event.id,
-      first_name: first,
-      last_name: last,
-      email: rsvp.value.email,
-      presence: rsvp.value.attending === 'yes',
-      adults: parseInt(rsvp.value.guests_count) + 1,
-      message: rsvp.value.message
+      first_name: main.first_name.trim(),
+      last_name: main.last_name.trim(),
+      email: rsvp.value.email || null,
+      presence: attending,
+      dietary_restrictions: main.dietary_restrictions || null,
+      sub_guests: attending
+        ? persons.value.slice(1).map(p => ({
+            first_name: p.first_name.trim(),
+            last_name: p.last_name.trim(),
+            dietary_restrictions: p.dietary_restrictions || null
+          }))
+        : [],
+      message: rsvp.value.message || null,
     });
-    
+
     isSubmitted.value = true;
   } catch (err) {
     if (err.response?.status === 403) error.value = "Cette invitation n'est pas encore publiée.";
+    else if (err.response?.status === 422) error.value = "Données invalides. Vérifiez les champs et réessayez.";
     else error.value = "Erreur réseau. Veuillez réessayer plus tard.";
   } finally {
     isLoading.value = false;
@@ -78,13 +94,16 @@ const submitRSVP = async () => {
 
 <template>
   <section class="rsvp-section py-20 px-6 max-w-xl mx-auto transition-all duration-700">
+
     <!-- ÉTAT : CONFIRMATION -->
     <div v-if="isSubmitted" class="text-center space-y-6 animate-fadeIn">
       <svg viewBox="0 0 60 60" class="w-20 h-20 mx-auto">
         <circle cx="30" cy="30" r="28" :stroke="theme.accent" stroke-width="1.5" fill="none" class="draw-circle" />
         <path d="M18 30 L26 38 L42 22" :stroke="theme.accent" stroke-width="2" fill="none" stroke-linecap="round" class="draw-check" />
       </svg>
-      <h3 class="text-3xl font-light italic" :style="{ color: theme.text }">Merci {{ rsvp.name.split(' ')[0] }}</h3>
+      <h3 class="text-3xl font-light italic" :style="{ color: theme.text }">
+        Merci {{ persons[0].first_name }}
+      </h3>
       <p :style="{ color: labelColor }">
         {{ rsvp.attending === 'yes' ? 'Votre présence est confirmée !' : 'Nous avons bien reçu votre réponse.' }}
       </p>
@@ -95,13 +114,6 @@ const submitRSVP = async () => {
       <h2 class="text-center text-4xl font-serif italic mb-12" :style="{ color: theme.text }">
         {{ content.rsvp_title || 'Serez-vous des nôtres ?' }}
       </h2>
-
-      <!-- Nom -->
-      <div class="group relative">
-        <label class="block text-[11px] uppercase tracking-widest font-medium mb-1" :style="{ color: labelColor }">Nom Complet</label>
-        <input v-model="rsvp.name" type="text" required class="w-full bg-transparent border-b py-2 focus:outline-none transition-colors"
-               :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
-      </div>
 
       <!-- Email -->
       <div class="group relative">
@@ -125,25 +137,60 @@ const submitRSVP = async () => {
         </div>
       </div>
 
-      <!-- Champs Conditionnels -->
-      <div v-if="rsvp.attending === 'yes'" class="space-y-10 animate-slideDown">
-        <div class="flex flex-col md:flex-row gap-6">
-          <div class="flex-1">
-            <label class="block text-[11px] uppercase tracking-widest font-medium mb-1" :style="{ color: labelColor }">Accompagnants</label>
-            <select v-model="rsvp.guests_count" class="w-full bg-transparent border-b py-2 focus:outline-none" :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
-              <option v-for="n in 4" :key="n-1" :value="n-1" class="text-black">{{ n-1 }} personne{{ n > 2 ? 's' : '' }}</option>
-            </select>
+      <!-- Liste des personnes -->
+      <div class="space-y-6 animate-slideDown">
+        <label class="block text-[11px] uppercase tracking-widest font-medium" :style="{ color: labelColor }">
+          {{ rsvp.attending === 'yes' ? 'Personnes présentes' : 'Votre identité' }}
+        </label>
+
+        <div v-for="(person, idx) in persons" :key="idx"
+             class="space-y-3 pb-4"
+             :class="idx > 0 ? 'border-t pt-4' : ''"
+             :style="idx > 0 ? { borderColor: (theme.accent || '#000') + '22' } : {}">
+
+          <!-- En-tête personne -->
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] uppercase tracking-widest font-bold" :style="{ color: labelColor }">
+              {{ idx === 0 ? 'Vous' : 'Personne ' + (idx + 1) }}
+            </span>
+            <button v-if="idx > 0" type="button" @click="removePerson(idx)"
+                    class="text-[10px] uppercase tracking-wider font-bold transition-opacity hover:opacity-70"
+                    :style="{ color: theme.text + '66' }">
+              Retirer
+            </button>
           </div>
-          <div class="flex-1">
-            <label class="block text-[11px] uppercase tracking-widest font-medium mb-1" :style="{ color: labelColor }">Régime</label>
-            <select v-model="rsvp.diet" class="w-full bg-transparent border-b py-2 focus:outline-none" :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
-              <option class="text-black">Aucun</option>
+
+          <!-- Prénom / Nom -->
+          <div class="flex gap-4">
+            <input v-model="person.first_name" type="text" placeholder="Prénom" required
+                   class="flex-1 bg-transparent border-b py-2 focus:outline-none text-sm placeholder-opacity-40"
+                   :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
+            <input v-model="person.last_name" type="text" placeholder="Nom" required
+                   class="flex-1 bg-transparent border-b py-2 focus:outline-none text-sm placeholder-opacity-40"
+                   :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
+          </div>
+
+          <!-- Régime (seulement si présent) -->
+          <div v-if="rsvp.attending === 'yes'">
+            <select v-model="person.dietary_restrictions"
+                    class="w-full bg-transparent border-b py-2 focus:outline-none text-sm"
+                    :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
+              <option value="" class="text-black">Aucun régime particulier</option>
               <option class="text-black">Végétarien</option>
               <option class="text-black">Vegan</option>
               <option class="text-black">Sans Gluten</option>
             </select>
           </div>
         </div>
+
+        <!-- Bouton + Ajouter une personne -->
+        <button v-if="rsvp.attending === 'yes' && persons.length < 30"
+                type="button"
+                @click="addPerson"
+                class="w-full py-3 rounded-full border text-xs font-bold tracking-widest uppercase transition-all hover:opacity-80"
+                :style="{ borderColor: (theme.accent || '#000') + '44', color: theme.accent || theme.text }">
+          + Ajouter une personne
+        </button>
       </div>
 
       <!-- Message -->
@@ -155,7 +202,7 @@ const submitRSVP = async () => {
 
       <!-- Erreur & Submit -->
       <p v-if="error" class="text-red-500 text-xs text-center font-bold tracking-tight">{{ error }}</p>
-      
+
       <button type="submit" :disabled="isLoading" class="w-full py-5 rounded-sm font-bold tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98]"
               :style="{ backgroundColor: theme.accent, color: buttonTextColor }">
         {{ isLoading ? 'ENVOI...' : 'CONFIRMER MA RÉPONSE' }}
