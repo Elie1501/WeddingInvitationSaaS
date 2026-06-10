@@ -179,7 +179,7 @@ const showCopiedToast = ref(false);
 const publicUrl = computed(() => cardSlug.value ? `${window.location.origin}/cards/${cardSlug.value}` : null);
 
 const showUpgradeModal = ref(false);
-const activeTab = ref('context');
+const activeTab = ref('cover');
 const selectedBlock = ref(null);
 const editingField = ref(null);
 const quickUploadField = ref(null);
@@ -188,13 +188,10 @@ const previewDevice = ref('mobile'); // 'mobile' | 'desktop'
 const zoomLevel = ref(100);
 
 const tabs = [
-  { id: 'context', label: '✦ Sélection' },
-  { id: 'design', label: 'Style' },
-  { id: 'cover', label: 'Garde' },
-  { id: 'structure', label: 'Blocs' },
-  { id: 'content', label: 'Textes' },
-  { id: 'media', label: 'Médias' },
-  { id: 'music', label: '♪ Musique' }
+  { id: 'cover',     label: 'Garde'  },
+  { id: 'design',    label: 'Style'  },
+  { id: 'structure', label: 'Blocs'  },
+  { id: 'media',     label: 'Médias' },
 ];
 
 provide('isEditorMode', true);
@@ -508,6 +505,9 @@ watch(selectedBlock, (newVal) => {
   if (newVal && contextFields.value && activeTab.value !== 'cover') {
     activeTab.value = 'context';
   }
+  if (!newVal && activeTab.value === 'context') {
+    activeTab.value = 'cover';
+  }
 });
 
 // Onglet Garde : sync preview ↔ onglet
@@ -763,17 +763,17 @@ onUnmounted(() => {
         <!-- Navigation persistante -->
         <div class="flex items-stretch border-b border-gray-100">
           <button @click="router.push('/templates')"
-                  class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[9px] font-black uppercase tracking-[0.15em] text-gray-500 hover:text-[#C5A059] hover:bg-amber-50/60 transition-all border-r border-gray-100">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                  class="flex-1 flex flex-col items-center justify-center gap-1 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-gray-500 hover:text-[#C5A059] hover:bg-amber-50/60 transition-all border-r border-gray-100">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
             Galerie
           </button>
           <div class="flex items-center px-3">
             <span class="text-[10px] font-black uppercase tracking-widest text-gray-300">Studio</span>
           </div>
           <button @click="router.push('/dashboard')"
-                  class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[9px] font-black uppercase tracking-[0.15em] text-gray-500 hover:text-[#C5A059] hover:bg-amber-50/60 transition-all border-l border-gray-100">
+                  class="flex-1 flex flex-col items-center justify-center gap-1 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-gray-500 hover:text-[#C5A059] hover:bg-amber-50/60 transition-all border-l border-gray-100">
             Mon espace
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
           </button>
         </div>
         <!-- Undo / Redo -->
@@ -801,8 +801,14 @@ onUnmounted(() => {
       <!-- CONTENU DES ONGLETS -->
       <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#FAFAFA]">
         
-        <!-- ONGLET : CONTEXTE -->
+        <!-- ONGLET : CONTEXTE (auto-activé au clic sur un bloc, hors nav) -->
         <div v-if="activeTab === 'context'" class="animate-in space-y-6">
+          <!-- Bouton retour -->
+          <button @click="selectedBlock = null"
+                  class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-[#C5A059] transition-colors">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+            Retour
+          </button>
           <div v-if="!selectedBlock || !contextFields" class="py-20 text-center space-y-4">
             <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto">
               <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
@@ -1052,7 +1058,7 @@ onUnmounted(() => {
               Palette de couleurs
             </h3>
             <div class="grid grid-cols-2 gap-3">
-              <div v-for="(label, key) in { background: 'Fond', text: 'Texte', titleColor: 'Titres', namesColor: 'Prénoms', accent: 'Accentuation' }" :key="key"
+              <div v-for="(label, key) in { background: 'Fond', text: 'Texte', titleColor: 'Titres', namesColor: 'Prénoms', accent: 'Sous-titre' }" :key="key"
                    class="bg-white border border-gray-200 p-2 rounded-xl flex items-center">
                 <input type="color" v-model="config.theme[key]" class="w-8 h-8 rounded-lg cursor-pointer border-0 p-0 bg-transparent">
                 <span class="ml-2 text-[10px] font-bold uppercase text-gray-500">{{ label }}</span>
@@ -1201,143 +1207,104 @@ onUnmounted(() => {
           </section>
         </div>
 
-        <!-- ONGLET : TEXTES (dynamique par template) -->
-        <div v-if="activeTab === 'content'" class="animate-in space-y-5">
-          <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">
-            Tous les textes — {{ config.layout }}
-          </p>
+        <!-- ONGLET : MÉDIAS (images + musique) -->
+        <div v-if="activeTab === 'media'" class="animate-in space-y-6">
 
-          <div v-for="field in currentTemplateFields" :key="field.key" class="space-y-1">
-            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{{ field.label }}</label>
+          <!-- Images -->
+          <div class="space-y-3">
+            <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Images</p>
 
-            <!-- Texte court -->
-            <input
-              v-if="field.type === 'text'"
-              type="text"
-              :value="config.content[field.key] ?? ''"
-              :placeholder="field.placeholder || ''"
-              @input="config.content[field.key] = $event.target.value"
-              class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] focus:ring-2 focus:ring-[#C5A059]/20 outline-none transition-all"
-            >
-
-            <!-- Texte long -->
-            <textarea
-              v-else-if="field.type === 'textarea'"
-              :value="config.content[field.key] ?? ''"
-              @input="config.content[field.key] = $event.target.value"
-              class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs h-24 resize-none focus:border-[#C5A059] outline-none transition-all"
-            ></textarea>
-
-            <!-- Image -->
-            <div v-else-if="field.type === 'image'" class="space-y-2">
+            <!-- Image principale (couverture) -->
+            <div class="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+              <p class="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Image principale</p>
               <div class="flex gap-2">
-                <input
-                  type="text"
-                  :value="config.content[field.key] ?? ''"
-                  @input="config.content[field.key] = $event.target.value"
-                  placeholder="URL de l'image..."
-                  class="flex-1 p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none transition-all"
-                >
-                <label class="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors flex items-center justify-center aspect-square">
-                  <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                  </svg>
-                  <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event, 'content.' + field.key)">
+                <input type="text" v-model="config.media.image_url" placeholder="https://..." class="flex-1 p-2.5 bg-gray-50 border border-transparent rounded-lg text-xs focus:border-[#C5A059] outline-none">
+                <label class="p-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event, 'media.image_url')">
                 </label>
               </div>
-              <div v-if="config.content[field.key]" class="aspect-video rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
-                <img :src="config.content[field.key]" class="w-full h-full object-cover">
-              </div>
-            </div>
-          </div>
-
-          <!-- Champs globaux toujours présents -->
-          <div class="pt-4 border-t border-gray-200 space-y-4">
-            <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Autres</p>
-            <div class="space-y-1">
-              <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pied de page</label>
-              <input type="text" v-model="config.content.footer_text"
-                     class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none">
-            </div>
-            <div class="space-y-1">
-              <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Titre RSVP</label>
-              <input type="text" v-model="config.content.rsvp_title"
-                     class="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs focus:border-[#C5A059] outline-none">
-            </div>
-          </div>
-        </div>
-
-        <!-- ONGLET : MEDIA -->
-        <div v-if="activeTab === 'media'" class="animate-in space-y-6">
-           <div class="bg-white border border-gray-200 rounded-xl p-4 space-y-4">
-              <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Image de couverture (URL)</label>
-              <input type="text" v-model="config.media.image_url" placeholder="https://..." class="w-full p-3 bg-gray-50 border border-transparent rounded-xl text-xs focus:border-[#C5A059] outline-none">
               <div v-if="config.media.image_url" class="aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                  <img :src="config.media.image_url" class="w-full h-full object-cover">
+                <img :src="config.media.image_url" class="w-full h-full object-cover">
               </div>
-           </div>
-        </div>
+            </div>
 
-        <!-- ONGLET : MUSIQUE -->
-        <div v-if="activeTab === 'music'" class="animate-in space-y-6">
-
-          <!-- Bloc Premium requis -->
-          <div v-if="!isPremium" class="rounded-2xl overflow-hidden border border-amber-200 bg-amber-50">
-            <div class="p-5 space-y-3 text-center">
-              <div class="w-12 h-12 rounded-full bg-[#C5A059]/15 flex items-center justify-center mx-auto">
-                <svg class="w-6 h-6 text-[#C5A059]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
-                </svg>
+            <!-- Image splash (écran d'accueil) -->
+            <div class="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+              <p class="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Écran d'accueil</p>
+              <div class="flex gap-2">
+                <input type="text" v-model="config.media.splash_url" placeholder="https://..." class="flex-1 p-2.5 bg-gray-50 border border-transparent rounded-lg text-xs focus:border-[#C5A059] outline-none">
+                <label class="p-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event, 'media.splash_url')">
+                </label>
               </div>
-              <div>
-                <p class="text-xs font-black uppercase tracking-widest text-[#8B6914]">Fonctionnalité Premium</p>
-                <p class="text-[11px] text-amber-700 mt-1">Ajoutez une musique d'ambiance à votre invitation. Disponible avec le forfait Premium.</p>
+              <div v-if="config.media.splash_url" class="aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                <img :src="config.media.splash_url" class="w-full h-full object-cover">
               </div>
-              <button @click="showUpgradeModal = true" class="w-full py-2.5 bg-[#C5A059] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#b08c47] transition-colors">
-                Passer Premium
-              </button>
             </div>
           </div>
 
-          <!-- Interface upload si Premium -->
-          <template v-else>
-            <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-              <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-[#C5A059]"></div>
-                <p class="text-[10px] font-black uppercase tracking-widest text-gray-700">Musique d'ambiance</p>
-              </div>
+          <!-- Musique -->
+          <div class="space-y-3">
+            <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Musique d'ambiance</p>
 
-              <!-- Lecteur si musique chargée -->
-              <div v-if="config.media.music_url" class="space-y-3">
-                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                  <svg class="w-4 h-4 text-[#C5A059] shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+            <!-- Bloc Premium requis -->
+            <div v-if="!isPremium" class="rounded-2xl overflow-hidden border border-amber-200 bg-amber-50">
+              <div class="p-5 space-y-3 text-center">
+                <div class="w-12 h-12 rounded-full bg-[#C5A059]/15 flex items-center justify-center mx-auto">
+                  <svg class="w-6 h-6 text-[#C5A059]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
                   </svg>
-                  <audio :src="config.media.music_url" controls class="flex-1 h-8 w-full" style="min-width:0"></audio>
                 </div>
-                <button @click="removeMusic" class="w-full py-2 text-[10px] font-bold uppercase tracking-wider text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
-                  Supprimer la musique
+                <div>
+                  <p class="text-xs font-black uppercase tracking-widest text-[#8B6914]">Fonctionnalité Premium</p>
+                  <p class="text-[11px] text-amber-700 mt-1">Ajoutez une musique d'ambiance à votre invitation. Disponible avec le forfait Premium.</p>
+                </div>
+                <button @click="showUpgradeModal = true" class="w-full py-2.5 bg-[#C5A059] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#b08c47] transition-colors">
+                  Passer Premium
                 </button>
               </div>
-
-              <!-- Zone d'upload -->
-              <label v-else class="flex flex-col items-center gap-3 p-6 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#C5A059] hover:bg-amber-50/40 transition-all group">
-                <div class="w-10 h-10 rounded-full bg-gray-100 group-hover:bg-amber-100 flex items-center justify-center transition-colors">
-                  <svg class="w-5 h-5 text-gray-400 group-hover:text-[#C5A059] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                  </svg>
-                </div>
-                <div class="text-center">
-                  <p class="text-[11px] font-bold text-gray-600">Importer un fichier audio</p>
-                  <p class="text-[10px] text-gray-400 mt-0.5">MP3, AAC, OGG — max 20 Mo</p>
-                </div>
-                <span v-if="uploadingMusic" class="w-4 h-4 border-2 border-[#C5A059]/30 border-t-[#C5A059] rounded-full animate-spin"></span>
-                <input type="file" class="hidden" accept="audio/*" @change="handleMusicUpload" :disabled="uploadingMusic">
-              </label>
-
-              <p class="text-[10px] text-gray-400 leading-relaxed">La musique est jouée en fond lors de la consultation de l'invitation par vos invités.</p>
             </div>
-          </template>
+
+            <!-- Interface upload si Premium -->
+            <template v-else>
+              <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-[#C5A059]"></div>
+                  <p class="text-[10px] font-black uppercase tracking-widest text-gray-700">Musique d'ambiance</p>
+                </div>
+
+                <div v-if="config.media.music_url" class="space-y-3">
+                  <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <svg class="w-4 h-4 text-[#C5A059] shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+                    </svg>
+                    <audio :src="config.media.music_url" controls class="flex-1 h-8 w-full" style="min-width:0"></audio>
+                  </div>
+                  <button @click="removeMusic" class="w-full py-2 text-[10px] font-bold uppercase tracking-wider text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
+                    Supprimer la musique
+                  </button>
+                </div>
+
+                <label v-else class="flex flex-col items-center gap-3 p-6 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#C5A059] hover:bg-amber-50/40 transition-all group">
+                  <div class="w-10 h-10 rounded-full bg-gray-100 group-hover:bg-amber-100 flex items-center justify-center transition-colors">
+                    <svg class="w-5 h-5 text-gray-400 group-hover:text-[#C5A059] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-[11px] font-bold text-gray-600">Importer un fichier audio</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">MP3, AAC, OGG — max 20 Mo</p>
+                  </div>
+                  <span v-if="uploadingMusic" class="w-4 h-4 border-2 border-[#C5A059]/30 border-t-[#C5A059] rounded-full animate-spin"></span>
+                  <input type="file" class="hidden" accept="audio/*" @change="handleMusicUpload" :disabled="uploadingMusic">
+                </label>
+
+                <p class="text-[10px] text-gray-400 leading-relaxed">La musique est jouée en fond lors de la consultation de l'invitation par vos invités.</p>
+              </div>
+            </template>
+          </div>
         </div>
 
       </div>

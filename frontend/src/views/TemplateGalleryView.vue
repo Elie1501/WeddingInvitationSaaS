@@ -260,11 +260,9 @@ onMounted(() => {
                   <p class="text-[#C5A059] text-[10px] font-black uppercase tracking-widest mb-1">Template Premium</p>
                   <p class="text-white/70 text-[11px] font-sans leading-relaxed">{{ tpl.description }}</p>
                 </div>
-                <button @click.stop="upgradeToPremium"
-                        :disabled="upgradingToPremium"
-                        class="flex items-center gap-2 px-8 py-3 bg-[#C5A059] text-white text-[10px] uppercase tracking-widest font-bold hover:bg-[#b08c47] disabled:opacity-60 transition-all rounded-sm">
-                  <span v-if="upgradingToPremium" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  <span v-else>Passer au Premium →</span>
+                <button @click.stop="showUpgradeModal = true"
+                        class="flex items-center gap-2 px-8 py-3 bg-[#C5A059] text-white text-[10px] uppercase tracking-widest font-bold hover:bg-[#b08c47] transition-all rounded-sm">
+                  Passer au Premium →
                 </button>
               </template>
 

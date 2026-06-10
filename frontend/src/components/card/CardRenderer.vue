@@ -177,9 +177,9 @@ const currentTemplate = computed(() => {
          '--accent-color': theme.accent      || '#C5A059',
          '--names-color':  theme.namesColor  || null,
          '--title-color':  theme.titleColor  || null,
-         '--names-size': theme.namesSize ? theme.namesSize + 'rem' : '',
-         '--title-size': theme.titleSize ? theme.titleSize + 'rem' : '',
-         '--body-size':  theme.fontSize  ? theme.fontSize  + 'rem' : '',
+         '--names-size': theme.namesSize ? parseFloat(theme.namesSize) + 'rem' : '',
+         '--title-size': theme.titleSize ? parseFloat(theme.titleSize) + 'rem' : '',
+         '--body-size':  theme.fontSize  ? parseFloat(theme.fontSize)  + 'rem' : '',
        }">
     
     <div v-for="sectionId in sections" :key="sectionId"
