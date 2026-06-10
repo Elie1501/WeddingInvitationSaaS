@@ -44,6 +44,20 @@ def seed_data():
         except Exception:
             pass  # colonne déjà présente
 
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE cards ADD COLUMN created_at TIMESTAMP DEFAULT NOW()"))
+                conn.commit()
+        except Exception:
+            pass  # colonne déjà présente
+
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT NOW()"))
+                conn.commit()
+        except Exception:
+            pass  # colonne déjà présente
+
         # Activer + configurer tous les templates du catalogue
         for tpl_id, (category, thumbnail, name) in TEMPLATE_CATALOG.items():
             tpl = db.query(CardTemplate).filter(CardTemplate.id == tpl_id).first()

@@ -20,6 +20,7 @@ class User(Base):
     plan = Column(String, default="classic") # classic, premium
     is_admin = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     events = relationship("Event", back_populates="owner")
 
 class Event(Base):
@@ -63,6 +64,7 @@ class Card(Base):
     has_cover_page = Column(Boolean, default=False)
     media_url = Column(String, nullable=True)
     music_url = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     event = relationship("Event", back_populates="card")
