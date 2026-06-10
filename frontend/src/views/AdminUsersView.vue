@@ -9,20 +9,19 @@ const loading = ref(true);
 const auth = useAuthStore();
 const router = useRouter();
 
-const selectedUser = ref(null);
-const userCards = ref([]);
-const loadingCards = ref(false);
-const showCardsModal = ref(false);
-
 const fetchUsers = async () => {
   try {
     const response = await api.get('/users/');
     users.value = response.data;
   } catch (err) {
     console.error("Erreur lors de la récupération des utilisateurs", err);
-    if (err.response?.status === 403) {
+    const status = err.response?.status;
+    if (status === 403) {
       alert("Accès refusé : vous n'êtes pas administrateur.");
       router.push('/dashboard');
+    } else if (status === 401 || status === 404) {
+      auth.logout();
+      router.push('/login');
     }
   } finally {
     loading.value = false;
@@ -52,21 +51,6 @@ const deleteUser = async (userId) => {
   } catch (err) {
     console.error("Erreur lors de la suppression", err);
     alert(err.response?.data?.detail || "Erreur lors de la suppression.");
-  }
-};
-
-const openUserCards = async (user) => {
-  selectedUser.value = user;
-  showCardsModal.value = true;
-  loadingCards.value = true;
-  userCards.value = [];
-  try {
-    const response = await api.get(`/users/${user.id}/cards`);
-    userCards.value = response.data;
-  } catch (err) {
-    console.error("Erreur lors du chargement des cartes", err);
-  } finally {
-    loadingCards.value = false;
   }
 };
 
@@ -142,25 +126,22 @@ onMounted(() => {
                   <span v-else class="text-gray-400 text-xs uppercase">Client</span>
                 </td>
                 <td class="px-8 py-4 text-right space-x-4">
-                  <button 
-                    @click="openUserCards(user)"
-                    class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
-                  >
-                    Cartes
-                  </button>
-                  <button 
-                    @click="toggleUserStatus(user)"
-                    :class="user.is_active ? 'text-amber-600 hover:text-amber-800' : 'text-green-600 hover:text-green-800'"
-                    class="text-sm font-medium transition-colors"
-                  >
-                    {{ user.is_active ? 'Désactiver' : 'Activer' }}
-                  </button>
-                  <button 
-                    @click="deleteUser(user.id)"
-                    class="text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
-                  >
-                    Supprimer
-                  </button>
+                  <template v-if="user.id !== auth.user?.id">
+                    <button
+                      @click="toggleUserStatus(user)"
+                      :class="user.is_active ? 'text-amber-600 hover:text-amber-800' : 'text-green-600 hover:text-green-800'"
+                      class="text-sm font-medium transition-colors"
+                    >
+                      {{ user.is_active ? 'Désactiver' : 'Activer' }}
+                    </button>
+                    <button
+                      @click="deleteUser(user.id)"
+                      class="text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
+                    >
+                      Supprimer
+                    </button>
+                  </template>
+                  <span v-else class="text-xs text-gray-400 italic">Mon compte</span>
                 </td>
               </tr>
             </tbody>
@@ -169,69 +150,5 @@ onMounted(() => {
       </div>
     </main>
 
-    <!-- Modal Cartes Utilisateur -->
-    <div v-if="showCardsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl p-8 max-w-4xl w-full shadow-2xl max-h-[90vh] flex flex-col">
-        <div class="flex justify-between items-start mb-6">
-          <div>
-            <h2 class="text-2xl text-gray-900">Cartes de {{ selectedUser?.email }}</h2>
-            <p class="text-sm text-gray-500 font-sans mt-1">Aperçu visuel des invitations créées.</p>
-          </div>
-          <button @click="showCardsModal = false" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-          </button>
-        </div>
-
-        <div v-if="loadingCards" class="flex justify-center items-center py-20 flex-grow">
-           <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-        </div>
-
-        <div v-else-if="userCards.length === 0" class="py-20 text-center flex-grow">
-           <p class="text-gray-500 italic">Cet utilisateur n'a pas encore créé de carte.</p>
-        </div>
-
-        <div v-else class="overflow-y-auto pr-2 flex-grow">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div v-for="card in userCards" :key="card.id" class="border border-primary-100 rounded-2xl p-6 hover:shadow-md transition-shadow bg-primary-50/20">
-              <div class="flex justify-between items-start mb-4">
-                <span 
-                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest"
-                  :class="card.is_published ? 'bg-secondary-100 text-secondary-800' : 'bg-gray-200 text-gray-600'"
-                >
-                  {{ card.is_published ? 'Publiée' : 'Brouillon' }}
-                </span>
-                <span class="text-xs text-gray-400 font-mono">ID: #{{ card.id }}</span>
-              </div>
-              
-              <h3 class="text-lg font-medium text-gray-900 mb-4">{{ card.slug || 'Sans nom' }}</h3>
-              
-              <div class="space-y-4">
-                <a 
-                  v-if="card.is_published"
-                  :href="'/cards/' + card.slug" 
-                  target="_blank"
-                  class="block w-full text-center py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm shadow-primary-600/20"
-                >
-                  Voir le rendu visuel
-                </a>
-                <span v-else class="block w-full text-center py-2 bg-gray-100 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed">
-                  Non publiée
-                </span>
-                <div class="pt-4 border-t border-primary-50">
-                   <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Détails techniques</p>
-                   <div class="space-y-1 text-xs text-gray-600 font-sans">
-                      <p><strong>Template:</strong> {{ card.template_id }}</p>
-                      <p><strong>Version:</strong> {{ card.current_version }}</p>
-                      <p><strong>Slug:</strong> {{ card.slug }}</p>
-                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button @click="showCardsModal = false" class="w-full mt-8 py-3 bg-gray-100 text-gray-800 rounded-xl font-semibold hover:bg-gray-200 transition-colors">Fermer</button>
-      </div>
-    </div>
   </div>
 </template>
