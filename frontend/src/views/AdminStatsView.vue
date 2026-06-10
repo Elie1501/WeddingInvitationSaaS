@@ -95,8 +95,8 @@ onMounted(fetchStats);
 
       <template v-else-if="stats">
 
-        <!-- Ligne 1 : 4 chiffres clés -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Ligne 1 : 3 chiffres clés -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
           <div class="bg-white rounded-2xl p-5 border border-gray-100">
             <p class="text-xs text-gray-400 mb-1">MRR</p>
@@ -114,12 +114,6 @@ onMounted(fetchStats);
             <p class="text-xs text-gray-400 mb-1">Cartes créées</p>
             <p class="text-2xl font-semibold text-gray-900">{{ stats.cards_this_month }}</p>
             <p class="text-xs text-gray-400 mt-1 capitalize">{{ currentMonth }}</p>
-          </div>
-
-          <div class="bg-white rounded-2xl p-5 border border-gray-100">
-            <p class="text-xs text-gray-400 mb-1">Inscrits actifs</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ stats.total_users }}</p>
-            <p class="text-xs text-gray-400 mt-1">+{{ stats.new_users_this_month }} ce mois</p>
           </div>
 
         </div>
