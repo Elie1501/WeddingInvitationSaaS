@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted, inject } from 'vue';
 import { getContrastColor } from '../../service/colorUtils';
+import { useCardStyle } from '../../composables/useCardStyle';
 
 // Composants de base
 import CardSectionBanner from './CardSectionBanner.vue';
@@ -127,6 +128,9 @@ onUnmounted(() => clearInterval(timer));
 const theme = computed(() => safeConfig.value.theme);
 const layout = computed(() => safeConfig.value.layout);
 
+const { cssVars } = useCardStyle(safeConfig);
+
+
 // Helper pour identifier les blocs Hero des templates
 const isTemplateHero = (id) => {
   return id.endsWith('-full') || id.endsWith('-hero') || id === 'hero';
@@ -169,18 +173,7 @@ const currentTemplate = computed(() => {
 
   <div v-show="!(isEditorMode && selectedBlock === 'splash')"
        class="card-engine w-full flex flex-col items-center overflow-x-hidden pb-10 relative"
-       :style="{
-         fontFamily: theme.fontFamily || 'Playfair Display',
-         backgroundColor: theme.background || 'white',
-         color: theme.text,
-         '--accent':       theme.accent      || '#C5A059',
-         '--accent-color': theme.accent      || '#C5A059',
-         '--names-color':  theme.namesColor  || null,
-         '--title-color':  theme.titleColor  || null,
-         '--names-size': theme.namesSize ? parseFloat(theme.namesSize) + 'rem' : '',
-         '--title-size': theme.titleSize ? parseFloat(theme.titleSize) + 'rem' : '',
-         '--body-size':  theme.fontSize  ? parseFloat(theme.fontSize)  + 'rem' : '',
-       }">
+       :style="cssVars">
     
     <div v-for="sectionId in sections" :key="sectionId"
          @click="isEditorMode && emit('select-block', sectionId)"
@@ -198,31 +191,56 @@ const currentTemplate = computed(() => {
       <!-- BLOCS GÉNÉRIQUES -->
       <CardSectionText v-if="sectionId.startsWith('custom-text')" :id="sectionId" :config="safeConfig" :event="event" />
 
-      <div v-if="sectionId === 'countdown' && safeConfig.show_countdown" class="w-full py-16 text-center z-10 relative" :style="{ color: theme.text }">
-         <p class="text-[11px] font-bold uppercase tracking-[0.5em] mb-8 opacity-40">Le grand décompte</p>
+      <div v-if="sectionId === 'countdown' && safeConfig.show_countdown" class="w-full py-16 text-center z-10 relative" :style="{ color: theme.text, fontFamily: theme.fontFamily }">
+         <p class="font-bold uppercase tracking-[0.5em] mb-8 opacity-40" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">Le grand décompte</p>
          <div class="flex justify-center items-center space-x-8">
             <div v-for="(val, label) in { Jours:timeLeft.days, Heures:timeLeft.hours, Min:timeLeft.mins, Sec:timeLeft.secs }" :key="label" class="flex flex-col">
-               <span class="text-5xl font-light" :style="{ color: theme.accent }">{{ val }}</span>
-               <span class="text-[9px] uppercase tracking-widest opacity-40 mt-2">{{ label }}</span>
+               <span class="font-light" :style="{ color: theme.accent, fontSize: 'var(--size-countdown, 3rem)', fontFamily: theme.fontFamily }">{{ val }}</span>
+               <span class="uppercase tracking-widest opacity-40 mt-2" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ label }}</span>
             </div>
          </div>
       </div>
 
-      <div v-if="sectionId === 'program'" class="w-full py-20 px-8 text-center space-y-12 z-10 relative" :style="{ color: theme.text }">
-        <h2 class="text-4xl md:text-5xl font-serif italic">Le Programme</h2>
+      <div v-if="sectionId === 'program'" class="w-full py-20 px-8 text-center space-y-12 z-10 relative" :style="{ color: theme.text, fontFamily: theme.fontFamily }">
+        <h2 class="italic" :style="{ fontSize: 'var(--size-headings, 2.5rem)', fontFamily: theme.fontFamily }">Le Programme</h2>
         <div v-if="subEvents && subEvents.length > 0" class="max-w-xl mx-auto space-y-12">
           <div v-for="(se, idx) in subEvents" :key="idx" class="space-y-4">
-              <p class="text-[11px] font-bold uppercase tracking-[0.4em]" :style="{ color: theme.accent }">{{ se.time }}</p>
-              <h3 class="text-2xl font-light italic">{{ se.title }}</h3>
-              <p v-if="se.location" class="text-xs uppercase tracking-widest opacity-60">{{ se.location }}</p>
-              <p v-if="se.description" class="text-sm opacity-50 italic">{{ se.description }}</p>
+              <p class="font-bold uppercase tracking-[0.4em]" :style="{ color: theme.accent, fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ se.time }}</p>
+              <h3 class="font-light italic" :style="{ fontSize: 'var(--size-body, 1.25rem)', fontFamily: theme.fontFamily }">{{ se.title }}</h3>
+              <p v-if="se.location" class="uppercase tracking-widest opacity-60" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ se.location }}</p>
+              <p v-if="se.description" class="opacity-50 italic" :style="{ fontSize: 'var(--size-body, 0.875rem)', fontFamily: theme.fontFamily }">{{ se.description }}</p>
           </div>
+        </div>
+      </div>
+
+      <!-- BLOC IMAGE avec placeholder élégant -->
+      <div v-if="sectionId.startsWith('image-')" class="w-full relative group">
+        <img
+          :src="safeConfig.content[sectionId]?.image_url || '/placeholder-mariage.svg'"
+          :alt="safeConfig.content[sectionId]?.caption || ''"
+          class="w-full block"
+          :class="isEditorMode ? 'cursor-pointer' : ''"
+          @click.stop="isEditorMode && handleImageClick(`content.${sectionId}.image_url`)"
+          @error="$event.target.src='/placeholder-mariage.svg'"
+        />
+        <p v-if="safeConfig.content[sectionId]?.caption"
+           class="text-center py-3 italic opacity-60 px-4"
+           :style="{ color: theme.text, fontSize: 'var(--size-body, 0.875rem)', fontFamily: theme.fontFamily }">
+          {{ safeConfig.content[sectionId].caption }}
+        </p>
+        <!-- Hint éditeur au survol -->
+        <div v-if="isEditorMode"
+             class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+          <span class="bg-black/60 text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+            Cliquer pour changer l'image
+          </span>
         </div>
       </div>
 
       <CardSectionRSVP v-if="sectionId === 'rsvp'" :config="safeConfig" :event="event" />
 
-      <div v-if="sectionId === 'footer'" class="py-20 w-full text-center opacity-30 text-[9px] uppercase tracking-[0.5em] border-t border-black/5" :style="{ color: theme.text, borderColor: theme.text + '1a' }">
+      <div v-if="sectionId === 'footer'" class="py-20 w-full text-center opacity-30 uppercase tracking-[0.5em] border-t border-black/5"
+           :style="{ color: theme.text, borderColor: theme.text + '1a', fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">
         {{ safeConfig.content.footer_text || 'Fait avec amour • 2026' }}
       </div>
     </div>
@@ -230,8 +248,9 @@ const currentTemplate = computed(() => {
 </template>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;700&family=Inter:wght@300;400;700&family=Bodoni+Moda:ital,wght@0,400;0,700;1,400&family=Noto+Serif+JP:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;600;700&family=Dancing+Script:wght@400;600;700&display=swap');
 
+.card-engine { font-family: var(--card-font, 'Playfair Display'), serif; }
 .card-engine * { transition: color 0.3s ease, background-color 0.3s ease; }
 
 /* Annuler le text-gray-900 global sur les titres */
@@ -244,30 +263,13 @@ const currentTemplate = computed(() => {
   color: inherit;
 }
 
-/* ── PRÉNOMS : couleur + taille ────────────────────────────────────────── */
+/* Reset Tailwind's gray-900 default on headings — templates set their own color */
 .card-engine h1,
-.card-engine .names,
-.card-engine .main-names,
-.card-engine .name-part,
-.card-engine .template-title,
-.card-engine .hero-names {
-  color:     var(--names-color, inherit) !important;
-  font-size: var(--names-size, '')       !important;
-}
-
-/* ── TITRES DE SECTION : couleur + taille ─────────────────────────────── */
 .card-engine h2,
 .card-engine h3,
-.card-engine .section-title,
-.card-engine .feature-title {
-  color:     var(--title-color, inherit) !important;
-  font-size: var(--title-size, '')       !important;
-}
-
-/* ── CORPS DU TEXTE : taille ───────────────────────────────────────────── */
-.card-engine .template-body,
-.card-engine .feature-body,
-.card-engine .section-desc {
-  font-size: var(--body-size, '') !important;
+.card-engine h4,
+.card-engine h5,
+.card-engine h6 {
+  color: inherit;
 }
 </style>

@@ -157,7 +157,8 @@ const exportCsv = async () => {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   } catch (err) {
-    if (err.response?.status === 403) showUpgradeModal.value = true;
+    if (err.response?.status === 403 && !isPremium.value) showUpgradeModal.value = true;
+    else if (err.response?.status === 403) alert("Accès refusé.");
     else alert("Erreur lors de l'export CSV");
   } finally {
     exportingCsv.value = false;

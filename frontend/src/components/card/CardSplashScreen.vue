@@ -133,10 +133,10 @@ const themeStyles = computed(() => {
         </div>
         
         <div class="mb-10 overflow-hidden">
-          <h1 
+          <h1
             class="text-6xl md:text-8xl drop-shadow-2xl animate-reveal-up-delay-1 italic"
-            :style="{ 
-              fontFamily: themeStyles.font,
+            :style="{
+              fontFamily: config?.theme?.fontFamily || themeStyles.font,
               color: templateId === 'royal-gold' ? '#d4af37' : '#ffffff'
             }"
           >
@@ -147,7 +147,7 @@ const themeStyles = computed(() => {
         <div class="w-24 h-[1px] mb-10 animate-grow-width" :style="{ backgroundColor: themeStyles.accent + '66' }"></div>
 
         <div v-if="config?.content?.splash_subtitle" class="mb-8 overflow-hidden">
-          <p class="text-white text-xl md:text-3xl font-light tracking-[0.1em] italic font-serif animate-reveal-up-delay-2">
+          <p class="text-white text-xl md:text-3xl font-light tracking-[0.1em] italic animate-reveal-up-delay-2" :style="{ fontFamily: config?.theme?.fontFamily || themeStyles.font }">
             {{ config.content.splash_subtitle }}
           </p>
         </div>

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { getContrastColor } from '../../service/colorUtils';
 
 const props = defineProps({
   config: { type: Object, required: true },
@@ -8,6 +9,12 @@ const props = defineProps({
 
 // --- CONFIG & FALLBACKS ---
 const content = computed(() => props.config.content || {});
+
+const theme = computed(() => ({
+  bg:     props.config.theme?.background || '#0A0A0A',
+  text:   props.config.theme?.text || getContrastColor(props.config.theme?.background || '#0A0A0A'),
+  accent: props.config.theme?.accent || '#C9A84C',
+}));
 const names = computed(() =>
   content.value.names ||
   (props.event?.groom_name && props.event?.bride_name
@@ -73,11 +80,19 @@ onUnmounted(() => {
   pendingTimeouts.forEach(clearTimeout);
 });
 
-// Contraste : #F5E6C8 sur #0A0A0A = ratio 15.2:1 (Exceptionnel AAA)
+const monogram = computed(() => {
+  if (content.value.monogram) return content.value.monogram;
+  const n = names.value;
+  if (!n) return '';
+  const parts = n.trim().split(/\s*[&\/]\s*/);
+  if (parts.length >= 2) return `${parts[0].charAt(0).toUpperCase()} & ${parts[1].charAt(0).toUpperCase()}`;
+  return parts[0]?.charAt(0).toUpperCase() || '';
+});
 </script>
 
 <template>
-  <div class="hero-container relative h-screen bg-[#0A0A0A] overflow-hidden flex items-center justify-center">
+  <div class="hero-container relative h-dvh overflow-hidden flex items-center justify-center"
+       :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
     <canvas ref="canvasRef" class="absolute inset-0 z-0 pointer-events-none opacity-40"></canvas>
     
     <!-- Grain SVG Filter -->
@@ -86,23 +101,23 @@ onUnmounted(() => {
     <div class="vignette absolute inset-0 pointer-events-none z-20"></div>
 
     <div class="relative z-30 text-center space-y-12 px-6">
-      <div class="monogram font-serif tracking-[0.5em] text-gold uppercase opacity-80 text-sm md:text-base">
-        {{ content.monogram || 'E & L' }}
+      <div class="monogram tracking-[0.5em] text-gold uppercase opacity-80 text-sm md:text-base">
+        {{ monogram }}
       </div>
 
-      <h1 class="template-title font-serif italic text-[#F5E6C8]">
+      <h1 class="template-title italic" :style="{ color: 'var(--card-text)' }">
         <span v-for="(c, i) in displayedNames" :key="i" class="animate-letter">{{ c }}</span>
       </h1>
 
       <div class="divider w-24 h-[1px] bg-gold opacity-30 mx-auto"></div>
 
-      <p class="template-body max-w-2xl mx-auto text-[#F5E6C8] font-serif italic">
+      <p class="template-body max-w-2xl mx-auto italic" :style="{ color: 'var(--card-text)' }">
         {{ content.intro_text || 'Nous vous convions à célébrer l’éternité d’un instant.' }}
       </p>
 
       <div class="info-block space-y-4">
         <p class="template-label text-gold">{{ content.date_display || '15 JUIN 2026' }}</p>
-        <p v-if="content.address" class="template-label text-[#F5E6C8]">{{ content.address }}</p>
+        <p v-if="content.address" class="template-label" :style="{ color: 'var(--card-text)' }">{{ content.address }}</p>
       </div>
 
       <div class="text-2xl pt-12 animate-pulse">{{ content.divider_symbol || '✦' }}</div>
@@ -113,13 +128,18 @@ onUnmounted(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel&family=Cormorant+Garamond:ital,wght@1,300&family=Playfair+Display:ital,wght@1,400&display=swap');
 
-.hero-container { --gold: #C9A84C; }
+.hero-container {
+  --gold: var(--card-accent, #C9A84C);
+  background: var(--card-bg, #0A0A0A);
+  color: var(--card-text, #F5E6C8);
+}
 .text-gold { color: var(--gold); }
 .vignette { background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.8) 100%); }
 
-.template-title { font-size: clamp(2.5rem, 12vw, 6rem); line-height: 1.1; }
-.template-body  { font-size: clamp(1rem, 3vw, 1.4rem); }
-.template-label { font-family: 'Cinzel', serif; letter-spacing: 0.3em; font-size: 0.7rem; }
+.template-title { font-family: var(--card-font, 'Cormorant Garamond'), serif; font-size: var(--size-names, clamp(2.5rem, 12vw, 6rem)); line-height: 1.1; }
+.template-body  { font-family: var(--card-font, 'Cormorant Garamond'), serif; font-size: clamp(1rem, 3vw, 1.4rem); }
+.monogram       { font-family: var(--card-font, 'Cinzel'), serif; }
+.template-label { font-family: var(--card-font, 'Cinzel'), serif; letter-spacing: 0.3em; font-size: 0.7rem; }
 
 .animate-letter { animation: fadeIn 0.5s forwards; opacity: 0; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

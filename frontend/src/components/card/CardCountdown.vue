@@ -47,7 +47,7 @@ const containerClass = computed(() => `countdown-${props.templateId}`);
         <span class="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold mt-2 opacity-60">{{ unit }}</span>
       </div>
     </template>
-    <div v-else class="text-2xl font-serif italic text-center p-4" :style="{ color: themeColor }">
+    <div v-else class="text-2xl italic text-center p-4" :style="{ color: themeColor }">
       C'est le grand jour ! ✨
     </div>
   </div>
@@ -90,7 +90,7 @@ const containerClass = computed(() => `countdown-${props.templateId}`);
   }
 }
 .countdown-luxury-minimal span {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--card-font, 'Montserrat'), sans-serif;
   letter-spacing: -0.05em;
 }
 

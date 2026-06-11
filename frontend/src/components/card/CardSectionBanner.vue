@@ -25,7 +25,7 @@ const props = defineProps({
         <div class="reveal-up delay-1">
             <p class="text-[10px] uppercase tracking-[0.6em] mb-6 font-bold" :style="{ color: theme.accent }">Célébration Unique</p>
         </div>
-        <h1 class="text-7xl md:text-8xl font-light leading-none italic mb-10 drop-shadow-sm font-playfair reveal-up delay-2">{{ displayData.names }}</h1>
+        <h1 class="text-7xl md:text-8xl font-light leading-none italic mb-10 drop-shadow-sm reveal-up delay-2" :style="{ fontFamily: theme.fontFamily }">{{ displayData.names }}</h1>
         <div class="w-16 h-[1px] mx-auto opacity-30 mb-8 reveal-up delay-3" :style="{ backgroundColor: theme.text }"></div>
         <div class="space-y-2 reveal-up delay-4">
             <p class="text-base tracking-[0.3em] font-bold uppercase">{{ displayData.date }}</p>
@@ -49,7 +49,7 @@ const props = defineProps({
         <div class="overflow-hidden mb-4">
             <p class="text-xs tracking-[0.5em] uppercase font-black opacity-40 reveal-up">The Wedding of</p>
         </div>
-        <h1 class="text-[6rem] md:text-[10rem] font-black tracking-tighter uppercase leading-[0.8] -ml-4 mix-blend-difference break-words font-montserrat reveal-left text-white drop-shadow-2xl">
+        <h1 class="text-[6rem] md:text-[10rem] font-black tracking-tighter uppercase leading-[0.8] -ml-4 mix-blend-difference break-words reveal-left text-white drop-shadow-2xl" :style="{ fontFamily: theme.fontFamily }">
             {{ displayData.names.split('&')[0] }}<br>
             <span class="text-[#C5A059]">&</span>{{ displayData.names.split('&')[1] }}
         </h1>
@@ -86,10 +86,10 @@ const props = defineProps({
             <span class="text-lg">✦</span>
         </div>
         <p class="text-[10px] uppercase tracking-[0.6em] opacity-90 font-black">L'Union Sacrée</p>
-        <h1 class="text-6xl md:text-7xl italic font-light drop-shadow-2xl leading-tight font-playfair">{{ displayData.names }}</h1>
+        <h1 class="text-6xl md:text-7xl italic font-light drop-shadow-2xl leading-tight" :style="{ fontFamily: theme.fontFamily }">{{ displayData.names }}</h1>
         <div class="flex items-center space-x-6 w-full opacity-60">
             <div class="h-[1px] flex-1 bg-white"></div>
-            <span class="text-sm font-serif">A.D. 2026</span>
+            <span class="text-sm" :style="{ fontFamily: theme.fontFamily }">A.D. 2026</span>
             <div class="h-[1px] flex-1 bg-white"></div>
         </div>
         <div class="space-y-4">
@@ -112,7 +112,7 @@ const props = defineProps({
       <div class="relative z-10 p-16 bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.2)] max-w-[450px] es-box-wrapper reveal-up">
         <div class="absolute inset-4 border-2 border-black/5 pointer-events-none"></div>
         <p class="text-[11px] font-black uppercase tracking-[0.8em] mb-10 text-black/40">Premium Wedding</p>
-        <h1 class="text-6xl md:text-7xl font-black uppercase tracking-tighter leading-[0.85] mb-12 text-black font-inter">
+        <h1 class="text-6xl md:text-7xl font-black uppercase tracking-tighter leading-[0.85] mb-12 text-black" :style="{ fontFamily: theme.fontFamily }">
             {{ displayData.names.replace(' & ', '\n&\n') }}
         </h1>
         <div class="w-12 h-[6px] bg-[#C5A059] mx-auto mb-12"></div>
@@ -129,9 +129,9 @@ const props = defineProps({
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@900&family=Inter:wght@900&display=swap');
 
-.font-playfair { font-family: 'Playfair Display', serif !important; }
-.font-montserrat { font-family: 'Montserrat', sans-serif !important; font-weight: 900 !important; }
-.font-inter { font-family: 'Inter', sans-serif !important; font-weight: 900 !important; }
+.font-playfair { font-family: var(--card-font, 'Playfair Display'), serif; }
+.font-montserrat { font-family: var(--card-font, 'Montserrat'), sans-serif; font-weight: 900; }
+.font-inter { font-family: var(--card-font, 'Inter'), sans-serif; font-weight: 900; }
 
 .hero-block-main {
     min-height: 700px;

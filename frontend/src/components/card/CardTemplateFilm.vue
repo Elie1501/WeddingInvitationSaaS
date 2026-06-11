@@ -53,12 +53,11 @@ onMounted(() => {
 
 <template>
   <div class="film-template" :style="{
-      '--black': theme.black,
-      '--cream': theme.cream,
-      '--accent': theme.accent,
+      '--card-bg': theme.black,
+      '--card-text': theme.cream,
+      '--card-accent': theme.accent,
       '--spot-x': spotlightPos.x + '%',
       '--spot-y': spotlightPos.y + '%',
-      color: theme.text
     }">
 
     <!-- Film Grain & Projector Overlay -->
@@ -98,7 +97,7 @@ onMounted(() => {
                     <h2 class="section-title ArtDeco">{{ config.content?.section_title || 'Première Mondiale' }}</h2>
                     <p class="description italic">{{ config.content?.intro_text || '"Une histoire d\'amour pour l\'éternité."' }}</p>
                     <div class="film-divider-fancy"></div>
-                    <div class="details-grid font-serif">
+                    <div class="details-grid">
                         <div class="d-item">
                             <span class="d-label">DATE</span>
                             <p>{{ displayDate }}</p>
@@ -137,11 +136,11 @@ onMounted(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
 
-.ArtDeco { font-family: 'Cormorant SC', serif; letter-spacing: 0.1em; }
+.ArtDeco { font-family: var(--card-font, 'Cormorant SC'), serif; letter-spacing: 0.1em; }
 
 .film-template {
-  background-color: var(--black);
-  color: var(--cream);
+  background-color: var(--card-bg);
+  color: var(--card-text);
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -175,7 +174,7 @@ onMounted(() => {
 .film-perforations {
     position: absolute;
     top: 0; bottom: 0; width: 40px;
-    background-image: radial-gradient(circle, var(--black) 50%, transparent 50%);
+    background-image: radial-gradient(circle, var(--card-bg) 50%, transparent 50%);
     background-size: 20px 40px;
     background-repeat: repeat-y;
 }
@@ -202,19 +201,19 @@ onMounted(() => {
 }
 
 .film-intro { font-size: 0.7rem; letter-spacing: 0.5em; margin-bottom: 20px; opacity: 0.6; }
-.main-title { font-size: 5rem; text-shadow: 0 0 20px rgba(0,0,0,0.5); }
-.film-line { width: 60px; height: 2px; background: var(--sepia); margin: 30px 0; }
+.main-title { font-size: var(--size-names, 5rem); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+.film-line { width: 60px; height: 2px; background: var(--card-accent); margin: 30px 0; }
 .film-date { font-size: 1.2rem; letter-spacing: 0.3em; font-weight: 300; }
 
-.body-content { background-color: var(--cream); color: var(--black); position: relative; z-index: 5; }
+.body-content { background-color: var(--card-text); color: var(--card-bg); position: relative; z-index: 5; }
 .container { max-width: 800px; margin: 0 auto; padding: 0 40px; }
 
 .presentation-section { padding: 80px 0; }
-.frame-border { border: 1px solid var(--black); border-style: double; border-width: 6px; text-align: center; }
+.frame-border { border: 1px solid var(--card-bg); border-style: double; border-width: 6px; text-align: center; }
 .section-title { font-size: 3.5rem; margin-bottom: 10px; }
 .description { font-size: 1.1rem; line-height: 1.7; opacity: 0.75; margin-top: 10px; }
-.film-divider-fancy { height: 1px; background: var(--black); width: 100px; margin: 30px auto; position: relative; }
-.film-divider-fancy::after { content: '◈'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--cream); padding: 0 10px; }
+.film-divider-fancy { height: 1px; background: var(--card-bg); width: 100px; margin: 30px auto; position: relative; }
+.film-divider-fancy::after { content: '◈'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--card-text); padding: 0 10px; }
 
 .details-grid { display: flex; justify-content: center; gap: 60px; margin-top: 40px; }
 .d-label { font-size: 0.7rem; opacity: 0.5; letter-spacing: 3px; }

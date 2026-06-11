@@ -17,13 +17,14 @@ const content = computed(() => contentData.value.content);
 </script>
 
 <template>
-  <div class="py-16 px-8 text-center bg-transparent reveal-up">
-    <h2 v-if="title" class="text-4xl md:text-5xl mb-8 font-playfair italic">
+  <div class="py-16 px-8 text-center bg-transparent reveal-up" :style="{ color: config.theme?.text, fontFamily: config.theme?.fontFamily }">
+    <h2 v-if="title" class="text-4xl md:text-5xl mb-8 italic" :style="{ fontFamily: config.theme?.fontFamily }">
       {{ title }}
     </h2>
-    
-    <div 
+
+    <div
       class="text-content text-lg md:text-xl leading-relaxed max-w-2xl mx-auto font-light tracking-wide whitespace-pre-line opacity-80"
+      :style="{ fontFamily: config.theme?.fontFamily }"
     >
       {{ content }}
     </div>

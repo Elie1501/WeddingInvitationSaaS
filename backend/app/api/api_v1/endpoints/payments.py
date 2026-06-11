@@ -1,11 +1,15 @@
+import logging
 import stripe
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.db.session import get_db
 from app.api import deps
 from app.models.wedding import User
 from app.core.config import settings
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -72,18 +76,29 @@ def create_checkout_session(
 
 @router.post("/create-upgrade-session")
 def create_upgrade_session(
+    card_id: Optional[int] = Query(None, description="ID de la carte éditeur pour redirect post-paiement"),
     current_user: User = Depends(deps.get_current_user),
     db: Session = Depends(get_db),
 ):
     """Crée une session Stripe pour l'upgrade Classic → Premium (différence de prix uniquement)."""
-    if current_user.plan == "premium":
+    user_plan = current_user.plan or "classic"
+    if user_plan == "premium":
+        logger.warning(
+            "[upgrade] user_id=%s (%s) est déjà Premium — upgrade refusé (400)",
+            current_user.id, current_user.email
+        )
         raise HTTPException(status_code=400, detail="Vous êtes déjà abonné au forfait Premium.")
 
     from app.api.plans import get_upgrade_amount
-    upgrade_amount = get_upgrade_amount()  # 5000 centimes = 50 €
+    upgrade_amount = get_upgrade_amount()
 
     try:
         frontend = settings.FRONTEND_URL.rstrip("/")
+        if card_id:
+            success_url = f"{frontend}/cards/edit/{card_id}?payment_success=true&plan=premium&session_id={{CHECKOUT_SESSION_ID}}"
+        else:
+            success_url = f"{frontend}/dashboard?payment_success=true&plan=premium&session_id={{CHECKOUT_SESSION_ID}}"
+
         checkout_session = stripe.checkout.Session.create(
             customer_email=current_user.email,
             payment_method_types=["card"],
@@ -99,7 +114,7 @@ def create_upgrade_session(
                 "quantity": 1,
             }],
             mode="payment",
-            success_url=f"{frontend}/dashboard?payment_success=true&plan=premium&session_id={{CHECKOUT_SESSION_ID}}",
+            success_url=success_url,
             cancel_url=f"{frontend}/templates?payment_cancel=true",
             metadata={
                 "user_id": str(current_user.id),
@@ -107,8 +122,16 @@ def create_upgrade_session(
                 "checkout_type": "upgrade",
             },
         )
+        logger.info(
+            "[upgrade] session créée pour user_id=%s montant=%s card_id=%s",
+            current_user.id, upgrade_amount, card_id
+        )
         return {"checkout_url": checkout_session.url, "amount": upgrade_amount}
     except stripe.error.StripeError as e:
+        logger.error(
+            "[upgrade] StripeError pour user_id=%s : %s",
+            current_user.id, str(e)
+        )
         raise HTTPException(status_code=500, detail=str(e))
 
 

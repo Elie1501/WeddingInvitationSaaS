@@ -25,6 +25,18 @@ const handleGoogleLogin = async () => {
     console.error("Google Auth Error:", err);
     if (err.response?.status === 403) {
       error.value = err.response.data?.detail || "Votre compte a été désactivé. Veuillez contacter l'administrateur.";
+    } else if (err.code === 'auth/popup-blocked') {
+      error.value = "La popup a été bloquée par votre navigateur. Autorisez les popups pour ce site.";
+    } else if (err.code === 'auth/popup-closed-by-user') {
+      error.value = "La fenêtre de connexion a été fermée. Réessayez.";
+    } else if (err.code === 'auth/unauthorized-domain') {
+      error.value = "Ce domaine n'est pas autorisé dans Firebase Console.";
+    } else if (err.code === 'auth/operation-not-allowed') {
+      error.value = "La connexion Google n'est pas activée dans Firebase Console.";
+    } else if (err.code) {
+      error.value = `Erreur Firebase : ${err.code}`;
+    } else if (err.response?.data?.detail) {
+      error.value = `Erreur serveur : ${err.response.data.detail}`;
     } else {
       error.value = "Une erreur est survenue lors de la connexion avec Google.";
     }

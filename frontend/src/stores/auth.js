@@ -4,11 +4,18 @@ import { auth, provider } from '../firebase';
 import { signInWithPopup } from 'firebase/auth';
 
 export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        user: null,
-        token: localStorage.getItem('token') || null,
-        refreshToken: localStorage.getItem('refresh_token') || null,
-    }),
+    state: () => {
+        let user = null;
+        try {
+            const saved = localStorage.getItem('user');
+            if (saved) user = JSON.parse(saved);
+        } catch {}
+        return {
+            user,
+            token: localStorage.getItem('token') || null,
+            refreshToken: localStorage.getItem('refresh_token') || null,
+        };
+    },
     actions: {
         async loginWithGoogle() {
             try {

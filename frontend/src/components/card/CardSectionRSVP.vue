@@ -93,7 +93,7 @@ const submitRSVP = async () => {
 </script>
 
 <template>
-  <section class="rsvp-section py-20 px-6 max-w-xl mx-auto transition-all duration-700">
+  <section class="rsvp-section py-20 px-6 max-w-xl mx-auto transition-all duration-700" :style="{ fontFamily: theme.fontFamily }">
 
     <!-- ÉTAT : CONFIRMATION -->
     <div v-if="isSubmitted" class="text-center space-y-6 animate-fadeIn">
@@ -101,7 +101,7 @@ const submitRSVP = async () => {
         <circle cx="30" cy="30" r="28" :stroke="theme.accent" stroke-width="1.5" fill="none" class="draw-circle" />
         <path d="M18 30 L26 38 L42 22" :stroke="theme.accent" stroke-width="2" fill="none" stroke-linecap="round" class="draw-check" />
       </svg>
-      <h3 class="text-3xl font-light italic" :style="{ color: theme.text }">
+      <h3 class="font-light italic" :style="{ color: theme.text, fontSize: 'var(--size-headings, 1.875rem)', fontFamily: theme.fontFamily }">
         Merci {{ persons[0].first_name }}
       </h3>
       <p :style="{ color: labelColor }">
@@ -111,26 +111,26 @@ const submitRSVP = async () => {
 
     <!-- ÉTAT : FORMULAIRE -->
     <form v-else @submit.prevent="submitRSVP" class="space-y-10">
-      <h2 class="text-center text-4xl font-serif italic mb-12" :style="{ color: theme.text }">
+      <h2 class="text-center italic mb-12" :style="{ color: theme.text, fontSize: 'var(--size-headings, 2.25rem)', fontFamily: theme.fontFamily }">
         {{ content.rsvp_title || 'Serez-vous des nôtres ?' }}
       </h2>
 
       <!-- Email -->
       <div class="group relative">
-        <label class="block text-[11px] uppercase tracking-widest font-medium mb-1" :style="{ color: labelColor }">Email (Optionnel)</label>
+        <label class="block uppercase tracking-widest font-medium mb-1" :style="{ color: labelColor, fontSize: 'var(--size-label, 0.7rem)' }">Email (Optionnel)</label>
         <input v-model="rsvp.email" type="email" class="w-full bg-transparent border-b py-2 focus:outline-none"
                :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
       </div>
 
       <!-- Toggle Présence -->
       <div class="space-y-4">
-        <label class="block text-[11px] uppercase tracking-widest font-medium" :style="{ color: labelColor }">Votre présence</label>
+        <label class="block uppercase tracking-widest font-medium" :style="{ color: labelColor, fontSize: 'var(--size-label, 0.7rem)' }">Votre présence</label>
         <div class="flex rounded-full border p-1" :style="{ borderColor: (theme.accent || '#000') + '33' }">
-          <button type="button" @click="rsvp.attending = 'yes'" class="flex-1 py-3 rounded-full text-xs font-bold transition-all duration-300"
+          <button type="button" @click="rsvp.attending = 'yes'" class="flex-1 py-3 rounded-full font-bold transition-all duration-300" style="font-size: var(--size-label, 0.7rem)"
                   :style="rsvp.attending === 'yes' ? { backgroundColor: theme.accent, color: buttonTextColor } : { color: theme.text }">
             ✓ PRÉSENT(E)
           </button>
-          <button type="button" @click="rsvp.attending = 'no'" class="flex-1 py-3 rounded-full text-xs font-bold transition-all duration-300"
+          <button type="button" @click="rsvp.attending = 'no'" class="flex-1 py-3 rounded-full font-bold transition-all duration-300" style="font-size: var(--size-label, 0.7rem)"
                   :style="rsvp.attending === 'no' ? { backgroundColor: theme.text, color: theme.background } : { color: theme.text }">
             ✗ ABSENT(E)
           </button>
@@ -139,7 +139,7 @@ const submitRSVP = async () => {
 
       <!-- Liste des personnes -->
       <div class="space-y-6 animate-slideDown">
-        <label class="block text-[11px] uppercase tracking-widest font-medium" :style="{ color: labelColor }">
+        <label class="block uppercase tracking-widest font-medium" :style="{ color: labelColor, fontSize: 'var(--size-label, 0.7rem)' }">
           {{ rsvp.attending === 'yes' ? 'Personnes présentes' : 'Votre identité' }}
         </label>
 
@@ -150,7 +150,7 @@ const submitRSVP = async () => {
 
           <!-- En-tête personne -->
           <div class="flex items-center justify-between">
-            <span class="text-[10px] uppercase tracking-widest font-bold" :style="{ color: labelColor }">
+            <span class="uppercase tracking-widest font-bold" :style="{ color: labelColor, fontSize: 'var(--size-label, 0.65rem)' }">
               {{ idx === 0 ? 'Vous' : 'Personne ' + (idx + 1) }}
             </span>
             <button v-if="idx > 0" type="button" @click="removePerson(idx)"
@@ -160,20 +160,23 @@ const submitRSVP = async () => {
             </button>
           </div>
 
-          <!-- Prénom / Nom -->
-          <div class="flex gap-4">
+          <!-- Prénom / Nom (champs séparés pour faciliter la saisie sur mobile) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input v-model="person.first_name" type="text" placeholder="Prénom" required
-                   class="flex-1 bg-transparent border-b py-2 focus:outline-none text-sm placeholder-opacity-40"
+                   class="w-full bg-transparent border-b py-2.5 focus:outline-none"
+                   style="font-size: var(--size-body, 0.875rem)"
                    :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
             <input v-model="person.last_name" type="text" placeholder="Nom" required
-                   class="flex-1 bg-transparent border-b py-2 focus:outline-none text-sm placeholder-opacity-40"
+                   class="w-full bg-transparent border-b py-2.5 focus:outline-none"
+                   style="font-size: var(--size-body, 0.875rem)"
                    :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
           </div>
 
           <!-- Régime (seulement si présent) -->
           <div v-if="rsvp.attending === 'yes'">
             <select v-model="person.dietary_restrictions"
-                    class="w-full bg-transparent border-b py-2 focus:outline-none text-sm"
+                    class="w-full bg-transparent border-b py-2 focus:outline-none"
+                    style="font-size: var(--size-body, 0.875rem)"
                     :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
               <option value="" class="text-black">Aucun régime particulier</option>
               <option class="text-black">Végétarien</option>
@@ -187,7 +190,8 @@ const submitRSVP = async () => {
         <button v-if="rsvp.attending === 'yes' && persons.length < 30"
                 type="button"
                 @click="addPerson"
-                class="w-full py-3 rounded-full border text-xs font-bold tracking-widest uppercase transition-all hover:opacity-80"
+                class="w-full py-3 rounded-full border font-bold tracking-widest uppercase transition-all hover:opacity-80"
+                style="font-size: var(--size-label, 0.7rem)"
                 :style="{ borderColor: (theme.accent || '#000') + '44', color: theme.accent || theme.text }">
           + Ajouter une personne
         </button>
@@ -195,8 +199,9 @@ const submitRSVP = async () => {
 
       <!-- Message -->
       <div class="group relative">
-        <label class="block text-[11px] uppercase tracking-widest font-medium mb-1" :style="{ color: labelColor }">Un mot pour nous ?</label>
+        <label class="block uppercase tracking-widest font-medium mb-1" :style="{ color: labelColor, fontSize: 'var(--size-label, 0.7rem)' }">Un mot pour nous ?</label>
         <textarea v-model="rsvp.message" rows="2" class="w-full bg-transparent border-b py-2 focus:outline-none resize-none"
+                  style="font-size: var(--size-body, 0.875rem)"
                   :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }"></textarea>
       </div>
 
@@ -204,6 +209,7 @@ const submitRSVP = async () => {
       <p v-if="error" class="text-red-500 text-xs text-center font-bold tracking-tight">{{ error }}</p>
 
       <button type="submit" :disabled="isLoading" class="w-full py-5 rounded-sm font-bold tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98]"
+              style="font-size: var(--size-label, 0.75rem)"
               :style="{ backgroundColor: theme.accent, color: buttonTextColor }">
         {{ isLoading ? 'ENVOI...' : 'CONFIRMER MA RÉPONSE' }}
       </button>

@@ -102,7 +102,7 @@ const parallaxStyle = (factor) => ({
 </script>
 
 <template>
-  <div class="celestial-wrap" :style="{ '--bg': theme.bg, '--text': theme.text, '--accent': theme.accent }">
+  <div class="celestial-wrap" :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
 
     <!-- ── HERO ── -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero">
@@ -182,8 +182,8 @@ const parallaxStyle = (factor) => ({
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@1,300;1,400&display=swap');
 
 .celestial-wrap {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--card-bg);
+  color: var(--card-text);
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
@@ -259,20 +259,20 @@ const parallaxStyle = (factor) => ({
 .hero-copy.reveal { opacity: 1; transform: translateY(0); }
 
 .over-text {
-  font-family: 'Cinzel', serif;
+  font-family: var(--card-font, 'Cinzel'), serif;
   font-size: 0.5rem;
   letter-spacing: 0.75em;
-  color: var(--accent);
+  color: var(--card-accent);
   opacity: 0.7;
   margin-bottom: 24px;
 }
 
 .names {
-  font-family: 'Cinzel', serif;
-  font-size: clamp(2.8rem, 14vw, 7.5rem);
+  font-family: var(--card-font, 'Cinzel'), serif;
+  font-size: var(--size-names, clamp(2.8rem, 14vw, 7.5rem));
   font-weight: 700;
   letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, #fff 100%);
+  background: linear-gradient(135deg, #fff 30%, var(--card-accent) 70%, #fff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -287,7 +287,7 @@ const parallaxStyle = (factor) => ({
 }
 
 .sub-date {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
   font-size: 1.1rem;
   letter-spacing: 0.15em;
@@ -298,13 +298,13 @@ const parallaxStyle = (factor) => ({
   font-size: 0.6rem;
   letter-spacing: 0.45em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--card-accent);
   margin-top: 8px;
   opacity: 0.75;
 }
 
 /* Body */
-.body { background: var(--bg); }
+.body { background: var(--card-bg); }
 
 .quote-section {
   padding: 80px 40px;
@@ -315,12 +315,12 @@ const parallaxStyle = (factor) => ({
   gap: 22px;
 }
 .quote-star {
-  color: var(--accent);
+  color: var(--card-accent);
   font-size: 1rem;
   opacity: 0.55;
 }
 .quote-text {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
   font-size: clamp(1.1rem, 3vw, 1.55rem);
   line-height: 1.8;
@@ -338,15 +338,15 @@ const parallaxStyle = (factor) => ({
 }
 .detail-card { text-align: center; }
 .d-label {
-  font-family: 'Cinzel', serif;
+  font-family: var(--card-font, 'Cinzel'), serif;
   font-size: 0.5rem;
   letter-spacing: 0.55em;
-  color: var(--accent);
+  color: var(--card-accent);
   opacity: 0.65;
   margin-bottom: 10px;
 }
 .d-val {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
   font-size: 1.2rem;
   opacity: 0.8;
