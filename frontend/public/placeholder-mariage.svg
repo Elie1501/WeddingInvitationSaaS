@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#F7F3EE"/>
+  <!-- Cadre décoratif -->
+  <rect x="24" y="24" width="752" height="452" fill="none" stroke="#D4C4A8" stroke-width="1" stroke-dasharray="6 4"/>
+  <rect x="32" y="32" width="736" height="436" fill="none" stroke="#E8DDD0" stroke-width="0.5"/>
+  <!-- Coin supérieur gauche -->
+  <path d="M24 60 L24 24 L60 24" fill="none" stroke="#C8A97E" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Coin supérieur droit -->
+  <path d="M740 24 L776 24 L776 60" fill="none" stroke="#C8A97E" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Coin inférieur gauche -->
+  <path d="M24 440 L24 476 L60 476" fill="none" stroke="#C8A97E" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Coin inférieur droit -->
+  <path d="M740 476 L776 476 L776 440" fill="none" stroke="#C8A97E" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Alliances entrelacées -->
+  <circle cx="375" cy="215" r="52" fill="none" stroke="#C8A97E" stroke-width="1.8"/>
+  <circle cx="425" cy="215" r="52" fill="none" stroke="#C8A97E" stroke-width="1.8"/>
+  <!-- Petits ornements -->
+  <circle cx="400" cy="145" r="3" fill="#D4B896"/>
+  <line x1="400" y1="152" x2="400" y2="163" stroke="#D4B896" stroke-width="1"/>
+  <circle cx="400" cy="285" r="3" fill="#D4B896"/>
+  <line x1="400" y1="278" x2="400" y2="267" stroke="#D4B896" stroke-width="1"/>
+  <!-- Séparateur -->
+  <line x1="300" y1="315" x2="500" y2="315" stroke="#D4B896" stroke-width="0.8" stroke-dasharray="4 3"/>
+  <!-- Losange central sur séparateur -->
+  <path d="M400 310 L405 315 L400 320 L395 315 Z" fill="#C8A97E"/>
+  <!-- Texte principal -->
+  <text x="400" y="348" text-anchor="middle" font-family="Georgia, serif" font-size="13" fill="#A88B5E" letter-spacing="5">VOTRE PHOTO</text>
+  <!-- Sous-texte -->
+  <text x="400" y="375" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#C0AB8A" letter-spacing="2">Cliquez pour ajouter une image</text>
+</svg>

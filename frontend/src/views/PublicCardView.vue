@@ -3,15 +3,17 @@ import { ref, computed, onMounted, provide } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
+import CardSplashScreen from '../components/card/CardSplashScreen.vue';
 
 provide('isEditorMode', false);
 
 const route = useRoute();
 const slug  = route.params.slug;
 
-const cardData = ref(null);
-const loading  = ref(true);
-const error    = ref('');
+const cardData   = ref(null);
+const loading    = ref(true);
+const error      = ref('');
+const showSplash = ref(false);
 
 const cfg = computed(() => {
   if (!cardData.value?.config_json) return {};
@@ -20,6 +22,9 @@ const cfg = computed(() => {
     return typeof c === 'string' ? JSON.parse(c) : c;
   } catch { return {}; }
 });
+
+// CardRenderer reçoit toujours show_splash:false — le splash est géré ici
+const cfgForRenderer = computed(() => ({ ...cfg.value, show_splash: false }));
 
 const eventObj = computed(() => ({
   id:         cardData.value?.event_id || cardData.value?.id || null,
@@ -30,8 +35,7 @@ const eventObj = computed(() => ({
 }));
 
 const subEvents = computed(() => cardData.value?.sub_events || []);
-
-const themeBg = computed(() => cfg.value.theme?.background || '#F9F7F2');
+const themeBg   = computed(() => cfg.value.theme?.background || '#F9F7F2');
 
 onMounted(async () => {
   try {
@@ -42,6 +46,8 @@ onMounted(async () => {
     const names = cfg.value.content?.names ||
       (ev.groom_name && ev.bride_name ? `${ev.groom_name} & ${ev.bride_name}` : '');
     document.title = names ? `${names} · Invitation` : 'Invitation de mariage';
+
+    showSplash.value = !!cfg.value.show_splash;
   } catch {
     error.value = 'Invitation introuvable.';
   } finally {
@@ -59,17 +65,30 @@ onMounted(async () => {
     <p class="pv-error">{{ error }}</p>
   </div>
 
-  <!-- Fond plein écran couleur du thème, carte centrée sur desktop -->
-  <div v-else class="pv-outer" :style="{ background: themeBg }">
-    <div class="pv-col">
-      <CardRenderer
-        :config="cfg"
-        :event="eventObj"
-        :subEvents="subEvents"
-        :selectedBlock="null"
-      />
+  <template v-else>
+    <!-- Invitation — rendue en dessous, visible dès que le splash part -->
+    <div class="pv-outer" :style="{ background: themeBg }">
+      <div class="pv-col">
+        <CardRenderer
+          :config="cfgForRenderer"
+          :event="eventObj"
+          :subEvents="subEvents"
+          :selectedBlock="null"
+        />
+      </div>
     </div>
-  </div>
+
+    <!-- Page de garde en overlay fixe — séparée du scroll de la carte -->
+    <!-- La transition de sortie est gérée par CardSplashScreen lui-même (1200ms) -->
+    <CardSplashScreen
+      v-if="showSplash"
+      :config="cfg"
+      :event="eventObj"
+      :templateId="cfg.layout"
+      :isPreview="false"
+      @close="showSplash = false"
+    />
+  </template>
 </template>
 
 <style scoped>

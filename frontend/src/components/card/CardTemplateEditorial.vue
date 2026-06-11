@@ -58,7 +58,7 @@ const dateDigits = computed(() => {
 </script>
 
 <template>
-  <div class="editorial-wrap" :style="{ '--bg': theme.bg, '--text': theme.text, '--accent': theme.accent }">
+  <div class="editorial-wrap" :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
 
     <!-- ── HERO ── -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero" :class="{ loaded: isLoaded }">
@@ -144,11 +144,11 @@ const dateDigits = computed(() => {
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;700&family=Playfair+Display:ital@1&display=swap');
 
 .editorial-wrap {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--card-bg);
+  color: var(--card-text);
   min-height: 100vh;
   overflow-x: hidden;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--card-font, 'Space Grotesk'), sans-serif;
 }
 
 /* Hero */
@@ -192,14 +192,14 @@ const dateDigits = computed(() => {
   line-height: 0.88;
 }
 .name-giant {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(4rem, 22vw, 14rem);
+  font-family: var(--card-font, 'Bebas Neue'), sans-serif;
+  font-size: var(--size-names, clamp(4rem, 22vw, 14rem));
   letter-spacing: -0.01em;
   line-height: 0.88;
   text-transform: uppercase;
 }
 .amp-mark {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--card-font, 'Playfair Display'), serif;
   font-style: italic;
   font-size: clamp(2rem, 10vw, 7rem);
   margin-left: 12px;
@@ -222,7 +222,7 @@ const dateDigits = computed(() => {
   font-size: 0.65rem;
   letter-spacing: 0.3em;
   font-weight: 700;
-  color: var(--bg);
+  color: var(--card-bg);
   padding: 0 8px;
   opacity: 0.95;
 }
@@ -237,7 +237,7 @@ const dateDigits = computed(() => {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 20px 32px;
-  border-top: 2px solid var(--text);
+  border-top: 2px solid var(--card-text);
   opacity: 0;
   transition: opacity 1s ease 0.5s;
 }
@@ -261,28 +261,28 @@ const dateDigits = computed(() => {
 }
 
 .clock-digits {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: var(--card-font, 'Bebas Neue'), sans-serif;
   font-size: clamp(1.8rem, 5vw, 3rem);
   letter-spacing: 0.08em;
-  color: var(--accent);
+  color: var(--card-accent);
   line-height: 1;
 }
-.dot { color: var(--text); opacity: 0.4; margin: 0 2px; }
+.dot { color: var(--card-text); opacity: 0.4; margin: 0 2px; }
 
 /* Body */
-.body { background: var(--bg); }
+.body { background: var(--card-bg); }
 
 .editorial-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 80vh;
-  border-top: 2px solid var(--text);
+  border-top: 2px solid var(--card-text);
 }
 
 .ed-photo-wrap {
   position: relative;
   overflow: hidden;
-  border-right: 2px solid var(--text);
+  border-right: 2px solid var(--card-text);
 }
 .ed-photo-wrap.editor-img { cursor: pointer; }
 .ed-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -295,8 +295,8 @@ const dateDigits = computed(() => {
   font-size: 0.45rem;
   letter-spacing: 0.6em;
   font-weight: 700;
-  background: var(--text);
-  color: var(--bg);
+  background: var(--card-text);
+  color: var(--card-bg);
   padding: 4px 8px;
 }
 
@@ -307,22 +307,22 @@ const dateDigits = computed(() => {
   justify-content: center;
 }
 .ed-issue-n {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: var(--card-font, 'Bebas Neue'), sans-serif;
   font-size: 5rem;
-  color: var(--accent);
+  color: var(--card-accent);
   opacity: 0.12;
   line-height: 1;
   margin-bottom: 12px;
 }
 .ed-rule {
   height: 2px;
-  background: var(--text);
+  background: var(--card-text);
   margin: 20px 0;
 }
-.ed-rule.accent-rule { background: var(--accent); height: 3px; width: 60px; }
+.ed-rule.accent-rule { background: var(--card-accent); height: 3px; width: 60px; }
 
 .ed-body {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--card-font, 'Playfair Display'), serif;
   font-style: italic;
   font-size: 1.3rem;
   line-height: 1.75;
@@ -339,14 +339,14 @@ const dateDigits = computed(() => {
   font-size: 0.48rem;
   letter-spacing: 0.45em;
   font-weight: 700;
-  border: 1.5px solid var(--text);
+  border: 1.5px solid var(--card-text);
   padding: 5px 10px;
   opacity: 0.5;
 }
 
 @media (max-width: 768px) {
   .editorial-section { grid-template-columns: 1fr; }
-  .ed-photo-wrap { height: 55vw; border-right: none; border-bottom: 2px solid var(--text); }
+  .ed-photo-wrap { height: 55vw; border-right: none; border-bottom: 2px solid var(--card-text); }
   .ed-text-col { padding: 40px 24px; }
   .meta-row { padding: 16px 24px; }
 }

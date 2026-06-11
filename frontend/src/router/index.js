@@ -77,6 +77,11 @@ const router = createRouter({
             component: () => import('../views/PublicCardView.vue')
         },
         {
+            path: '/i/:slug',
+            name: 'public-card-short',
+            component: () => import('../views/PublicCardView.vue')
+        },
+        {
             path: '/demo/:slug',
             name: 'demo-card',
             component: () => import('../views/DemoCardView.vue')

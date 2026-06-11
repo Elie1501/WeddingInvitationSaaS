@@ -217,11 +217,11 @@ const handleQuickUpload = async (event) => {
 // ==========================================
 const config = reactive({
   layout: 'riviera-blanche',
-  sections: [],
+  sections: ['hero', 'countdown', 'program', 'rsvp', 'footer'],
   theme: {
     background: '#FAFAF8', accent: '#2E6E8E', text: '#1C2B3A',
     titleColor: '#1C2B3A', namesColor: '#2E6E8E',
-    fontFamily: 'Jost', fontSize: '1rem', titleSize: '4rem'
+    fontFamily: 'Playfair Display', textScale: 'medium'
   },
   content: {
     names: '', monogram: '', date_display: '', address: '',
@@ -426,7 +426,6 @@ const contextFields = computed(() => {
       fields: [
         { type: 'text', label: 'Noms des mariés', model: 'content.names' },
         { type: 'text', label: 'Date affichée', model: 'content.date_display' },
-        { type: 'text', label: 'Monogramme', model: 'content.monogram' },
         { type: 'text', label: 'Lieu', model: 'content.address' },
         { type: 'textarea', label: 'Texte d\'intro', model: 'content.intro_text' },
         { type: 'color', label: 'Couleur Noms', model: 'theme.namesColor' },
@@ -494,7 +493,9 @@ const contextFields = computed(() => {
     || selectedBlock.value.includes('-hero');
 
   if (isHeroBlock) {
-    const tplFields = TEMPLATE_FIELDS[config.layout];
+    const aliasMap = { japonais: 'arch', riviera: 'split', brutaliste: 'es', film: 'typography-focus' };
+    const resolvedLayout = aliasMap[config.layout] || config.layout;
+    const tplFields = TEMPLATE_FIELDS[resolvedLayout];
     if (!tplFields) return maps['hero'];
     return {
       label: 'Bannière principale',
@@ -560,7 +561,14 @@ const fetchCard = async () => {
     if (response.data.config_json) {
       const parsed = typeof response.data.config_json === 'string' ? JSON.parse(response.data.config_json) : response.data.config_json;
       Object.assign(config, parsed);
-      
+
+      // Garantir que les sections de base sont toujours présentes
+      if (!config.sections || config.sections.length === 0) {
+        config.sections = ['hero', 'countdown', 'program', 'rsvp', 'footer'];
+      } else if (!config.sections.some(s => s.includes('hero') || s.includes('full'))) {
+        config.sections.unshift('hero');
+      }
+
       // Initialiser l'historique
       history.value = [snapshot()];
       historyIndex.value = 0;
@@ -714,17 +722,21 @@ const currentTemplateFields = computed(() =>
   ]
 );
 
-const namesSize = computed({
-  get: () => parseFloat(config.theme.namesSize) || 5,
-  set: v => { config.theme.namesSize = String(v); }
-});
-const titleSize = computed({
-  get: () => parseFloat(config.theme.titleSize) || 3.5,
-  set: v => { config.theme.titleSize = String(v); }
-});
-const bodySize = computed({
-  get: () => parseFloat(config.theme.fontSize) || 1,
-  set: v => { config.theme.fontSize = String(v); }
+const TEXT_SIZES = [
+  { id: 'small',  label: 'Petit' },
+  { id: 'medium', label: 'Moyen' },
+  { id: 'large',  label: 'Grand' },
+];
+
+const FONT_OPTIONS = [
+  { value: 'Playfair Display', label: 'Élégant' },
+  { value: 'Cormorant Garamond', label: 'Romantique' },
+  { value: 'Jost', label: 'Moderne' },
+  { value: 'Dancing Script', label: 'Manuscrit' },
+];
+const textScale = computed({
+  get: () => config.theme.textScale || 'medium',
+  set: v => { config.theme.textScale = v; },
 });
 
 // ==========================================
@@ -754,6 +766,9 @@ const handleKeyboard = (e) => {
 };
 
 onMounted(async () => {
+  // S'assurer que le plan de l'utilisateur est à jour (évite d'afficher les upsells aux comptes Premium)
+  if (!authStore.user) await authStore.fetchMe();
+
   // Migration silencieuse une fois par session — corrige les cartes existantes avec demo data
   if (!sessionStorage.getItem('cards_synced')) {
     try { await api.post('/events/admin/sync-cards-data'); } catch {}
@@ -1194,58 +1209,39 @@ onUnmounted(() => {
                    :class="!isPremium ? 'opacity-50 pointer-events-none select-none' : ''">
 
               <!-- Police -->
-              <div class="space-y-1">
+              <div class="space-y-2">
                 <span class="text-[10px] font-bold uppercase text-gray-500">Police de caractères</span>
-                <select v-model="config.theme.fontFamily" class="w-full bg-gray-50 border border-gray-100 rounded-lg p-2 text-xs font-bold text-gray-800 outline-none">
-                  <option value="Playfair Display">Playfair Display</option>
-                  <option value="Cormorant Garamond">Cormorant Garamond</option>
-                  <option value="Jost">Jost</option>
-                  <option value="Lato">Lato</option>
-                  <option value="Cinzel">Cinzel</option>
-                  <option value="Spectral">Spectral</option>
-                  <option value="Anton">Anton</option>
-                  <option value="Dancing Script">Dancing Script</option>
-                  <option value="Syne">Syne</option>
-                  <option value="Bodoni Moda">Bodoni Moda</option>
-                </select>
-              </div>
-
-              <!-- Taille Prénoms -->
-              <div class="space-y-2">
-                <div class="flex justify-between items-center">
-                  <span class="text-[10px] font-bold uppercase text-gray-500">Taille prénoms</span>
-                  <span class="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded">{{ namesSize }}rem</span>
-                </div>
-                <input type="range" :value="namesSize" @input="namesSize = +$event.target.value"
-                       min="2" max="12" step="0.25" class="w-full accent-[#C5A059]">
-                <div class="flex justify-between text-[8px] text-gray-300 font-mono">
-                  <span>2rem</span><span>7rem</span><span>12rem</span>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    v-for="font in FONT_OPTIONS" :key="font.value"
+                    @click="config.theme.fontFamily = font.value"
+                    class="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl border-2 transition-all text-left"
+                    :class="config.theme.fontFamily === font.value
+                      ? 'border-amber-400 bg-amber-50'
+                      : 'border-gray-100 bg-gray-50 hover:border-gray-200'"
+                  >
+                    <span class="text-lg leading-tight" :style="{ fontFamily: font.value }">Aa</span>
+                    <span class="text-[9px] font-bold uppercase tracking-widest text-gray-500 truncate w-full">{{ font.label }}</span>
+                  </button>
                 </div>
               </div>
 
-              <!-- Taille Titres de section -->
+              <!-- Taille du texte -->
               <div class="space-y-2">
-                <div class="flex justify-between items-center">
-                  <span class="text-[10px] font-bold uppercase text-gray-500">Titres de section</span>
-                  <span class="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded">{{ titleSize }}rem</span>
-                </div>
-                <input type="range" :value="titleSize" @input="titleSize = +$event.target.value"
-                       min="1" max="7" step="0.25" class="w-full accent-[#C5A059]">
-                <div class="flex justify-between text-[8px] text-gray-300 font-mono">
-                  <span>1rem</span><span>4rem</span><span>7rem</span>
-                </div>
-              </div>
-
-              <!-- Taille corps de texte -->
-              <div class="space-y-2">
-                <div class="flex justify-between items-center">
-                  <span class="text-[10px] font-bold uppercase text-gray-500">Corps du texte</span>
-                  <span class="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded">{{ bodySize }}rem</span>
-                </div>
-                <input type="range" :value="bodySize" @input="bodySize = +$event.target.value"
-                       min="0.7" max="2" step="0.05" class="w-full accent-[#C5A059]">
-                <div class="flex justify-between text-[8px] text-gray-300 font-mono">
-                  <span>0.7</span><span>1.35</span><span>2rem</span>
+                <span class="text-[10px] font-bold uppercase text-gray-500">Taille du texte</span>
+                <div class="grid grid-cols-3 gap-2">
+                  <button
+                    v-for="size in TEXT_SIZES" :key="size.id"
+                    @click="textScale = size.id"
+                    class="flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 transition-all"
+                    :class="textScale === size.id
+                      ? 'border-[#C5A059] bg-amber-50 text-[#C5A059]'
+                      : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300 hover:text-gray-600'"
+                  >
+                    <span class="font-serif leading-none transition-all"
+                          :class="size.id === 'small' ? 'text-base' : size.id === 'medium' ? 'text-xl' : 'text-3xl'">A</span>
+                    <span class="text-[9px] font-black uppercase tracking-wider">{{ size.label }}</span>
+                  </button>
                 </div>
               </div>
             </div>

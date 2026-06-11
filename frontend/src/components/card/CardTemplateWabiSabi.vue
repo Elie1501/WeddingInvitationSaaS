@@ -70,7 +70,7 @@ const inkDash = computed(() => {
 </script>
 
 <template>
-  <div class="wabi-wrap" :style="{ '--bg': theme.bg, '--text': theme.text, '--accent': theme.accent }">
+  <div class="wabi-wrap" :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
 
     <!-- Paper texture overlay -->
     <div class="paper-tex" />
@@ -173,12 +173,12 @@ const inkDash = computed(() => {
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400&family=Shippori+Mincho:wght@400;600&family=Dancing+Script:wght@600&display=swap');
 
 .wabi-wrap {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--card-bg);
+  color: var(--card-text);
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
-  font-family: 'Noto Serif JP', serif;
+  font-family: var(--card-font, 'Noto Serif JP'), serif;
 }
 
 .paper-tex {
@@ -202,7 +202,7 @@ const inkDash = computed(() => {
 .petal {
   position: absolute;
   border-radius: 50% 0 50% 0;
-  background: var(--accent);
+  background: var(--card-accent);
   opacity: 0;
   animation: petalFall linear infinite;
 }
@@ -261,17 +261,17 @@ const inkDash = computed(() => {
 .hero-copy.reveal { opacity: 1; transform: translateY(0); }
 
 .kana-dec {
-  font-family: 'Noto Serif JP', serif;
+  font-family: var(--card-font, 'Noto Serif JP'), serif;
   font-size: 0.8rem;
   letter-spacing: 0.4em;
-  color: var(--accent);
+  color: var(--card-accent);
   opacity: 0.55;
   margin-bottom: 18px;
 }
 
 .names {
-  font-family: 'Shippori Mincho', serif;
-  font-size: clamp(2.8rem, 13vw, 7rem);
+  font-family: var(--card-font, 'Shippori Mincho'), serif;
+  font-size: var(--size-names, clamp(2.8rem, 13vw, 7rem));
   font-weight: 400;
   color: #fff;
   line-height: 1.1;
@@ -294,13 +294,13 @@ const inkDash = computed(() => {
 .sub-loc {
   font-size: 0.6rem;
   letter-spacing: 0.35em;
-  color: var(--accent);
+  color: var(--card-accent);
   margin-top: 7px;
   opacity: 0.9;
 }
 
 /* Body */
-.body { background: var(--bg); position: relative; z-index: 2; }
+.body { background: var(--card-bg); position: relative; z-index: 2; }
 
 .quote-section {
   padding: 72px 40px;
@@ -314,7 +314,7 @@ const inkDash = computed(() => {
 .brush-div.mirror { transform: scaleX(-1); }
 
 .quote {
-  font-family: 'Shippori Mincho', serif;
+  font-family: var(--card-font, 'Shippori Mincho'), serif;
   font-size: clamp(1.1rem, 3vw, 1.45rem);
   line-height: 2;
   opacity: 0.68;
@@ -336,19 +336,19 @@ const inkDash = computed(() => {
 .d-key {
   font-size: 0.62rem;
   letter-spacing: 0.3em;
-  color: var(--accent);
+  color: var(--card-accent);
   opacity: 0.75;
   white-space: nowrap;
 }
 .d-val {
-  font-family: 'Shippori Mincho', serif;
+  font-family: var(--card-font, 'Shippori Mincho'), serif;
   font-size: 0.95rem;
   opacity: 0.8;
   text-align: right;
 }
 .ink-rule {
   height: 1px;
-  background: linear-gradient(to right, transparent, var(--accent), transparent);
+  background: linear-gradient(to right, transparent, var(--card-accent), transparent);
   opacity: 0.3;
 }
 

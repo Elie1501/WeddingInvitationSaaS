@@ -39,7 +39,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="couture-template" :style="{ '--accent': theme.accent }">
+  <div class="couture-template" :style="{ '--card-bg': theme.white, '--card-text': theme.black, '--card-accent': theme.accent }">
 
     <!-- Hero Section: The Unboxing / Cover -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero-section">
@@ -135,14 +135,14 @@ onMounted(() => {
 @reference "../../style.css";
 @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;1,400&family=Dancing+Script&family=Montserrat:wght@200;400&display=swap');
 
-.couture-serif { font-family: 'Bodoni Moda', serif; }
+.couture-serif { font-family: var(--card-font, 'Bodoni Moda'), serif; }
 
 .couture-template {
-  background-color: var(--white);
-  color: var(--black);
+  background-color: var(--card-bg, #FFFFFF);
+  color: var(--card-text, #000000);
   min-height: 100vh;
   overflow-x: hidden;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--card-font, 'Montserrat'), sans-serif;
 }
 
 .paper-texture {
@@ -173,13 +173,13 @@ onMounted(() => {
 }
 
 .main-title {
-    font-size: 5rem;
+    font-size: var(--size-names, 5rem);
     font-weight: 400;
     margin: 20px 0;
     letter-spacing: -0.02em;
 }
 
-.fine-line { height: 0.5px; background: var(--black); }
+.fine-line { height: 0.5px; background: var(--card-text, #000000); }
 
 .couture-date {
     font-size: 14px;
@@ -209,7 +209,7 @@ onMounted(() => {
 }
 
 @keyframes drawSig {
-    to { stroke-dashoffset: 0; fill: var(--black); opacity: 0.05; }
+    to { stroke-dashoffset: 0; fill: var(--card-text, #000000); opacity: 0.05; }
 }
 
 /* Lookbook */
@@ -223,7 +223,7 @@ onMounted(() => {
     font-size: 10px;
     letter-spacing: 0.2em;
     font-weight: 400;
-    border-bottom: 0.5px solid var(--black);
+    border-bottom: 0.5px solid var(--card-text, #000000);
     padding-bottom: 4px;
     transition: 0.3s;
 }

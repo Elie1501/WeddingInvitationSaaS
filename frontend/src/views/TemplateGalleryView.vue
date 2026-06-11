@@ -137,6 +137,9 @@ const selectTemplate = async (template) => {
 
     let config = manifest.default_config || manifest;
 
+    // Le layout doit toujours correspondre à l'ID du template sélectionné
+    config.layout = template.id;
+
     // Noms finaux : wizard > event > vide
     const finalGroom = wizardData.value.groomName || eventDetail.data.groom_name || '';
     const finalBride = wizardData.value.brideName || eventDetail.data.bride_name || '';
@@ -181,6 +184,8 @@ const selectTemplate = async (template) => {
 };
 
 onMounted(async () => {
+  if (!authStore.user) await authStore.fetchMe();
+
   const savedData = localStorage.getItem('wizard_data');
   if (savedData) {
     const parsed = JSON.parse(savedData);

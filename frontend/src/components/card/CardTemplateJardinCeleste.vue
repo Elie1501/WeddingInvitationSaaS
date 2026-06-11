@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { getContrastColor } from '../../service/colorUtils';
 
 const props = defineProps({
   config: { type: Object, required: true },
@@ -7,6 +8,13 @@ const props = defineProps({
 });
 
 const content = computed(() => props.config.content || {});
+
+const theme = computed(() => ({
+  bg:     props.config.theme?.background || '#1A2E1F',
+  text:   props.config.theme?.text || getContrastColor(props.config.theme?.background || '#1A2E1F'),
+  accent: props.config.theme?.accent || '#E8A598',
+}));
+
 const displayNames = computed(() =>
   content.value.names ||
   (props.event?.groom_name && props.event?.bride_name
@@ -18,11 +26,19 @@ onMounted(() => {
   isMobile.value = window.matchMedia('(max-width: 768px)').matches;
 });
 
-// Contraste : #F2EBE0 sur #1A2E1F = ratio 9.8:1 (WCAG AA)
+const monogram = computed(() => {
+  if (content.value.monogram) return content.value.monogram;
+  const n = displayNames.value;
+  if (!n) return '';
+  const parts = n.trim().split(/\s*[&\/]\s*/);
+  if (parts.length >= 2) return `${parts[0].charAt(0).toUpperCase()} & ${parts[1].charAt(0).toUpperCase()}`;
+  return parts[0]?.charAt(0).toUpperCase() || '';
+});
 </script>
 
 <template>
-  <div class="hero-jardin h-screen bg-[#1A2E1F] relative overflow-hidden flex items-center justify-center text-center px-6">
+  <div class="hero-jardin h-dvh relative overflow-hidden flex items-center justify-center text-center px-6"
+       :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
     <!-- Feuilles flottantes (désactivées sur mobile) -->
     <div v-if="!isMobile" class="leaves-overlay absolute inset-0 pointer-events-none">
       <svg v-for="i in 8" :key="i" class="leaf-float" :class="'l-' + i" viewBox="0 0 24 24">
@@ -35,33 +51,33 @@ onMounted(() => {
       <div class="relative inline-block p-12">
         <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
           <path d="M50 5 Q80 10 90 50 Q85 90 50 95 Q15 90 10 50 Q20 10 50 5" 
-                stroke="#E8A598" stroke-width="0.5" fill="none" class="organic-draw" />
+                :stroke="theme.accent" stroke-width="0.5" fill="none" class="organic-draw" />
         </svg>
-        <span class="text-3xl tracking-[0.4em] text-[#E8A598] uppercase font-light">
-          {{ content.monogram || 'M' }}
+        <span class="text-3xl tracking-[0.4em] uppercase font-light" :style="{ color: 'var(--card-accent)' }">
+          {{ monogram }}
         </span>
       </div>
 
-      <h1 class="template-title italic text-[#F2EBE0]">
+      <h1 class="template-title italic" :style="{ color: 'var(--card-text)' }">
         {{ displayNames }}
       </h1>
 
-      <p class="template-body text-[#F2EBE0] font-light max-w-xl mx-auto italic opacity-90">
+      <p class="template-body font-light max-w-xl mx-auto italic opacity-90" :style="{ color: 'var(--card-text)' }">
         {{ content.intro_text || 'Entrez dans la danse au cœur de notre jardin céleste.' }}
       </p>
 
       <div class="space-y-6 pt-10">
-        <div class="flex items-center justify-center gap-4 text-[#E8A598]">
+        <div class="flex items-center justify-center gap-4" :style="{ color: 'var(--card-accent)' }">
            <div class="h-[1px] w-8 bg-current opacity-30"></div>
-           <span class="font-sans text-xs tracking-[0.3em] font-light">{{ content.date_display || '15 JUIN 2026' }}</span>
+           <span class="text-xs tracking-[0.3em] font-light">{{ content.date_display || '15 JUIN 2026' }}</span>
            <div class="h-[1px] w-8 bg-current opacity-30"></div>
         </div>
-        <p v-if="content.address" class="template-label text-[#F2EBE0] uppercase opacity-70 tracking-widest">
+        <p v-if="content.address" class="template-label uppercase opacity-70 tracking-widest" :style="{ color: 'var(--card-text)' }">
           {{ content.address }}
         </p>
       </div>
 
-      <div class="pt-12 text-3xl text-[#E8A598]">{{ content.divider_symbol || '❦' }}</div>
+      <div class="pt-12 text-3xl" :style="{ color: 'var(--card-accent)' }">{{ content.divider_symbol || '❦' }}</div>
     </div>
   </div>
 </template>
@@ -69,10 +85,14 @@ onMounted(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Upright:wght@300;600&family=Josefin+Sans:wght@300&family=Lato:wght@300&display=swap');
 
-.hero-jardin { font-family: 'Lato', sans-serif; }
-.template-title { font-family: 'Cormorant Upright', serif; font-size: clamp(3.5rem, 12vw, 6.5rem); line-height: 1; }
+.hero-jardin {
+  font-family: var(--card-font, 'Lato'), sans-serif;
+  background: var(--card-bg, #1A2E1F);
+  color: var(--card-text, #F2EBE0);
+}
+.template-title { font-family: var(--card-font, 'Cormorant Upright'), serif; font-size: var(--size-names, clamp(3.5rem, 12vw, 6.5rem)); line-height: 1; }
 .template-body { font-size: clamp(1rem, 2.5vw, 1.25rem); }
-.template-label { font-family: 'Josefin Sans', sans-serif; font-size: 0.7rem; }
+.template-label { font-family: var(--card-font, 'Josefin Sans'), sans-serif; font-size: 0.7rem; }
 
 .organic-draw { stroke-dasharray: 300; stroke-dashoffset: 300; animation: draw 3s ease-out forwards; }
 @keyframes draw { to { stroke-dashoffset: 0; } }

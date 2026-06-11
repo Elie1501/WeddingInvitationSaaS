@@ -53,10 +53,13 @@ const handleCreateEvent = () => {
   router.push('/events/create');
 };
 
-const copyToClipboard = async (text) => {
+const copiedEventId = ref(null);
+
+const copyToClipboard = async (text, eventId) => {
   try {
     await navigator.clipboard.writeText(text);
-    alert('Lien copié dans le presse-papier !');
+    copiedEventId.value = eventId;
+    setTimeout(() => { copiedEventId.value = null; }, 2000);
   } catch {
     console.error('Erreur lors de la copie');
   }
@@ -191,7 +194,7 @@ onMounted(async () => {
           <svg v-else class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
           </svg>
-          {{ canCreateEvent ? 'Créer un événement' : 'Limite atteinte — Passer au Premium' }}
+          {{ canCreateEvent ? 'Créer un événement' : `Limite atteinte (${planInfo.max_sites} max)` }}
         </button>
       </div>
 
@@ -310,19 +313,25 @@ onMounted(async () => {
               <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Partager l'invitation</p>
               <div class="flex items-center gap-2">
                 <div class="flex-grow bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono text-gray-500 truncate">
-                  {{ baseUrl }}/cards/{{ event.card.slug }}
+                  {{ baseUrl }}/i/{{ event.card.slug }}
                 </div>
                 <button
-                  @click="copyToClipboard(`${baseUrl}/cards/${event.card.slug}`)"
-                  class="p-2 bg-white border border-gray-200 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors shadow-sm"
-                  title="Copier le lien"
+                  @click="copyToClipboard(`${baseUrl}/i/${event.card.slug}`, event.id)"
+                  class="p-2 bg-white border rounded-lg transition-all shadow-sm"
+                  :class="copiedEventId === event.id
+                    ? 'border-green-300 text-green-600 bg-green-50'
+                    : 'border-gray-200 text-primary-600 hover:bg-primary-50'"
+                  :title="copiedEventId === event.id ? 'Lien copié ✓' : 'Copier le lien'"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="copiedEventId !== event.id" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                  </svg>
+                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                   </svg>
                 </button>
                 <a
-                  :href="'https://wa.me/?text=' + encodeURIComponent('Découvrez notre invitation de mariage : ' + baseUrl + '/cards/' + event.card.slug)"
+                  :href="'https://wa.me/?text=' + encodeURIComponent('Découvrez notre invitation de mariage : ' + baseUrl + '/i/' + event.card.slug)"
                   target="_blank"
                   class="p-2 bg-white border border-gray-200 rounded-lg text-green-600 hover:bg-green-50 transition-colors shadow-sm"
                   title="Partager sur WhatsApp"

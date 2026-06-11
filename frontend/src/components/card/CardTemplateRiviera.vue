@@ -42,9 +42,9 @@ onMounted(() => {
 
 <template>
   <div class="riviera-template" :style="{
-      '--terracotta': theme.terracotta,
-      '--cream': theme.cream,
-      '--accent': theme.accent
+      '--card-bg': theme.cream,
+      '--card-text': theme.terracotta,
+      '--card-accent': theme.accent
     }">
 
     <!-- Mosaic Pattern Background -->
@@ -111,9 +111,9 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@1,300;1,600&family=Montserrat:wght@800&display=swap');
 
 .riviera-template {
-  background-color: var(--cream);
-  color: var(--terracotta);
-  font-family: 'Cormorant', serif;
+  background-color: var(--card-bg);
+  color: var(--card-text);
+  font-family: var(--card-font, 'Cormorant'), serif;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -152,8 +152,8 @@ onMounted(() => {
 .vintage-badge {
     display: inline-block;
     padding: 5px 15px;
-    border: 2px solid var(--terracotta);
-    font-family: 'Montserrat', sans-serif;
+    border: 2px solid var(--card-text);
+    font-family: var(--card-font, 'Montserrat'), sans-serif;
     font-weight: 800;
     font-size: 0.7rem;
     letter-spacing: 3px;
@@ -161,7 +161,7 @@ onMounted(() => {
 }
 
 .main-title {
-    font-size: 5rem;
+    font-size: var(--size-names, 5rem);
     font-weight: 600;
     line-height: 0.9;
     margin-bottom: 30px;
@@ -184,7 +184,7 @@ onMounted(() => {
     pointer-events: none;
 }
 
-.hero-date { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; letter-spacing: 5px; font-weight: 800; }
+.hero-date { font-family: var(--card-font, 'Montserrat'), sans-serif; font-size: 1.2rem; letter-spacing: 5px; font-weight: 800; }
 
 .body-content { position: relative; }
 
@@ -194,7 +194,7 @@ onMounted(() => {
     padding: 50px 0;
 }
 .angled-block > * { transform: skewY(5deg); }
-.bg-sand { background-color: var(--sand); color: var(--terracotta); }
+.bg-sand { background-color: var(--sand); color: var(--card-text); }
 
 .container { max-width: 800px; margin: 0 auto; padding: 0 40px; }
 
@@ -206,9 +206,9 @@ onMounted(() => {
 .btn-riviera {
     padding: 15px 40px;
     background: transparent;
-    border: 2px solid var(--terracotta);
-    color: var(--terracotta);
-    font-family: 'Montserrat', sans-serif;
+    border: 2px solid var(--card-text);
+    color: var(--card-text);
+    font-family: var(--card-font, 'Montserrat'), sans-serif;
     font-weight: 800;
     font-size: 0.8rem;
     text-transform: uppercase;
@@ -216,8 +216,8 @@ onMounted(() => {
     cursor: pointer;
     transition: 0.3s;
 }
-.btn-riviera:hover { background: var(--terracotta); color: var(--cream); }
-.btn-riviera.solid { background: var(--terracotta); color: var(--cream); width: 100%; margin-top: 20px; }
+.btn-riviera:hover { background: var(--card-text); color: var(--card-bg); }
+.btn-riviera.solid { background: var(--card-text); color: var(--card-bg); width: 100%; margin-top: 20px; }
 
 .lemon-svg { width: 150px; opacity: 0.2; }
 

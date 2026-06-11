@@ -85,9 +85,19 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                 </svg>
-                {{ loading ? 'Redirection...' : 'Passer Premium pour 50 €' }}
+                {{ loading ? 'Redirection vers Stripe…' : 'Passer Premium pour 50 €' }}
               </button>
-              <p v-if="errorMsg" class="mt-2 text-sm text-red-500">{{ errorMsg }}</p>
+
+              <!-- Bloc erreur avec retry -->
+              <div v-if="errorMsg" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-left">
+                <p class="text-xs font-black uppercase tracking-widest text-red-700 mb-1">Erreur de paiement</p>
+                <p class="text-sm text-red-600">{{ errorMsg }}</p>
+                <button @click="startUpgrade"
+                        class="mt-2 text-xs font-bold text-red-700 underline hover:text-red-900 transition-colors">
+                  Réessayer
+                </button>
+              </div>
+
               <button
                 class="mt-3 text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
                 @click="$emit('update:modelValue', false)"
@@ -107,11 +117,15 @@
 import { ref } from 'vue';
 import api from '../service/api';
 
-defineProps({ modelValue: { type: Boolean, required: true } });
+const props = defineProps({
+  modelValue: { type: Boolean, required: true },
+  cardId: { type: [Number, String], default: null },
+});
 const emit = defineEmits(['update:modelValue']);
 
 const loading = ref(false);
 const errorMsg = ref('');
+const isDev = import.meta.env.DEV;
 
 const classicFeatures = [
   "Jusqu'à 3 pages",
@@ -134,14 +148,19 @@ const startUpgrade = async () => {
   loading.value = true;
   errorMsg.value = '';
   try {
-    const res = await api.post('/payments/create-upgrade-session');
+    const url = props.cardId
+      ? `/payments/create-upgrade-session?card_id=${props.cardId}`
+      : '/payments/create-upgrade-session';
+    const res = await api.post(url);
     if (res.data.checkout_url) {
       window.location.href = res.data.checkout_url;
     }
   } catch (err) {
-    errorMsg.value = "Impossible d'initialiser le paiement. Veuillez réessayer.";
+    const detail = err.response?.data?.detail;
+    errorMsg.value = isDev && detail
+      ? `[DEV] ${detail}`
+      : "Impossible d'initialiser le paiement. Veuillez réessayer.";
     console.error('Upgrade error:', err);
-  } finally {
     loading.value = false;
   }
 };

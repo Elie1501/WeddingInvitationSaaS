@@ -41,7 +41,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="brutal-template" :style="{ '--accent': theme.accent }">
+  <div class="brutal-template" :style="{ '--card-bg': theme.concrete, '--card-text': theme.black, '--card-accent': theme.accent }">
 
     <!-- Hero Section -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero-section grid-modular">
@@ -80,7 +80,7 @@ onMounted(() => {
                         <p class="brutal-text text-2xl font-black uppercase leading-none mb-8">
                             {{ config.content?.intro_text || 'Nous confirmons notre union dans une structure de forme et de fonction.' }}
                         </p>
-                        <div class="technical-details font-mono text-xs uppercase tracking-tighter">
+                        <div class="technical-details text-xs uppercase tracking-tighter">
                             <p>TYPE: WEDDING_CELEBRATION</p>
                             <p>DRESS_CODE: RADICAL_MINIMAL</p>
                             <p>STATUS: CONFIRMED</p>
@@ -100,7 +100,7 @@ onMounted(() => {
                       :class="{ 'cursor-pointer ring-0 hover:ring-2 hover:ring-blue-400 transition-all': isEditorMode }"
                       @click="isEditorMode ? emit('click-image', 'image_url') : null"
                     >
-                    <div class="absolute bottom-0 left-0 bg-black text-white p-4 font-mono text-[10px]">IMG_REF_042.RAW</div>
+                    <div class="absolute bottom-0 left-0 bg-black text-white p-4 text-[10px]">IMG_REF_042.RAW</div>
                 </div>
             </div>
         </section>
@@ -112,13 +112,13 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@900&display=swap');
 
 .brutal-template {
-  --concrete: #9E9E9E;
-  --black: #000000;
+  --concrete: var(--card-bg, #9E9E9E);
+  --black: var(--card-text, #000000);
   --white: #FFFFFF;
-  --accent: #FF3E00;
+  --accent: var(--card-accent, #FF3E00);
   background-color: var(--concrete);
   color: var(--black);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--card-font, 'Inter'), sans-serif;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -157,7 +157,7 @@ onMounted(() => {
 .hero-content { padding: 0 5vw; z-index: 10; }
 
 .main-names {
-    font-size: 15vw;
+    font-size: var(--size-names, 15vw);
     font-weight: 900;
     text-transform: uppercase;
     line-height: 0.8;
@@ -166,7 +166,7 @@ onMounted(() => {
 
 .main-names span { display: block; }
 
-.hero-meta .label { font-family: 'Space Mono', monospace; font-size: 0.7rem; opacity: 0.5; }
+.hero-meta .label { font-family: var(--card-font, 'Space Mono'), monospace; font-size: 0.7rem; opacity: 0.5; }
 .hero-meta .val { font-weight: 900; text-transform: uppercase; font-size: 1.5rem; }
 
 /* Animations Brutales */
