@@ -58,7 +58,7 @@ const dateDigits = computed(() => {
 </script>
 
 <template>
-  <div class="editorial-wrap" :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
+  <div class="editorial-wrap">
 
     <!-- ── HERO ── -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero" :class="{ loaded: isLoaded }">
@@ -70,7 +70,7 @@ const dateDigits = computed(() => {
       <div class="names-grid" :class="{ snap: gridRevealed }">
         <div class="name-row name-row-1">
           <span class="name-giant">{{ firstName }}</span>
-          <span class="amp-mark" :style="{ color: theme.accent }">&amp;</span>
+          <span class="amp-mark" :style="{ color: 'var(--color-countdown)' }">&amp;</span>
         </div>
         <div class="name-row name-row-2">
           <span class="name-giant">{{ secondName || displayNames }}</span>
@@ -78,7 +78,7 @@ const dateDigits = computed(() => {
       </div>
 
       <!-- Horizontal marquee band -->
-      <div class="marquee-band" :style="{ background: theme.accent }">
+      <div class="marquee-band" :style="{ background: 'var(--color-countdown)' }">
         <div class="marquee-inner">
           <span v-for="n in 6" :key="n" class="marquee-item">
             {{ displayNames }} · {{ displayDate }}<template v-if="displayLocation"> · {{ displayLocation }}</template> ·&nbsp;
@@ -144,8 +144,8 @@ const dateDigits = computed(() => {
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;700&family=Playfair+Display:ital@1&display=swap');
 
 .editorial-wrap {
-  background: var(--card-bg);
-  color: var(--card-text);
+  background: var(--color-bg);
+  color: var(--color-text);
   min-height: 100vh;
   overflow-x: hidden;
   font-family: var(--card-font, 'Space Grotesk'), sans-serif;
@@ -222,7 +222,7 @@ const dateDigits = computed(() => {
   font-size: 0.65rem;
   letter-spacing: 0.3em;
   font-weight: 700;
-  color: var(--card-bg);
+  color: var(--color-bg);
   padding: 0 8px;
   opacity: 0.95;
 }
@@ -237,7 +237,7 @@ const dateDigits = computed(() => {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 20px 32px;
-  border-top: 2px solid var(--card-text);
+  border-top: 2px solid var(--color-text);
   opacity: 0;
   transition: opacity 1s ease 0.5s;
 }
@@ -264,25 +264,25 @@ const dateDigits = computed(() => {
   font-family: var(--card-font, 'Bebas Neue'), sans-serif;
   font-size: clamp(1.8rem, 5vw, 3rem);
   letter-spacing: 0.08em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   line-height: 1;
 }
-.dot { color: var(--card-text); opacity: 0.4; margin: 0 2px; }
+.dot { color: var(--color-text); opacity: 0.4; margin: 0 2px; }
 
 /* Body */
-.body { background: var(--card-bg); }
+.body { background: var(--color-bg); }
 
 .editorial-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 80vh;
-  border-top: 2px solid var(--card-text);
+  border-top: 2px solid var(--color-text);
 }
 
 .ed-photo-wrap {
   position: relative;
   overflow: hidden;
-  border-right: 2px solid var(--card-text);
+  border-right: 2px solid var(--color-text);
 }
 .ed-photo-wrap.editor-img { cursor: pointer; }
 .ed-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -295,8 +295,8 @@ const dateDigits = computed(() => {
   font-size: 0.45rem;
   letter-spacing: 0.6em;
   font-weight: 700;
-  background: var(--card-text);
-  color: var(--card-bg);
+  background: var(--color-text);
+  color: var(--color-bg);
   padding: 4px 8px;
 }
 
@@ -309,17 +309,17 @@ const dateDigits = computed(() => {
 .ed-issue-n {
   font-family: var(--card-font, 'Bebas Neue'), sans-serif;
   font-size: 5rem;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.12;
   line-height: 1;
   margin-bottom: 12px;
 }
 .ed-rule {
   height: 2px;
-  background: var(--card-text);
+  background: var(--color-text);
   margin: 20px 0;
 }
-.ed-rule.accent-rule { background: var(--card-accent); height: 3px; width: 60px; }
+.ed-rule.accent-rule { background: var(--color-countdown); height: 3px; width: 60px; }
 
 .ed-body {
   font-family: var(--card-font, 'Playfair Display'), serif;
@@ -339,14 +339,14 @@ const dateDigits = computed(() => {
   font-size: 0.48rem;
   letter-spacing: 0.45em;
   font-weight: 700;
-  border: 1.5px solid var(--card-text);
+  border: 1.5px solid var(--color-text);
   padding: 5px 10px;
   opacity: 0.5;
 }
 
 @media (max-width: 768px) {
   .editorial-section { grid-template-columns: 1fr; }
-  .ed-photo-wrap { height: 55vw; border-right: none; border-bottom: 2px solid var(--card-text); }
+  .ed-photo-wrap { height: 55vw; border-right: none; border-bottom: 2px solid var(--color-text); }
   .ed-text-col { padding: 40px 24px; }
   .meta-row { padding: 16px 24px; }
 }

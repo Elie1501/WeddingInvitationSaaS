@@ -92,7 +92,7 @@ const monogram = computed(() => {
 
 <template>
   <div class="hero-container relative h-dvh overflow-hidden flex items-center justify-center"
-       :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
+      >
     <canvas ref="canvasRef" class="absolute inset-0 z-0 pointer-events-none opacity-40"></canvas>
     
     <!-- Grain SVG Filter -->
@@ -105,19 +105,19 @@ const monogram = computed(() => {
         {{ monogram }}
       </div>
 
-      <h1 class="template-title italic" :style="{ color: 'var(--card-text)' }">
+      <h1 class="template-title italic" :style="{ color: 'var(--color-text)' }">
         <span v-for="(c, i) in displayedNames" :key="i" class="animate-letter">{{ c }}</span>
       </h1>
 
       <div class="divider w-24 h-[1px] bg-gold opacity-30 mx-auto"></div>
 
-      <p class="template-body max-w-2xl mx-auto italic" :style="{ color: 'var(--card-text)' }">
+      <p class="template-body max-w-2xl mx-auto italic" :style="{ color: 'var(--color-text)' }">
         {{ content.intro_text || 'Nous vous convions à célébrer l’éternité d’un instant.' }}
       </p>
 
       <div class="info-block space-y-4">
         <p class="template-label text-gold">{{ content.date_display || '15 JUIN 2026' }}</p>
-        <p v-if="content.address" class="template-label" :style="{ color: 'var(--card-text)' }">{{ content.address }}</p>
+        <p v-if="content.address" class="template-label" :style="{ color: 'var(--color-text)' }">{{ content.address }}</p>
       </div>
 
       <div class="text-2xl pt-12 animate-pulse">{{ content.divider_symbol || '✦' }}</div>
@@ -129,9 +129,9 @@ const monogram = computed(() => {
 @import url('https://fonts.googleapis.com/css2?family=Cinzel&family=Cormorant+Garamond:ital,wght@1,300&family=Playfair+Display:ital,wght@1,400&display=swap');
 
 .hero-container {
-  --gold: var(--card-accent, #C9A84C);
-  background: var(--card-bg, #0A0A0A);
-  color: var(--card-text, #F5E6C8);
+  --gold: var(--color-countdown, #C9A84C);
+  background: var(--color-bg, #0A0A0A);
+  color: var(--color-text, #F5E6C8);
 }
 .text-gold { color: var(--gold); }
 .vignette { background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.8) 100%); }

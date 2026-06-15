@@ -41,7 +41,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="brutal-template" :style="{ '--card-bg': theme.concrete, '--card-text': theme.black, '--card-accent': theme.accent }">
+  <div class="brutal-template">
 
     <!-- Hero Section -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero-section grid-modular">
@@ -112,10 +112,10 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@900&display=swap');
 
 .brutal-template {
-  --concrete: var(--card-bg, #9E9E9E);
-  --black: var(--card-text, #000000);
+  --concrete: var(--color-bg, #9E9E9E);
+  --black: var(--color-text, #000000);
   --white: #FFFFFF;
-  --accent: var(--card-accent, #FF3E00);
+  --accent: var(--color-countdown, #FF3E00);
   background-color: var(--concrete);
   color: var(--black);
   font-family: var(--card-font, 'Inter'), sans-serif;

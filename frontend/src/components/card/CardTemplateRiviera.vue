@@ -41,11 +41,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="riviera-template" :style="{
-      '--card-bg': theme.cream,
-      '--card-text': theme.terracotta,
-      '--card-accent': theme.accent
-    }">
+  <div class="riviera-template">
 
     <!-- Mosaic Pattern Background -->
     <div class="mosaic-bg"></div>
@@ -111,8 +107,8 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@1,300;1,600&family=Montserrat:wght@800&display=swap');
 
 .riviera-template {
-  background-color: var(--card-bg);
-  color: var(--card-text);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--card-font, 'Cormorant'), serif;
   min-height: 100vh;
   position: relative;
@@ -152,7 +148,7 @@ onMounted(() => {
 .vintage-badge {
     display: inline-block;
     padding: 5px 15px;
-    border: 2px solid var(--card-text);
+    border: 2px solid var(--color-text);
     font-family: var(--card-font, 'Montserrat'), sans-serif;
     font-weight: 800;
     font-size: 0.7rem;
@@ -194,7 +190,7 @@ onMounted(() => {
     padding: 50px 0;
 }
 .angled-block > * { transform: skewY(5deg); }
-.bg-sand { background-color: var(--sand); color: var(--card-text); }
+.bg-sand { background-color: var(--sand); color: var(--color-text); }
 
 .container { max-width: 800px; margin: 0 auto; padding: 0 40px; }
 
@@ -206,8 +202,8 @@ onMounted(() => {
 .btn-riviera {
     padding: 15px 40px;
     background: transparent;
-    border: 2px solid var(--card-text);
-    color: var(--card-text);
+    border: 2px solid var(--color-text);
+    color: var(--color-text);
     font-family: var(--card-font, 'Montserrat'), sans-serif;
     font-weight: 800;
     font-size: 0.8rem;
@@ -216,8 +212,8 @@ onMounted(() => {
     cursor: pointer;
     transition: 0.3s;
 }
-.btn-riviera:hover { background: var(--card-text); color: var(--card-bg); }
-.btn-riviera.solid { background: var(--card-text); color: var(--card-bg); width: 100%; margin-top: 20px; }
+.btn-riviera:hover { background: var(--color-text); color: var(--color-bg); }
+.btn-riviera.solid { background: var(--color-text); color: var(--color-bg); width: 100%; margin-top: 20px; }
 
 .lemon-svg { width: 150px; opacity: 0.2; }
 

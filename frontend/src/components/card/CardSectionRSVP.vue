@@ -9,7 +9,7 @@ const props = defineProps({
 
 // --- ÉTAT DU FORMULAIRE ---
 const persons = ref([{ first_name: '', last_name: '', dietary_restrictions: '' }]);
-const rsvp = ref({ email: '', attending: 'yes', message: '' });
+const rsvp = ref({ attending: 'yes', message: '' });
 
 const isSubmitted = ref(false);
 const isLoading = ref(false);
@@ -68,7 +68,6 @@ const submitRSVP = async () => {
       event_id: props.event.id,
       first_name: main.first_name.trim(),
       last_name: main.last_name.trim(),
-      email: rsvp.value.email || null,
       presence: attending,
       dietary_restrictions: main.dietary_restrictions || null,
       sub_guests: attending
@@ -111,16 +110,12 @@ const submitRSVP = async () => {
 
     <!-- ÉTAT : FORMULAIRE -->
     <form v-else @submit.prevent="submitRSVP" class="space-y-10">
-      <h2 class="text-center italic mb-12" :style="{ color: theme.text, fontSize: 'var(--size-headings, 2.25rem)', fontFamily: theme.fontFamily }">
+      <h2 class="text-center italic mb-4" :style="{ color: 'var(--color-section-title)', fontSize: 'var(--size-headings, 2.25rem)', fontFamily: theme.fontFamily }">
         {{ content.rsvp_title || 'Serez-vous des nôtres ?' }}
       </h2>
-
-      <!-- Email -->
-      <div class="group relative">
-        <label class="block uppercase tracking-widest font-medium mb-1" :style="{ color: labelColor, fontSize: 'var(--size-label, 0.7rem)' }">Email (Optionnel)</label>
-        <input v-model="rsvp.email" type="email" class="w-full bg-transparent border-b py-2 focus:outline-none"
-               :style="{ borderBottomColor: (theme.accent || '#000') + '4D', color: theme.text }">
-      </div>
+      <p v-if="content.rsvp_deadline_text" class="text-center mb-10 italic" :style="{ color: labelColor, fontSize: 'var(--size-body, 0.875rem)', fontFamily: theme.fontFamily }">
+        {{ content.rsvp_deadline_text }}
+      </p>
 
       <!-- Toggle Présence -->
       <div class="space-y-4">

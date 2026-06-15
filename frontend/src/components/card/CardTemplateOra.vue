@@ -46,7 +46,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
 </script>
 
 <template>
-  <div class="eclat-template" :style="{ '--card-bg': theme.bg, '--card-accent': theme.accent, '--card-text': theme.text }">
+  <div class="eclat-template">
 
     <!-- ── HERO ── -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero">
@@ -105,8 +105,8 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@300;400&display=swap');
 
 .eclat-template {
-  background: var(--card-bg);
-  color: var(--card-text);
+  background: var(--color-bg);
+  color: var(--color-text);
   min-height: 100vh;
   font-family: var(--card-font, 'Montserrat'), sans-serif;
   overflow-x: hidden;
@@ -166,7 +166,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
 .rule {
   width: 72px;
   height: 1px;
-  background: var(--card-accent);
+  background: var(--color-countdown);
   margin: 16px auto;
   opacity: 0.85;
 }
@@ -195,7 +195,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   font-size: 0.6rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   margin-top: 7px;
 }
 
@@ -223,7 +223,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
 }
 
 /* ── Body ── */
-.body { background: var(--card-bg); padding: 0 20px 40px; }
+.body { background: var(--color-bg); padding: 0 20px 40px; }
 
 .body-card {
   max-width: 640px;
@@ -261,14 +261,14 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   display: block;
   width: 56px;
   height: 1px;
-  background: var(--card-accent);
+  background: var(--color-countdown);
   opacity: 0.4;
 }
 .diamond {
   display: block;
   width: 7px;
   height: 7px;
-  background: var(--card-accent);
+  background: var(--color-countdown);
   transform: rotate(45deg);
   opacity: 0.65;
 }
@@ -295,7 +295,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   display: block;
   width: 28px;
   height: 1px;
-  background: var(--card-accent);
+  background: var(--color-countdown);
   opacity: 0.25;
 }
 
@@ -303,7 +303,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   font-size: 0.56rem;
   letter-spacing: 0.45em;
   text-transform: uppercase;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.8;
 }
 

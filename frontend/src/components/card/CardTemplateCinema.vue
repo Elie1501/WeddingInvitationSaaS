@@ -72,7 +72,7 @@ onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTi
 </script>
 
 <template>
-  <div class="cinema-wrap" :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
+  <div class="cinema-wrap">
 
     <!-- ── HERO ── -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero">
@@ -148,8 +148,8 @@ onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTi
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:ital,wght@0,400;1,400&family=Special+Elite&display=swap');
 
 .cinema-wrap {
-  background: var(--card-bg);
-  color: var(--card-text);
+  background: var(--color-bg);
+  color: var(--color-text);
   min-height: 100vh;
   overflow-x: hidden;
   font-family: var(--card-font, 'Courier Prime'), monospace;
@@ -240,7 +240,7 @@ onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTi
 .eyebrow {
   font-size: 0.52rem;
   letter-spacing: 0.68em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.9;
   margin-bottom: 22px;
 }
@@ -248,7 +248,7 @@ onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTi
 .rule {
   width: 100px;
   height: 1px;
-  background: var(--card-accent);
+  background: var(--color-countdown);
   margin: 16px auto;
   opacity: 0.5;
 }
@@ -263,7 +263,7 @@ onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTi
 }
 
 .cursor {
-  color: var(--card-accent);
+  color: var(--color-countdown);
   animation: blink 0.9s step-end infinite;
 }
 @keyframes blink { 50% { opacity: 0; } }
@@ -278,13 +278,13 @@ onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTi
 .sub-loc {
   font-size: 0.58rem;
   letter-spacing: 0.32em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   margin-top: 7px;
   opacity: 0.85;
 }
 
 /* Body */
-.body { background: var(--card-bg); }
+.body { background: var(--color-bg); }
 
 .credits {
   display: flex;
@@ -311,7 +311,7 @@ onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTi
 .c-role {
   font-size: 0.5rem;
   letter-spacing: 0.55em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.7;
 }
 .c-val {
@@ -330,7 +330,7 @@ onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTi
   display: block;
   font-size: 0.5rem;
   letter-spacing: 0.65em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.6;
   margin-bottom: 28px;
 }

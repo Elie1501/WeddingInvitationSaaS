@@ -46,7 +46,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="gatsby-wrap" :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
+  <div class="gatsby-wrap">
 
     <!-- ── HERO ── -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero">
@@ -184,8 +184,8 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@400;700&family=Cormorant:ital,wght@1,300&display=swap');
 
 .gatsby-wrap {
-  background: var(--card-bg);
-  color: var(--card-text);
+  background: var(--color-bg);
+  color: var(--color-text);
   min-height: 100vh;
   overflow-x: hidden;
   font-family: var(--card-font, 'Playfair Display'), serif;
@@ -243,7 +243,7 @@ onMounted(() => {
   font-family: var(--card-font, 'Cinzel Decorative'), serif;
   font-size: 0.5rem;
   letter-spacing: 0.75em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.75;
   margin-bottom: 20px;
 }
@@ -251,7 +251,7 @@ onMounted(() => {
 .gold-rule {
   width: 120px;
   height: 1px;
-  background: linear-gradient(to right, transparent, var(--card-accent), transparent);
+  background: linear-gradient(to right, transparent, var(--color-countdown), transparent);
   margin: 16px auto;
 }
 
@@ -260,7 +260,7 @@ onMounted(() => {
   font-size: var(--size-names, clamp(2rem, 10vw, 5.5rem));
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   line-height: 1.1;
   background: linear-gradient(135deg, #c8923a 0%, #F5E090 40%, #D4A853 65%, #b87a28 100%);
   -webkit-background-clip: text;
@@ -286,13 +286,13 @@ onMounted(() => {
 .sub-loc {
   font-size: 0.6rem;
   letter-spacing: 0.35em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   margin-top: 7px;
   opacity: 0.8;
 }
 
 /* Body */
-.body { background: var(--card-bg); }
+.body { background: var(--color-bg); }
 
 .invite-card {
   max-width: 640px;
@@ -317,7 +317,7 @@ onMounted(() => {
   font-family: var(--card-font, 'Cinzel Decorative'), serif;
   font-size: 0.52rem;
   letter-spacing: 0.7em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.65;
   margin-bottom: 28px;
 }
@@ -330,7 +330,7 @@ onMounted(() => {
   margin: 22px 0;
 }
 .diam {
-  color: var(--card-accent);
+  color: var(--color-countdown);
   font-size: 0.5rem;
   opacity: 0.6;
 }
@@ -338,7 +338,7 @@ onMounted(() => {
   display: block;
   height: 1px;
   width: 40px;
-  background: var(--card-accent);
+  background: var(--color-countdown);
   opacity: 0.3;
 }
 
@@ -372,7 +372,7 @@ onMounted(() => {
   font-family: var(--card-font, 'Cinzel Decorative'), serif;
   font-size: 0.45rem;
   letter-spacing: 0.55em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.6;
   margin-bottom: 8px;
 }

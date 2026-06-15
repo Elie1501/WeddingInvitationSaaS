@@ -38,7 +38,7 @@ const monogram = computed(() => {
 
 <template>
   <div class="hero-jardin h-dvh relative overflow-hidden flex items-center justify-center text-center px-6"
-       :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
+      >
     <!-- Feuilles flottantes (désactivées sur mobile) -->
     <div v-if="!isMobile" class="leaves-overlay absolute inset-0 pointer-events-none">
       <svg v-for="i in 8" :key="i" class="leaf-float" :class="'l-' + i" viewBox="0 0 24 24">
@@ -51,33 +51,33 @@ const monogram = computed(() => {
       <div class="relative inline-block p-12">
         <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
           <path d="M50 5 Q80 10 90 50 Q85 90 50 95 Q15 90 10 50 Q20 10 50 5" 
-                :stroke="theme.accent" stroke-width="0.5" fill="none" class="organic-draw" />
+                stroke="var(--color-countdown)" stroke-width="0.5" fill="none" class="organic-draw" />
         </svg>
-        <span class="text-3xl tracking-[0.4em] uppercase font-light" :style="{ color: 'var(--card-accent)' }">
+        <span class="text-3xl tracking-[0.4em] uppercase font-light" :style="{ color: 'var(--color-countdown)' }">
           {{ monogram }}
         </span>
       </div>
 
-      <h1 class="template-title italic" :style="{ color: 'var(--card-text)' }">
+      <h1 class="template-title italic" :style="{ color: 'var(--color-text)' }">
         {{ displayNames }}
       </h1>
 
-      <p class="template-body font-light max-w-xl mx-auto italic opacity-90" :style="{ color: 'var(--card-text)' }">
+      <p class="template-body font-light max-w-xl mx-auto italic opacity-90" :style="{ color: 'var(--color-text)' }">
         {{ content.intro_text || 'Entrez dans la danse au cœur de notre jardin céleste.' }}
       </p>
 
       <div class="space-y-6 pt-10">
-        <div class="flex items-center justify-center gap-4" :style="{ color: 'var(--card-accent)' }">
+        <div class="flex items-center justify-center gap-4" :style="{ color: 'var(--color-countdown)' }">
            <div class="h-[1px] w-8 bg-current opacity-30"></div>
            <span class="text-xs tracking-[0.3em] font-light">{{ content.date_display || '15 JUIN 2026' }}</span>
            <div class="h-[1px] w-8 bg-current opacity-30"></div>
         </div>
-        <p v-if="content.address" class="template-label uppercase opacity-70 tracking-widest" :style="{ color: 'var(--card-text)' }">
+        <p v-if="content.address" class="template-label uppercase opacity-70 tracking-widest" :style="{ color: 'var(--color-text)' }">
           {{ content.address }}
         </p>
       </div>
 
-      <div class="pt-12 text-3xl" :style="{ color: 'var(--card-accent)' }">{{ content.divider_symbol || '❦' }}</div>
+      <div class="pt-12 text-3xl" :style="{ color: 'var(--color-countdown)' }">{{ content.divider_symbol || '❦' }}</div>
     </div>
   </div>
 </template>
@@ -87,8 +87,8 @@ const monogram = computed(() => {
 
 .hero-jardin {
   font-family: var(--card-font, 'Lato'), sans-serif;
-  background: var(--card-bg, #1A2E1F);
-  color: var(--card-text, #F2EBE0);
+  background: var(--color-bg, #1A2E1F);
+  color: var(--color-text, #F2EBE0);
 }
 .template-title { font-family: var(--card-font, 'Cormorant Upright'), serif; font-size: var(--size-names, clamp(3.5rem, 12vw, 6.5rem)); line-height: 1; }
 .template-body { font-size: clamp(1rem, 2.5vw, 1.25rem); }

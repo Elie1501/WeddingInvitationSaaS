@@ -57,7 +57,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="velvet-wrap" :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
+  <div class="velvet-wrap">
 
     <!-- Velvet texture overlay -->
     <div class="velvet-tex" />
@@ -152,8 +152,8 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@400;600&display=swap');
 
 .velvet-wrap {
-  background: var(--card-bg);
-  color: var(--card-text);
+  background: var(--color-bg);
+  color: var(--color-text);
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
@@ -182,7 +182,7 @@ onMounted(() => {
   position: absolute;
   bottom: -10%;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--card-accent) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--color-countdown) 0%, transparent 70%);
   animation: particleRise linear infinite;
 }
 @keyframes particleRise {
@@ -288,7 +288,7 @@ onMounted(() => {
   font-family: var(--card-font, 'Cinzel'), serif;
   font-size: 0.5rem;
   letter-spacing: 0.75em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.7;
   margin-bottom: 22px;
 }
@@ -296,7 +296,7 @@ onMounted(() => {
 .velvet-rule {
   width: 80px;
   height: 1px;
-  background: linear-gradient(to right, transparent, var(--card-accent), transparent);
+  background: linear-gradient(to right, transparent, var(--color-countdown), transparent);
   margin: 16px auto;
   opacity: 0.6;
 }
@@ -324,14 +324,14 @@ onMounted(() => {
 .sub-loc {
   font-size: 0.6rem;
   letter-spacing: 0.35em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   margin-top: 7px;
   opacity: 0.8;
   font-family: var(--card-font, 'Cinzel'), serif;
 }
 
 /* Body */
-.body { background: var(--card-bg); position: relative; z-index: 2; }
+.body { background: var(--color-bg); position: relative; z-index: 2; }
 
 .reveal-section {
   padding: 80px 40px;
@@ -344,7 +344,7 @@ onMounted(() => {
   font-family: var(--card-font, 'Cinzel'), serif;
   font-size: 0.48rem;
   letter-spacing: 0.72em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.6;
   margin-bottom: 28px;
 }
@@ -379,7 +379,7 @@ onMounted(() => {
   font-family: var(--card-font, 'Cinzel'), serif;
   font-size: 0.45rem;
   letter-spacing: 0.6em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.6;
 }
 .d-val {

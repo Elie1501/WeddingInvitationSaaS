@@ -35,11 +35,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="japonais-template" :style="{
-      '--card-bg': theme.bg,
-      '--card-text': theme.ink,
-      '--card-accent': theme.accent
-    }">
+  <div class="japonais-template">
     <!-- Washi Paper Texture -->
     <div class="washi-texture"></div>
 
@@ -84,8 +80,8 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;700&family=Playfair+Display:ital,wght@1,400&display=swap');
 
 .japonais-template {
-  background-color: var(--card-bg);
-  color: var(--card-text);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--card-font, 'Noto Serif JP'), serif;
   min-height: 100vh;
   position: relative;
@@ -116,7 +112,7 @@ onMounted(() => {
   position: absolute;
   width: 300px;
   height: 300px;
-  background: var(--card-text);
+  background: var(--color-text);
   filter: blur(40px);
   border-radius: 50%;
   opacity: 0;
@@ -162,7 +158,7 @@ onMounted(() => {
 .brush-divider { width: 300px; margin: 0 auto 30px; }
 .brush-path {
   fill: none;
-  stroke: var(--card-text);
+  stroke: var(--color-text);
   stroke-width: 4;
   stroke-linecap: round;
   stroke-dasharray: 500;
@@ -179,7 +175,7 @@ onMounted(() => {
   text-transform: uppercase;
   letter-spacing: 5px;
   font-size: 0.9rem;
-  color: var(--card-accent);
+  color: var(--color-countdown);
 }
 
 .body-content { padding: 100px 0; position: relative; z-index: 2; }
@@ -189,13 +185,13 @@ onMounted(() => {
 .section-title { font-size: 2.5rem; margin-bottom: 20px; font-weight: 200; }
 .section-desc { font-style: italic; opacity: 0.7; margin-bottom: 30px; }
 
-.brush-path-sm { fill: none; stroke: var(--card-accent); stroke-width: 3; opacity: 0.5; }
+.brush-path-sm { fill: none; stroke: var(--color-countdown); stroke-width: 3; opacity: 0.5; }
 
 .btn-jap {
     padding: 12px 30px;
-    border: 1px solid var(--card-text);
-    background: var(--card-text);
-    color: var(--card-bg);
+    border: 1px solid var(--color-text);
+    background: var(--color-text);
+    color: var(--color-bg);
     text-transform: uppercase;
     letter-spacing: 3px;
     font-size: 0.7rem;
@@ -203,7 +199,7 @@ onMounted(() => {
     transition: 0.4s;
     cursor: pointer;
 }
-.btn-jap.outline { background: transparent; color: var(--card-text); }
+.btn-jap.outline { background: transparent; color: var(--color-text); }
 .btn-jap:hover { transform: scale(1.05); background: var(--red); border-color: var(--red); color: white; }
 
 
