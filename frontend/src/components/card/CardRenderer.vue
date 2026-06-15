@@ -19,13 +19,15 @@ import CardTemplateNoirEternel from './CardTemplateNoirEternel.vue';
 import CardTemplateRivieraBlanche from './CardTemplateRivieraBlanche.vue';
 import CardTemplateJardinCeleste from './CardTemplateJardinCeleste.vue';
 import CardTemplateEmpireAbstrait from './CardTemplateEmpireAbstrait.vue';
-import CardTemplateCouture from './CardTemplateCouture.vue';
 import CardTemplateCinema from './CardTemplateCinema.vue';
 import CardTemplateCelestial from './CardTemplateCelestial.vue';
-import CardTemplateWabiSabi from './CardTemplateWabiSabi.vue';
 import CardTemplateGatsby from './CardTemplateGatsby.vue';
 import CardTemplateEditorial from './CardTemplateEditorial.vue';
 import CardTemplateVelvetNoir from './CardTemplateVelvetNoir.vue';
+import CardTemplateEclipse from './CardTemplateEclipse.vue';
+import CardTemplateLettre from './CardTemplateLettre.vue';
+import CardTemplateLumiere from './CardTemplateLumiere.vue';
+import CardTemplateSanctuaire from './CardTemplateSanctuaire.vue';
 
 const props = defineProps({
   config: {
@@ -147,13 +149,15 @@ const currentTemplate = computed(() => {
   if (l === 'riviera' || l === 'split') return CardTemplateRiviera;
   if (l === 'brutaliste' || l === 'es') return CardTemplateBrutaliste;
   if (l === 'film' || l === 'typography-focus') return CardTemplateFilm;
-  if (l === 'couture') return CardTemplateCouture;
   if (l === 'cinema') return CardTemplateCinema;
   if (l === 'celestial') return CardTemplateCelestial;
-  if (l === 'wabi-sabi') return CardTemplateWabiSabi;
   if (l === 'gatsby') return CardTemplateGatsby;
   if (l === 'editorial') return CardTemplateEditorial;
   if (l === 'velvet-noir') return CardTemplateVelvetNoir;
+  if (l === 'eclipse') return CardTemplateEclipse;
+  if (l === 'lettre') return CardTemplateLettre;
+  if (l === 'lumiere') return CardTemplateLumiere;
+  if (l === 'sanctuaire') return CardTemplateSanctuaire;
   return null;
 });
 </script>
@@ -172,7 +176,7 @@ const currentTemplate = computed(() => {
   />
 
   <div v-show="!(isEditorMode && selectedBlock === 'splash')"
-       class="card-engine w-full flex flex-col items-center overflow-x-hidden pb-10 relative"
+       class="card-engine w-full flex flex-col items-center pb-10 relative"
        :style="cssVars">
     
     <div v-for="sectionId in sections" :key="sectionId"
@@ -195,14 +199,14 @@ const currentTemplate = computed(() => {
          <p class="font-bold uppercase tracking-[0.5em] mb-8 opacity-40" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">Le grand décompte</p>
          <div class="flex justify-center items-center space-x-8">
             <div v-for="(val, label) in { Jours:timeLeft.days, Heures:timeLeft.hours, Min:timeLeft.mins, Sec:timeLeft.secs }" :key="label" class="flex flex-col">
-               <span class="font-light" :style="{ color: theme.accent, fontSize: 'var(--size-countdown, 3rem)', fontFamily: theme.fontFamily }">{{ val }}</span>
+               <span class="font-light" :style="{ color: theme.countdownColor || theme.accent, fontSize: 'var(--size-countdown, 3rem)', fontFamily: theme.fontFamily }">{{ val }}</span>
                <span class="uppercase tracking-widest opacity-40 mt-2" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ label }}</span>
             </div>
          </div>
       </div>
 
       <div v-if="sectionId === 'program'" class="w-full py-20 px-8 text-center space-y-12 z-10 relative" :style="{ color: theme.text, fontFamily: theme.fontFamily }">
-        <h2 class="italic" :style="{ fontSize: 'var(--size-headings, 2.5rem)', fontFamily: theme.fontFamily }">Le Programme</h2>
+        <h2 class="italic" :style="{ color: 'var(--color-section-title)', fontSize: 'var(--size-headings, 2.5rem)', fontFamily: theme.fontFamily }">Le Programme</h2>
         <div v-if="subEvents && subEvents.length > 0" class="max-w-xl mx-auto space-y-12">
           <div v-for="(se, idx) in subEvents" :key="idx" class="space-y-4">
               <p class="font-bold uppercase tracking-[0.4em]" :style="{ color: theme.accent, fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ se.time }}</p>
@@ -250,7 +254,10 @@ const currentTemplate = computed(() => {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;600;700&family=Dancing+Script:wght@400;600;700&display=swap');
 
-.card-engine { font-family: var(--card-font, 'Playfair Display'), serif; }
+.card-engine {
+  font-family: var(--card-font, 'Playfair Display'), serif;
+  overflow-x: clip; /* clip ne crée pas de contexte de scroll (contrairement à hidden) */
+}
 .card-engine * { transition: color 0.3s ease, background-color 0.3s ease; }
 
 /* Annuler le text-gray-900 global sur les titres */
@@ -263,13 +270,14 @@ const currentTemplate = computed(() => {
   color: inherit;
 }
 
-/* Reset Tailwind's gray-900 default on headings — templates set their own color */
-.card-engine h1,
-.card-engine h2,
-.card-engine h3,
-.card-engine h4,
-.card-engine h5,
-.card-engine h6 {
-  color: inherit;
+/* ── Couleur des noms des mariés : override global pour tous les templates ── */
+/* Cible les classes utilisées pour l'h1 des prénoms dans chaque template    */
+.card-engine .template-title,
+.card-engine .names,
+.card-engine .main-names,
+.card-engine .main-title,
+.card-engine h1.title,
+.card-engine .name-giant {
+  color: var(--color-names, var(--card-names, inherit)) !important;
 }
 </style>
