@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted, inject } from 'vue';
+import { computed, ref, inject } from 'vue';
 import { getContrastColor } from '../../service/colorUtils';
 import { useCardStyle } from '../../composables/useCardStyle';
 
@@ -7,6 +7,8 @@ import { useCardStyle } from '../../composables/useCardStyle';
 import CardSectionBanner from './CardSectionBanner.vue';
 import CardSectionText from './CardSectionText.vue';
 import CardSectionRSVP from './CardSectionRSVP.vue';
+import CardSectionCountdown from './CardSectionCountdown.vue';
+import CardSectionProgramme from './CardSectionProgramme.vue';
 import CardSplashScreen from './CardSplashScreen.vue';
 
 // Templates (Hero-only refactored)
@@ -102,31 +104,6 @@ const displayData = computed(() => ({
   image: safeConfig.value.media?.image_url || safeConfig.value.content?.image_url || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200'
 }));
 
-// Logic de compte à rebours global
-const timeLeft = ref({ days: 0, hours: 0, mins: 0, secs: 0 });
-let timer = null;
-const updateCountdown = () => {
-  const dateToUse = props.event?.date || safeConfig.value?.content?.date;
-  if (!dateToUse) return;
-  const targetDate = new Date(dateToUse).getTime();
-  const now = new Date().getTime();
-  const diff = targetDate - now;
-  if (diff > 0) {
-    timeLeft.value = {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      mins: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      secs: Math.floor((diff % (1000 * 60)) / 1000)
-    };
-  }
-};
-
-onMounted(() => {
-  updateCountdown();
-  timer = setInterval(updateCountdown, 1000);
-});
-onUnmounted(() => clearInterval(timer));
-
 const theme = computed(() => safeConfig.value.theme);
 const layout = computed(() => safeConfig.value.layout);
 
@@ -195,27 +172,15 @@ const currentTemplate = computed(() => {
       <!-- BLOCS GÉNÉRIQUES -->
       <CardSectionText v-if="sectionId.startsWith('custom-text')" :id="sectionId" :config="safeConfig" :event="event" />
 
-      <div v-if="sectionId === 'countdown' && safeConfig.show_countdown" class="w-full py-16 text-center z-10 relative" :style="{ color: theme.text, fontFamily: theme.fontFamily }">
-         <p class="font-bold uppercase tracking-[0.5em] mb-8 opacity-40" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">Le grand décompte</p>
-         <div class="flex justify-center items-center space-x-8">
-            <div v-for="(val, label) in { Jours:timeLeft.days, Heures:timeLeft.hours, Min:timeLeft.mins, Sec:timeLeft.secs }" :key="label" class="flex flex-col">
-               <span class="font-light" :style="{ color: theme.countdownColor || theme.accent, fontSize: 'var(--size-countdown, 3rem)', fontFamily: theme.fontFamily }">{{ val }}</span>
-               <span class="uppercase tracking-widest opacity-40 mt-2" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ label }}</span>
-            </div>
-         </div>
-      </div>
+      <CardSectionCountdown
+        v-if="sectionId === 'countdown' && safeConfig.show_countdown"
+        :config="safeConfig" :event="event"
+      />
 
-      <div v-if="sectionId === 'program'" class="w-full py-20 px-8 text-center space-y-12 z-10 relative" :style="{ color: theme.text, fontFamily: theme.fontFamily }">
-        <h2 class="italic" :style="{ color: 'var(--color-section-title)', fontSize: 'var(--size-headings, 2.5rem)', fontFamily: theme.fontFamily }">Le Programme</h2>
-        <div v-if="subEvents && subEvents.length > 0" class="max-w-xl mx-auto space-y-12">
-          <div v-for="(se, idx) in subEvents" :key="idx" class="space-y-4">
-              <p class="font-bold uppercase tracking-[0.4em]" :style="{ color: theme.accent, fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ se.time }}</p>
-              <h3 class="font-light italic" :style="{ fontSize: 'var(--size-body, 1.25rem)', fontFamily: theme.fontFamily }">{{ se.title }}</h3>
-              <p v-if="se.location" class="uppercase tracking-widest opacity-60" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ se.location }}</p>
-              <p v-if="se.description" class="opacity-50 italic" :style="{ fontSize: 'var(--size-body, 0.875rem)', fontFamily: theme.fontFamily }">{{ se.description }}</p>
-          </div>
-        </div>
-      </div>
+      <CardSectionProgramme
+        v-if="sectionId === 'program'"
+        :config="safeConfig" :event="event" :sub-events="subEvents"
+      />
 
       <!-- BLOC IMAGE avec placeholder élégant -->
       <div v-if="sectionId.startsWith('image-')" class="w-full relative group">
