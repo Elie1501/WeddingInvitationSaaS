@@ -47,6 +47,8 @@ jobs:
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
           REFRESH_TOKEN_EXPIRE_DAYS: 7
           PROJECT_NAME: TestWedding
+          STRIPE_SECRET_KEY: sk_test_dummy
+          STRIPE_WEBHOOK_SECRET: whsec_dummy
         run: |
           cd backend
           export PYTHONPATH=$PYTHONPATH:.
