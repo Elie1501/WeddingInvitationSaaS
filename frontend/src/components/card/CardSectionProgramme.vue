@@ -2,13 +2,17 @@
 // CardSectionProgramme.vue — Phase 2
 // Section partagée. Lecture directe config/event (même convention que RSVP).
 // Aucune logique : juste l'affichage de la liste des sous-événements.
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 
 const props = defineProps({
   config:    { type: Object, required: true },
   event:     { type: Object, required: true },
   subEvents: { type: Array, default: null }, // prioritaire : prop directe depuis CardRenderer
 });
+
+// En mode éditeur, on affiche toujours le bloc (même vide) pour qu'il soit visible
+// et éditable ; en vue publique on masque un programme vide.
+const isEditorMode = inject('isEditorMode', false);
 
 const theme   = computed(() => props.config.theme   || {});
 const content = computed(() => props.config.content || {});
@@ -23,9 +27,9 @@ const items = computed(() => {
 </script>
 
 <template>
-  <!-- Rien à afficher si pas de programme : on ne laisse pas un bloc vide -->
+  <!-- Public : masqué si vide. Éditeur : toujours visible (état vide éditable). -->
   <section
-    v-if="items.length"
+    v-if="items.length || isEditorMode"
     class="programme-section py-16 px-6 max-w-xl mx-auto transition-all duration-700"
     :style="{ fontFamily: theme.fontFamily }"
   >
@@ -83,5 +87,15 @@ const items = computed(() => {
         </p>
       </li>
     </ul>
+
+    <!-- État vide visible uniquement dans l'éditeur -->
+    <p
+      v-if="!items.length && isEditorMode"
+      class="text-center italic opacity-50 mt-2"
+      style="font-size: var(--size-body, 0.95rem)"
+      :style="{ color: theme.text || '#1A1A1A' }"
+    >
+      Aucune étape pour l'instant — ajoutez votre programme ici.
+    </p>
   </section>
 </template>

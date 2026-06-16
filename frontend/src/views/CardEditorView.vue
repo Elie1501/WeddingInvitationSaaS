@@ -558,6 +558,13 @@ const fetchCard = async () => {
         config.sections.unshift('hero');
       }
 
+      // Migration : anciennes cartes "full" (hero seul, sections incrustées dans le
+      // composant). Désormais countdown/programme/RSVP/footer sont des blocs gérés
+      // par CardRenderer → on les rétablit comme blocs déplaçables s'ils manquent.
+      if (config.sections.length === 1 && config.sections[0] === 'hero') {
+        config.sections = ['hero', 'countdown', 'program', 'rsvp', 'footer'];
+      }
+
       // Initialiser l'historique
       history.value = [snapshot()];
       historyIndex.value = 0;

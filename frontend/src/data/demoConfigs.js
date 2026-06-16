@@ -144,7 +144,7 @@ export const DEMO_CONFIGS = {
   'eclipse': {
     name: 'Éclipse', isPremium: true,
     layout: 'eclipse',
-    sections: ['hero'],
+    sections: FULL_SECTIONS,
     theme: {
       background: '#1B1430',
       accent: '#F0A85C',
@@ -168,7 +168,7 @@ export const DEMO_CONFIGS = {
   'amour': {
     name: 'Amour', isPremium: false,
     layout: 'amour',
-    sections: ['hero'],
+    sections: FULL_SECTIONS,
     theme: {
       background: '#FDF1F0',
       accent: '#D6677A',
@@ -191,13 +191,23 @@ export const DEMO_CONFIGS = {
 
 };
 
-// Liste ordonnée pour la section landing (6 templates en vedette)
+// Liste ordonnée pour la section landing (14 templates — images vérifiées 200 OK)
+const U = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&q=80&w=600`;
 export const LANDING_TEMPLATES = [
-  { id: 'riviera-blanche', name: 'Riviera Blanche', isPremium: false, image: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=600' },
-  { id: 'velvet-noir',     name: 'Velvet Noir',     isPremium: true,  image: 'https://images.unsplash.com/photo-1549416878-b5a76567bec9?auto=format&fit=crop&q=80&w=600' },
-  { id: 'gatsby',          name: 'Art Déco',         isPremium: true,  image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=600' },
-  { id: 'celestial',       name: 'Céleste',          isPremium: true,  image: 'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?auto=format&fit=crop&q=80&w=600' },
-  { id: 'tel-aviv',        name: 'Tel Aviv',         isPremium: false, image: 'https://images.unsplash.com/photo-1602002418082-dd4a3f5b1aef?auto=format&fit=crop&q=80&w=600' },
+  { id: 'riviera-blanche', name: 'Riviera Blanche', isPremium: false, image: U('photo-1519225421980-715cb0215aed') },
+  { id: 'tel-aviv',        name: 'Tel Aviv',        isPremium: false, image: U('photo-1502602898657-3e91760cbb34') },
+  { id: 'amour',           name: 'Amour',           isPremium: false, image: U('photo-1494955870715-979ca4f13bf0') },
+  { id: 'velvet-noir',     name: 'Velvet Noir',     isPremium: true,  image: U('photo-1606800052052-a08af7148866') },
+  { id: 'gatsby',          name: 'Art Déco',        isPremium: true,  image: U('photo-1511795409834-ef04bbd61622') },
+  { id: 'celestial',       name: 'Céleste',         isPremium: true,  image: U('photo-1534796636912-3b95b3ab5986') },
+  { id: 'japonais',        name: 'Japonais',        isPremium: false, image: U('photo-1522383225653-ed111181a951') },
+  { id: 'riviera',         name: 'Riviera',         isPremium: false, image: U('photo-1537633552985-df8429e8048b') },
+  { id: 'cinema',          name: 'Cinéma',          isPremium: true,  image: U('photo-1536440136628-849c177e76a1') },
+  { id: 'jardin-celeste',  name: 'Jardin Céleste',  isPremium: false, image: U('photo-1464822759023-fed622ff2c3b') },
+  { id: 'empire-abstrait', name: 'Empire Abstrait', isPremium: true,  image: U('photo-1518895949257-7621c3c786d7') },
+  { id: 'ora',             name: 'Ora',             isPremium: false, image: U('photo-1469474968028-56623f02e42e') },
+  { id: 'film',            name: 'Pellicule',       isPremium: true,  image: U('photo-1476357471311-43c0db9fb2b4') },
+  { id: 'eclipse',         name: 'Éclipse',         isPremium: true,  image: U('photo-1492684223066-81342ee5ff30') },
 ];
 
 // Config miniature : sections réduite au hero, splash désactivé

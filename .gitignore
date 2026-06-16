@@ -48,3 +48,5 @@ login*.json
 .docker/
 
 backend/firebase-service-account.json
+# Certificats TLS auto-signés (dev local)
+backend/certs/

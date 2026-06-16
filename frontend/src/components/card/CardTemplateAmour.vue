@@ -1,12 +1,10 @@
 <script setup>
 import { useTemplateData } from '@/composables/useTemplateData';
-import CardSectionCountdown from './CardSectionCountdown.vue';
-import CardSectionProgramme from './CardSectionProgramme.vue';
-import CardSectionRSVP      from './CardSectionRSVP.vue';
 
 const props = defineProps({
   config: { type: Object, required: true },
   event:  { type: Object, default: () => ({}) },
+  mode:   { type: String, default: 'full' },
 });
 
 defineEmits(['click-image']);
@@ -26,7 +24,8 @@ const hearts = Array.from({ length: 14 }, () => ({
 </script>
 
 <template>
-  <div class="amr-wrap">
+  <!-- Hero uniquement — countdown / programme / RSVP sont des blocs gérés par CardRenderer -->
+  <section class="amr-hero">
     <!-- Cœurs flottants -->
     <div class="amr-hearts" aria-hidden="true">
       <svg v-for="(h, i) in hearts" :key="i" class="fly-heart" viewBox="0 0 24 24"
@@ -35,54 +34,40 @@ const hearts = Array.from({ length: 14 }, () => ({
       </svg>
     </div>
 
-    <!-- ── 1. PAGE DE GARDE ── -->
-    <section class="amr-hero">
-      <div class="amr-glow" aria-hidden="true"></div>
+    <div class="amr-glow" aria-hidden="true"></div>
 
-      <div class="amr-inner" :class="{ revealed: isLoaded }">
-        <!-- Cœur tracé + battement -->
-        <div class="amr-beat" :class="{ go: isLoaded }">
-          <svg viewBox="0 0 100 90" class="amr-heart-svg">
-            <path d="M50 80 C 12 52, 4 30, 18 16 C 30 4, 46 10, 50 24 C 54 10, 70 4, 82 16 C 96 30, 88 52, 50 80 Z"
-                  class="heart-path" :class="{ draw: isLoaded }" />
-          </svg>
-        </div>
-
-        <p class="amr-script">Pour toujours</p>
-        <h1 class="amr-names template-title main-names">{{ displayNames }}</h1>
-        <div class="amr-rule" aria-hidden="true"><span></span><span class="dot">♥</span><span></span></div>
-        <p class="amr-date">{{ displayDate }}</p>
-        <p v-if="displayLocation" class="amr-loc">{{ displayLocation }}</p>
+    <div class="amr-inner" :class="{ revealed: isLoaded }">
+      <!-- Cœur tracé + battement -->
+      <div class="amr-beat" :class="{ go: isLoaded }">
+        <svg viewBox="0 0 100 90" class="amr-heart-svg">
+          <path d="M50 80 C 12 52, 4 30, 18 16 C 30 4, 46 10, 50 24 C 54 10, 70 4, 82 16 C 96 30, 88 52, 50 80 Z"
+                class="heart-path" :class="{ draw: isLoaded }" />
+        </svg>
       </div>
-    </section>
 
-    <!-- ── 2. COMPTE À REBOURS ── -->
-    <div class="amr-sep">
-      <CardSectionCountdown :config="props.config" :event="props.event" />
+      <p class="amr-script">Pour toujours</p>
+      <h1 class="amr-names template-title main-names">{{ displayNames }}</h1>
+      <div class="amr-rule" aria-hidden="true"><span></span><span class="dot">♥</span><span></span></div>
+      <p class="amr-date">{{ displayDate }}</p>
+      <p v-if="displayLocation" class="amr-loc">{{ displayLocation }}</p>
     </div>
-
-    <!-- ── 3. LE PROGRAMME ── -->
-    <div class="amr-sep">
-      <CardSectionProgramme :config="props.config" :event="props.event" />
-    </div>
-
-    <!-- ── 4. RSVP ── -->
-    <div class="amr-sep">
-      <CardSectionRSVP :config="props.config" :event="props.event" />
-    </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Dancing+Script:wght@500;600&family=Jost:wght@300;400&display=swap');
 
-.amr-wrap {
+/* HERO */
+.amr-hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+  padding: clamp(50px, 11cqi, 90px) clamp(24px, 7cqi, 50px);
   background: var(--color-bg, #FDF1F0);
   color: var(--color-text, #4A2E33);
   font-family: var(--card-font, 'Jost'), sans-serif;
-  min-height: 100svh;
-  overflow-x: clip;
-  position: relative;
+  overflow: clip;
 }
 
 /* Cœurs flottants */
@@ -98,19 +83,9 @@ const hearts = Array.from({ length: 14 }, () => ({
   100% { opacity: 0; transform: translate(var(--drift, 30px), -118vh) rotate(25deg) scale(1); }
 }
 
-.amr-sep { border-top: 1px solid color-mix(in srgb, var(--color-countdown, #D6677A) 18%, transparent); position: relative; z-index: 1; }
-
-/* HERO */
-.amr-hero {
-  min-height: 100svh;
-  display: flex; align-items: center; justify-content: center;
-  text-align: center;
-  padding: clamp(50px, 11cqi, 90px) clamp(24px, 7cqi, 50px);
-  position: relative; z-index: 1;
-}
 .amr-glow {
   position: absolute; top: 24%; left: 50%; transform: translateX(-50%);
-  width: 120%; aspect-ratio: 1; pointer-events: none;
+  width: 120%; aspect-ratio: 1; pointer-events: none; z-index: 0;
   background: radial-gradient(circle, color-mix(in srgb, var(--color-countdown, #D6677A) 20%, transparent) 0%, transparent 50%);
   animation: glowPulse 6s ease-in-out infinite;
 }

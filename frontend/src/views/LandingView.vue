@@ -258,7 +258,7 @@ onUnmounted(() => {
              :class="isVisible('tpl-header') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'">
           <div>
             <span class="text-[10px] font-bold uppercase tracking-[0.5em] text-primary-500 block mb-3">
-              Collection 2026 · 18 designs exclusifs
+              Collection 2026 · 14 designs exclusifs
             </span>
             <h2 class="text-4xl md:text-5xl font-serif italic text-neutral-900">
               Des designs qui vous ressemblent.
