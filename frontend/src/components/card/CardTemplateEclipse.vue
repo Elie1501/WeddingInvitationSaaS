@@ -1,12 +1,10 @@
 <script setup>
 import { useTemplateData } from '@/composables/useTemplateData';
-import CardSectionCountdown from './CardSectionCountdown.vue';
-import CardSectionProgramme from './CardSectionProgramme.vue';
-import CardSectionRSVP      from './CardSectionRSVP.vue';
 
 const props = defineProps({
   config: { type: Object, required: true },
   event:  { type: Object, default: () => ({}) },
+  mode:   { type: String, default: 'full' },
 });
 
 defineEmits(['click-image']);
@@ -25,9 +23,7 @@ const stars = Array.from({ length: 22 }, () => ({
 </script>
 
 <template>
-  <div class="ecl-wrap">
-
-    <!-- ── 1. PAGE DE GARDE ── -->
+  <!-- Hero uniquement — countdown / programme / RSVP sont des blocs gérés par CardRenderer -->
     <section class="ecl-hero">
       <!-- Ciel étoilé -->
       <div class="ecl-sky" aria-hidden="true">
@@ -50,48 +46,24 @@ const stars = Array.from({ length: 22 }, () => ({
         <p v-if="displayLocation" class="ecl-loc">{{ displayLocation }}</p>
       </div>
     </section>
-
-    <!-- ── 2. COMPTE À REBOURS ── -->
-    <div class="ecl-sep">
-      <CardSectionCountdown :config="props.config" :event="props.event" />
-    </div>
-
-    <!-- ── 3. LE PROGRAMME ── -->
-    <div class="ecl-sep">
-      <CardSectionProgramme :config="props.config" :event="props.event" />
-    </div>
-
-    <!-- ── 4. RSVP ── -->
-    <div class="ecl-sep">
-      <CardSectionRSVP :config="props.config" :event="props.event" />
-    </div>
-
-  </div>
 </template>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Hanken+Grotesk:wght@300;400;500&display=swap');
 
-.ecl-wrap {
+/* HERO */
+.ecl-hero {
   background:
     radial-gradient(ellipse 120% 80% at 50% 6%, color-mix(in srgb, var(--color-countdown, #F0A85C) 22%, transparent), transparent 60%),
     var(--color-bg, #1B1430);
   color: var(--color-text, #E8DFF0);
   font-family: 'Hanken Grotesk', var(--card-font, sans-serif);
   min-height: 100svh;
-  overflow-x: clip;
-}
-
-.ecl-sep { border-top: 1px solid color-mix(in srgb, var(--color-text, #E8DFF0) 12%, transparent); }
-
-/* HERO */
-.ecl-hero {
-  min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 90px 40px;
+  padding: clamp(60px, 16cqi, 90px) clamp(24px, 7cqi, 40px);
   text-align: center;
   position: relative;
   overflow: clip;

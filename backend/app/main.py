@@ -13,23 +13,22 @@ Base.metadata.create_all(bind=engine)
 
 # ── Config des templates valides : (catégorie, thumbnail HD, nom d'affichage)
 # Tout template listé ici est activé automatiquement au démarrage.
+# Aligné sur frontend/src/data/demoConfigs.js (l'id == clé de layout CardRenderer).
 TEMPLATE_CATALOG = {
-    "noir-eternel":      ("minimal", "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80", "Noir Éternel"),
-    "ora-parallax":      ("classic", "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&q=80", "Éclat Doré"),
-    "riviera-blanche":   ("minimal", "https://images.unsplash.com/photo-1529636444744-adffc9135a5e?w=800&q=80", "Riviera Blanche"),
-    "velvet-noir":       ("minimal", "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80", "Velvet Noir"),
-    "couture":           ("minimal", "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80", "Maison de Haute Couture"),
-    "empire-abstrait":   ("classic", "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80", "Empire Abstrait"),
-    "gatsby":            ("classic", "https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=80", "Art Déco — Grande Gatsby"),
-    "cinema":            ("classic", "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=80", "Cinématique — Pellicule 35mm"),
-    "template-brutaliste":("art",    "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80", "Architecture Brutaliste"),
-    "template-film":     ("art",     "https://images.unsplash.com/photo-1476357471311-43c0db9fb2b4?w=800&q=80", "Sépia & Film Argentique"),
-    "editorial":         ("art",     "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80", "Éditorial Brutaliste"),
-    "celestial":         ("art",     "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=800&q=80", "Céleste — Nuit Étoilée"),
-    "template-riviera":  ("boho",    "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=800&q=80", "Riviera Anni 70"),
-    "jardin-celeste":    ("boho",    "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&q=80", "Jardin Céleste"),
-    "template-japonais": ("boho",    "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80", "Jardin Japonais"),
-    "wabi-sabi":         ("boho",    "https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?w=800&q=80", "Wabi-Sabi — Jardin Japonais"),
+    "riviera-blanche":   ("minimal", "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&q=80", "Riviera Blanche"),
+    "velvet-noir":       ("minimal", "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=800&q=80", "Velvet Noir"),
+    "gatsby":            ("classic", "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80", "Art Déco"),
+    "celestial":         ("art",     "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=800&q=80", "Céleste"),
+    "tel-aviv":          ("classic", "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80", "Tel Aviv"),
+    "japonais":          ("boho",    "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=800&q=80", "Japonais"),
+    "riviera":           ("boho",    "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=800&q=80", "Riviera"),
+    "cinema":            ("classic", "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=80", "Cinéma"),
+    "jardin-celeste":    ("boho",    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80", "Jardin Céleste"),
+    "empire-abstrait":   ("art",     "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=800&q=80", "Empire Abstrait"),
+    "ora":               ("minimal", "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80", "Ora"),
+    "film":              ("art",     "https://images.unsplash.com/photo-1476357471311-43c0db9fb2b4?w=800&q=80", "Pellicule"),
+    "eclipse":           ("minimal", "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80", "Éclipse"),
+    "amour":             ("minimal", "https://images.unsplash.com/photo-1494955870715-979ca4f13bf0?w=800&q=80", "Amour"),
 }
 
 def seed_data():
@@ -57,6 +56,20 @@ def seed_data():
                 conn.commit()
         except Exception:
             pass  # colonne déjà présente
+
+        # ── Auto-seed au démarrage (idempotent) ──────────────────────────
+        # Garantit que comptes de démo + galerie de templates existent
+        # même après une réinitialisation de la base de données.
+        try:
+            from scripts.seed_users import seed_users
+            seed_users()
+        except Exception as e:
+            print(f"[seed] users: {e}")
+        try:
+            from scripts.seed_gallery import seed as seed_gallery
+            seed_gallery()
+        except Exception as e:
+            print(f"[seed] gallery: {e}")
 
         # Activer + configurer tous les templates du catalogue
         for tpl_id, (category, thumbnail, name) in TEMPLATE_CATALOG.items():
