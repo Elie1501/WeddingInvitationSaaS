@@ -22,6 +22,12 @@ onMounted(() => {
 });
 
 const handleGoogleSuccess = async ({ isNewUser } = {}) => {
+  // Compte déjà existant → connexion directe, pas de réinscription/paiement
+  if (!isNewUser) {
+    router.push(auth.user?.is_admin ? '/admin/users' : '/dashboard');
+    return;
+  }
+  // Nouveau compte → sélection du plan via paiement Stripe
   try {
     const response = await api.post('/payments/create-checkout-session', {
       plan_name: selectedPlan.value
