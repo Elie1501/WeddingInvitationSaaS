@@ -63,20 +63,11 @@ export const DEMO_CONFIGS = {
     media: { image_url: '', music_url: '', splash_url: '' },
     show_countdown: true, show_splash: false,
   },
-  'wabi-sabi': {
-    name: 'Wabi-Sabi', isPremium: true,
-    layout: 'wabi-sabi',
+  'tel-aviv': {
+    name: 'Tel Aviv', isPremium: false,
+    layout: 'tel-aviv',
     sections: FULL_SECTIONS,
-    theme: { background: '#F7F4EE', accent: '#C4718A', text: '#2C2416', fontFamily: 'Cormorant Garamond', titleSize: '3.5rem' },
-    content: { ...BASE, image_url: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=1200' },
-    media: { image_url: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=1200', music_url: '', splash_url: '' },
-    show_countdown: true, show_splash: false,
-  },
-  'noir-eternel': {
-    name: 'Noir Éternel', isPremium: false,
-    layout: 'noir-eternel',
-    sections: FULL_SECTIONS,
-    theme: { background: '#0A0A0A', accent: '#C5A059', text: '#F5F0E8', fontFamily: 'Playfair Display', titleSize: '3.5rem' },
+    theme: { background: '#FBF9F4', accent: '#0038B8', text: '#1A2238', namesColor: '#16203A', countdownColor: '#0038B8', fontFamily: 'Cormorant Garamond', titleSize: '3.5rem' },
     content: { ...BASE },
     media: { image_url: '', music_url: '', splash_url: '' },
     show_countdown: true, show_splash: false,
@@ -85,7 +76,7 @@ export const DEMO_CONFIGS = {
     name: 'Japonais', isPremium: false,
     layout: 'japonais',
     sections: FULL_SECTIONS,
-    theme: { background: '#F8F5F0', accent: '#8B6C42', text: '#2A2016', fontFamily: 'Noto Serif JP', titleSize: '3rem' },
+    theme: { background: '#F7EEE3', accent: '#D14B3D', text: '#2A1E18', fontFamily: 'Shippori Mincho', titleSize: '3rem' },
     content: { ...BASE },
     media: { image_url: '', music_url: '', splash_url: '' },
     show_countdown: true, show_splash: false,
@@ -99,15 +90,6 @@ export const DEMO_CONFIGS = {
     media: { image_url: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200', music_url: '', splash_url: '' },
     show_countdown: true, show_splash: false,
   },
-  'couture': {
-    name: 'Haute Couture', isPremium: true,
-    layout: 'couture',
-    sections: FULL_SECTIONS,
-    theme: { background: '#FAF8F5', accent: '#B5A18A', text: '#1A1612', fontFamily: 'Cormorant Garamond', titleSize: '3.5rem' },
-    content: { ...BASE, image_url: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=1200', image_url_2: 'https://images.unsplash.com/photo-1606216794079-73d0b3eb5d8c?w=1200' },
-    media: { image_url: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=1200', music_url: '', splash_url: '' },
-    show_countdown: true, show_splash: false,
-  },
   'cinema': {
     name: 'Cinéma', isPremium: true,
     layout: 'cinema',
@@ -117,20 +99,11 @@ export const DEMO_CONFIGS = {
     media: { image_url: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200', music_url: '', splash_url: '' },
     show_countdown: true, show_splash: false,
   },
-  'editorial': {
-    name: 'Éditorial', isPremium: true,
-    layout: 'editorial',
-    sections: FULL_SECTIONS,
-    theme: { background: '#F9F9F7', accent: '#1A1A1A', text: '#1A1A1A', fontFamily: 'Jost', titleSize: '3.5rem' },
-    content: { ...BASE, image_url: 'https://images.unsplash.com/photo-1606216794079-73d0b3eb5d8c?w=1200' },
-    media: { image_url: 'https://images.unsplash.com/photo-1606216794079-73d0b3eb5d8c?w=1200', music_url: '', splash_url: '' },
-    show_countdown: true, show_splash: false,
-  },
   'jardin-celeste': {
     name: 'Jardin Céleste', isPremium: false,
     layout: 'jardin-celeste',
     sections: FULL_SECTIONS,
-    theme: { background: '#F5F0F8', accent: '#7B5E8A', text: '#2A1E30', fontFamily: 'Playfair Display', titleSize: '3.5rem' },
+    theme: { background: '#0F2419', accent: '#D9E86B', text: '#F2EBE0', fontFamily: 'Cormorant Upright', titleSize: '3.5rem' },
     content: { ...BASE },
     media: { image_url: '', music_url: '', splash_url: '' },
     show_countdown: true, show_splash: false,
@@ -139,7 +112,7 @@ export const DEMO_CONFIGS = {
     name: 'Empire Abstrait', isPremium: true,
     layout: 'empire-abstrait',
     sections: FULL_SECTIONS,
-    theme: { background: '#F2EDE8', accent: '#C5855A', text: '#1C1410', fontFamily: 'Syne', titleSize: '3.5rem' },
+    theme: { background: '#0E0C18', accent: '#FF6B6B', text: '#EDE9F5', namesColor: '#FFFFFF', countdownColor: '#FF6B6B', fontFamily: 'Space Grotesk', titleSize: '3.5rem' },
     content: { ...BASE },
     media: { image_url: '', music_url: '', splash_url: '' },
     show_countdown: true, show_splash: false,
@@ -153,16 +126,78 @@ export const DEMO_CONFIGS = {
     media: { image_url: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1200', music_url: '', splash_url: '' },
     show_countdown: true, show_splash: false,
   },
+
+  'film': {
+    name: 'Pellicule', isPremium: true,
+    layout: 'film',
+    sections: FULL_SECTIONS,
+    theme: { background: '#F2E9DB', accent: '#C77F4E', text: '#3A2E24', fontFamily: 'Cormorant Garamond', titleSize: '3.5rem' },
+    content: { ...BASE, image_url: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200', intro_text: 'Quelques instants volés, à garder pour toujours.' },
+    media: { image_url: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200', music_url: '', splash_url: '' },
+    show_countdown: true, show_splash: false,
+  },
+
+  // ── Nouveaux templates 2026 ────────────────────────────────────────────────
+  // Ces templates sont auto-portants (toutes les sections incluses dans le composant).
+  // sections: ['hero'] → CardRenderer délègue tout l'affichage au composant.
+
+  'eclipse': {
+    name: 'Éclipse', isPremium: true,
+    layout: 'eclipse',
+    sections: ['hero'],
+    theme: {
+      background: '#1B1430',
+      accent: '#F0A85C',
+      text: '#E8DFF0',
+      namesColor: '#FBF3E8',
+      countdownColor: '#F0A85C',
+      sectionTitleColor: '#F0A85C',
+      fontFamily: 'Fraunces',
+    },
+    content: { ...BASE },
+    sub_events: [
+      { time: '14h00', title: 'Cérémonie civile', location: 'Mairie de Provence' },
+      { time: '16h30', title: 'Cérémonie religieuse', location: 'Chapelle Saint-Pierre', description: 'Accueil des invités à partir de 16h00.' },
+      { time: '19h00', title: 'Vin d\'honneur', location: 'Terrasses du château' },
+      { time: '21h00', title: 'Dîner & soirée', location: 'Grande salle du château' },
+    ],
+    media: { image_url: '', music_url: '', splash_url: '' },
+    show_countdown: true, show_splash: false,
+  },
+
+  'amour': {
+    name: 'Amour', isPremium: false,
+    layout: 'amour',
+    sections: ['hero'],
+    theme: {
+      background: '#FDF1F0',
+      accent: '#D6677A',
+      text: '#4A2E33',
+      namesColor: '#6B2737',
+      countdownColor: '#D6677A',
+      sectionTitleColor: '#D6677A',
+      fontFamily: 'Cormorant Garamond',
+    },
+    content: { ...BASE },
+    sub_events: [
+      { time: '14h00', title: 'Cérémonie civile', location: 'Mairie de Provence' },
+      { time: '16h30', title: 'Cérémonie religieuse', location: 'Chapelle Saint-Pierre', description: 'Accueil des invités à partir de 16h00.' },
+      { time: '19h00', title: 'Vin d\'honneur', location: 'Terrasses du château' },
+      { time: '21h00', title: 'Dîner & soirée', location: 'Grande salle du château' },
+    ],
+    media: { image_url: '', music_url: '', splash_url: '' },
+    show_countdown: true, show_splash: false,
+  },
+
 };
 
 // Liste ordonnée pour la section landing (6 templates en vedette)
 export const LANDING_TEMPLATES = [
-  { id: 'riviera-blanche', name: 'Riviera Blanche', isPremium: false },
-  { id: 'velvet-noir',     name: 'Velvet Noir',     isPremium: true  },
-  { id: 'gatsby',          name: 'Art Déco',         isPremium: true  },
-  { id: 'celestial',       name: 'Céleste',          isPremium: true  },
-  { id: 'wabi-sabi',       name: 'Wabi-Sabi',        isPremium: true  },
-  { id: 'noir-eternel',    name: 'Noir Éternel',     isPremium: false },
+  { id: 'riviera-blanche', name: 'Riviera Blanche', isPremium: false, image: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=600' },
+  { id: 'velvet-noir',     name: 'Velvet Noir',     isPremium: true,  image: 'https://images.unsplash.com/photo-1549416878-b5a76567bec9?auto=format&fit=crop&q=80&w=600' },
+  { id: 'gatsby',          name: 'Art Déco',         isPremium: true,  image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=600' },
+  { id: 'celestial',       name: 'Céleste',          isPremium: true,  image: 'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?auto=format&fit=crop&q=80&w=600' },
+  { id: 'tel-aviv',        name: 'Tel Aviv',         isPremium: false, image: 'https://images.unsplash.com/photo-1602002418082-dd4a3f5b1aef?auto=format&fit=crop&q=80&w=600' },
 ];
 
 // Config miniature : sections réduite au hero, splash désactivé

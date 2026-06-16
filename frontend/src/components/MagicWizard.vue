@@ -1,13 +1,11 @@
 <script setup>
 import { ref, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import CardRenderer from './card/CardRenderer.vue';
 import { useWizardStore } from '../stores/wizard.js';
-import { DEMO_CONFIGS, DEMO_EVENT } from '../data/demoConfigs.js';
 
 const router = useRouter();
 const wizard = useWizardStore();
-wizard.step = 1; // toujours démarrer à l'étape 1
+wizard.step = 1;
 
 // ─── Transition directionnelle ────────────────────────────────────────────────
 const direction = ref(1); // 1 = avant, -1 = arrière
@@ -26,36 +24,7 @@ const finish = (style = null) => {
   router.push('/templates');
 };
 
-// ─── Preview live carte (étape 1) ─────────────────────────────────────────────
-const INNER_W    = 400;
-const PREVIEW_W  = 220;
-const previewScale = PREVIEW_W / INNER_W; // 0.55
-
-const previewConfig = computed(() => {
-  const base = DEMO_CONFIGS['riviera-blanche'];
-  const g = wizard.groomName || 'Prénom 1';
-  const b = wizard.brideName || 'Prénom 2';
-  return {
-    ...base,
-    sections:       ['hero'],
-    show_splash:    false,
-    show_countdown: false,
-    content: {
-      ...base.content,
-      names:        `${g} & ${b}`,
-      monogram:     `${g[0] || 'P'} & ${b[0] || 'P'}`,
-      splash_title: `${g} & ${b}`,
-    },
-  };
-});
-
-const previewEvent = computed(() => ({
-  ...DEMO_EVENT,
-  groom_name: wizard.groomName || 'Prénom 1',
-  bride_name: wizard.brideName || 'Prénom 2',
-}));
-
-// ─── Date minimum = aujourd'hui ───────────────────────────────────────────────
+// ─── Date minimum = aujourd'hui
 const today     = new Date().toISOString().split('T')[0];
 const dateError = ref('');
 
@@ -162,21 +131,21 @@ const canStep3 = computed(() => !!wizard.location.trim());
                ÉTAPE 1 — Prénoms + preview live
           ───────────────────────────────────────────────────────────────── -->
           <div v-if="wizard.step === 1"
-               class="flex flex-col lg:flex-row items-center lg:items-start gap-12 lg:gap-16">
+               class="flex flex-col items-center">
 
             <!-- Formulaire -->
-            <div class="flex-1 space-y-10 text-center lg:text-left">
+            <div class="w-full max-w-xl space-y-10 text-center">
               <div class="space-y-3">
                 <span class="text-[#C5A059] tracking-[0.3em] text-xs uppercase">L'Identité</span>
                 <h2 class="text-4xl md:text-5xl text-[#1A1A1A] leading-tight">
-                  Qui sont les deux étoiles de cette célébration ?
+                  À qui est dédiée cette magnifique journée ?
                 </h2>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="space-y-2">
                   <label class="block text-[10px] uppercase tracking-widest text-gray-400">
-                    Prénom 1
+                    Prénom 1 (La Mariée)
                   </label>
                   <input
                     v-model="wizard.groomName"
@@ -189,7 +158,7 @@ const canStep3 = computed(() => !!wizard.location.trim());
                 </div>
                 <div class="space-y-2">
                   <label class="block text-[10px] uppercase tracking-widest text-gray-400">
-                    Prénom 2
+                    Prénom 2 (La Marié)
                   </label>
                   <input
                     v-model="wizard.brideName"
@@ -213,28 +182,6 @@ const canStep3 = computed(() => !!wizard.location.trim());
               </button>
             </div>
 
-            <!-- Preview live (desktop uniquement) -->
-            <div class="hidden lg:flex flex-col items-center shrink-0" aria-hidden="true">
-              <div class="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-gray-100"
-                   :style="{ width: PREVIEW_W + 'px', aspectRatio: '3/4' }">
-                <div class="absolute top-0 left-0 pointer-events-none"
-                     :style="{
-                       width:           INNER_W + 'px',
-                       transformOrigin: 'top left',
-                       transform:       `scale(${previewScale})`,
-                     }">
-                  <CardRenderer
-                    :config="previewConfig"
-                    :event="previewEvent"
-                    :subEvents="[]"
-                    :selectedBlock="null"
-                  />
-                </div>
-              </div>
-              <p class="mt-3 text-[9px] uppercase tracking-[0.3em] text-gray-300 text-center font-sans">
-                Aperçu en temps réel
-              </p>
-            </div>
           </div>
 
           <!-- ─────────────────────────────────────────────────────────────────
@@ -245,7 +192,7 @@ const canStep3 = computed(() => !!wizard.location.trim());
             <div class="space-y-3">
               <span class="text-[#C5A059] tracking-[0.3em] text-xs uppercase">Le Temps</span>
               <h2 class="text-4xl md:text-5xl text-[#1A1A1A] leading-tight">
-                À quel moment le monde s'arrêtera-t-il pour vous dire OUI ?
+                Quel est le moment tant attendu où vous vous direz enfin OUI ?
               </h2>
             </div>
 
@@ -286,7 +233,7 @@ const canStep3 = computed(() => !!wizard.location.trim());
             <div class="space-y-3">
               <span class="text-[#C5A059] tracking-[0.3em] text-xs uppercase">Le Lieu</span>
               <h2 class="text-4xl md:text-5xl text-[#1A1A1A] leading-tight">
-                Où allez-vous ancrer vos souvenirs ?
+                Dans quel lieu magique vos souvenirs prendront-ils vie ?
               </h2>
             </div>
 
@@ -351,7 +298,7 @@ const canStep3 = computed(() => !!wizard.location.trim());
             <div class="space-y-3">
               <span class="text-[#C5A059] tracking-[0.3em] text-xs uppercase">L'Ambiance</span>
               <h2 class="text-4xl md:text-5xl text-[#1A1A1A] leading-tight">
-                Quelle atmosphère souhaitez-vous respirer ?
+                Quel ton souhaitez-vous donner à cette journée unique ?
               </h2>
             </div>
 
@@ -387,7 +334,7 @@ const canStep3 = computed(() => !!wizard.location.trim());
     <!-- Citation de fond -->
     <div class="absolute bottom-8 left-0 right-0 text-center
                 text-gray-300 italic text-xs tracking-widest opacity-50 font-sans px-4">
-      "Le design est l'ambassadeur silencieux de votre amour."
+      "L'esthétique de ce jour sera le miroir de votre complicité."
     </div>
   </div>
 </template>

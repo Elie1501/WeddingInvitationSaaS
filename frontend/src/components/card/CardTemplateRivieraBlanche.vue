@@ -35,43 +35,43 @@ const monogram = computed(() => {
 </script>
 
 <template>
-  <div class="hero-riviera min-h-dvh relative overflow-hidden flex flex-col justify-center px-6 md:px-20 py-20"
-       :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
-    <div class="grid md:grid-cols-2 gap-12 items-center max-w-7xl mx-auto w-full">
-      
-      <!-- GAUCHE : CONTENU -->
-      <div class="order-2 md:order-1 space-y-10 text-center md:text-left animate-slideRight">
-        <div class="inline-block text-white px-4 py-1 text-[10px] font-bold tracking-[0.4em] uppercase" :style="{ backgroundColor: theme.accent }">
-          SAVE THE DATE
-        </div>
+  <div class="hero-riviera relative overflow-clip flex flex-col justify-center px-6"
+      >
+    <div class="riviera-layout flex flex-col gap-12 items-center max-w-7xl mx-auto w-full">
 
-        <h1 class="template-title italic" :style="{ color: 'var(--card-text)' }">
-          {{ displayNames }}
-        </h1>
-
-        <p class="template-body max-w-md font-light leading-relaxed opacity-70" :style="{ color: 'var(--card-text)' }">
-          {{ content.intro_text || 'Nous serions honorés de votre présence pour célébrer notre union.' }}
-        </p>
-
-        <div class="space-y-2 pt-6">
-          <p class="text-xs tracking-tighter" :style="{ color: 'var(--card-accent)' }">{{ content.date_display || '15.06.2026' }}</p>
-          <p v-if="content.address" class="template-label" :style="{ color: 'var(--card-text)' }">{{ content.address }}</p>
-        </div>
-      </div>
-
-      <!-- DROITE : SVG ILLUSTRATION -->
-      <div class="order-1 md:order-2 flex justify-center relative overflow-hidden">
+      <!-- ILLUSTRATION SVG -->
+      <div class="flex justify-center relative overflow-clip w-full">
         <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none scale-150">
-           <span class="text-[25vw] italic" :style="{ color: '#1C2B3A', fontFamily: 'var(--card-font)' }">{{ monogram }}</span>
+           <span class="text-[25cqi] italic" :style="{ color: 'var(--color-names)', fontFamily: 'var(--card-font)' }">{{ monogram }}</span>
         </div>
-        
-        <svg class="w-full max-w-[320px] h-auto" viewBox="0 0 200 400" fill="none">
+
+        <svg class="w-full max-w-[150px] h-auto" viewBox="0 0 200 400" fill="none">
           <!-- Branche principale -->
-          <path d="M100 400 Q120 300 80 200 T100 0" :stroke="theme.accent" stroke-width="1" class="olive-path" :class="{ 'drawn': isDrawn }" />
+          <path d="M100 400 Q120 300 80 200 T100 0" stroke="var(--color-countdown)" stroke-width="1" class="olive-path" :class="{ 'drawn': isDrawn }" />
           <!-- Feuilles -->
           <path d="M100 300 Q140 280 130 240 Q110 250 100 300" fill="#C8D8C0" class="leaf opacity-0" :class="{ 'fade-in': isDrawn }" />
           <path d="M100 150 Q60 130 70 90 Q90 100 100 150" fill="#D4A853" class="leaf opacity-0" :class="{ 'fade-in': isDrawn }" />
         </svg>
+      </div>
+
+      <!-- CONTENU -->
+      <div class="space-y-10 text-center animate-slideRight">
+        <div class="inline-block text-white px-4 py-1 text-[10px] font-bold tracking-[0.4em] uppercase" :style="{ backgroundColor: 'var(--color-countdown)' }">
+          SAVE THE DATE
+        </div>
+
+        <h1 class="template-title italic" :style="{ color: 'var(--color-text)' }">
+          {{ displayNames }}
+        </h1>
+
+        <p class="template-body max-w-md mx-auto font-light leading-relaxed opacity-70" :style="{ color: 'var(--color-text)' }">
+          {{ content.intro_text || 'Nous serions honorés de votre présence pour célébrer notre union.' }}
+        </p>
+
+        <div class="space-y-2 pt-6">
+          <p class="text-xs tracking-tighter" :style="{ color: 'var(--color-countdown)' }">{{ content.date_display || '15.06.2026' }}</p>
+          <p v-if="content.address" class="template-label" :style="{ color: 'var(--color-text)' }">{{ content.address }}</p>
+        </div>
       </div>
     </div>
 
@@ -87,11 +87,13 @@ const monogram = computed(() => {
 
 .hero-riviera {
   font-family: var(--card-font, 'Jost'), sans-serif;
-  background: var(--card-bg, #FAFAF8);
-  color: var(--card-text, #1C2B3A);
+  background: var(--color-bg, #FAFAF8);
+  color: var(--color-text, #1C2B3A);
+  padding-top: clamp(56px, 15cqi, 100px);
+  padding-bottom: clamp(70px, 18cqi, 120px);
 }
-.template-title { font-family: var(--card-font, 'Libre Baskerville'), serif; font-size: var(--size-names, clamp(3rem, 10vw, 5.5rem)); line-height: 1.1; }
-.template-body { font-size: clamp(1.1rem, 2.5vw, 1.25rem); }
+.template-title { font-family: var(--card-font, 'Libre Baskerville'), serif; font-size: var(--size-names, clamp(3rem, 10cqi, 5.5rem)); line-height: 1.1; }
+.template-body { font-size: clamp(1.1rem, 2.5cqi, 1.25rem); }
 .template-label { font-size: 0.75rem; letter-spacing: 0.2em; font-weight: 500; }
 
 .olive-path { stroke-dasharray: 600; stroke-dashoffset: 600; transition: stroke-dashoffset 3s ease-out; }

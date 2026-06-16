@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted, inject } from 'vue';
+import { computed, ref, onMounted, inject } from 'vue';
 import { getContrastColor } from '../../service/colorUtils';
 
 const props = defineProps({
@@ -12,229 +12,216 @@ const emit = defineEmits(['click-image']);
 const isEditorMode = inject('isEditorMode', false);
 
 const theme = computed(() => {
-  const bgColor = props.config.theme?.background || '#0D0D0D';
-  const textColor = getContrastColor(bgColor);
-
+  const bgColor = props.config.theme?.background || '#F2E9DB';
   return {
-    black: bgColor,
-    cream: textColor,
-    sepia: props.config.theme?.accent || '#8B6914',
-    goldRose: '#C9956C',
-    accent: props.config.theme?.accent || '#8B6914',
-    text: textColor
+    bg: bgColor,
+    text: props.config.theme?.text || getContrastColor(bgColor),
+    accent: props.config.theme?.accent || '#C77F4E',
   };
 });
 
 const displayNames = computed(() => props.config.content?.names || `${props.event.groom_name} & ${props.event.bride_name}`);
-const displayDate = computed(() => props.config.content?.date_display || (props.event.date ? new Date(props.event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'GRAND ÉCRAN 2026'));
+const displayDate = computed(() => props.config.content?.date_display || (props.event.date ? new Date(props.event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '15 juin 2026'));
 const displayLocation = computed(() => props.config.content?.address || props.event.location || '');
 
-// Mouse spotlight effect
-const spotlightPos = ref({ x: 50, y: 50 });
-const handleMouseMove = (e) => {
-  spotlightPos.value = {
-    x: (e.clientX / window.innerWidth) * 100,
-    y: (e.clientY / window.innerHeight) * 100
-  };
-};
-
-onMounted(() => {
-  window.addEventListener('mousemove', handleMouseMove);
-});
-onUnmounted(() => {
-  window.removeEventListener('mousemove', handleMouseMove);
-});
+const heroImg  = computed(() => props.config.content?.image_url   || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800');
+const heroImg2 = computed(() => props.config.content?.image_url_2 || 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800');
 
 const isLoaded = ref(false);
 onMounted(() => {
-  setTimeout(() => isLoaded.value = true, 100);
+  setTimeout(() => isLoaded.value = true, 120);
 });
 </script>
 
 <template>
-  <div class="film-template" :style="{
-      '--card-bg': theme.black,
-      '--card-text': theme.cream,
-      '--card-accent': theme.accent,
-      '--spot-x': spotlightPos.x + '%',
-      '--spot-y': spotlightPos.y + '%',
-    }">
+  <div class="film-template">
 
-    <!-- Film Grain & Projector Overlay -->
-    <div class="film-grain"></div>
-    <div class="projector-spotlight"></div>
-
-    <!-- Hero Section: Film Reel -->
+    <!-- Hero : album argentique -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero-section">
-        <div class="film-perforations left"></div>
-        <div class="film-perforations right"></div>
+      <div class="paper-grain" aria-hidden="true"></div>
 
-        <div class="hero-frame" :class="{ 'frame-shake': isLoaded }">
-            <div class="vignette"></div>
-            <img
-              :src="config.content?.image_url || 'https://images.unsplash.com/photo-1437603565260-19658b689228?w=1200'"
-              class="sepia-photo hero-img"
-              :class="{ 'cursor-pointer ring-0 hover:ring-2 hover:ring-blue-400 transition-all': isEditorMode }"
-              @click="isEditorMode ? emit('click-image', 'image_url') : null"
-            >
+      <div class="album" :class="{ loaded: isLoaded }">
+        <p class="film-eyebrow">PELLICULE · {{ (displayDate.match(/\d{4}/) || ['2026'])[0] }}</p>
 
-            <div class="hero-overlay-content">
-                <p class="film-intro">UNE PRODUCTION ORIGINALE</p>
-                <h1 class="main-title ArtDeco">{{ displayNames }}</h1>
-                <div class="film-line"></div>
-                <p class="film-date">{{ displayDate }}</p>
+        <!-- Pile de polaroids -->
+        <div class="photo-stack">
+          <div class="polaroid p-back" aria-hidden="true">
+            <div class="tape tape-2"></div>
+            <div class="ph-frame">
+              <img
+                :src="heroImg2"
+                class="ph-img"
+                :class="{ 'cursor-pointer hover:opacity-90 transition': isEditorMode }"
+                @click="isEditorMode ? emit('click-image', 'image_url_2') : null"
+              >
             </div>
+          </div>
+          <div class="polaroid p-front">
+            <div class="tape tape-1"></div>
+            <div class="ph-frame">
+              <img
+                :src="heroImg"
+                class="ph-img"
+                :class="{ 'cursor-pointer hover:opacity-90 transition': isEditorMode }"
+                @click="isEditorMode ? emit('click-image', 'image_url') : null"
+              >
+            </div>
+            <p class="ph-caption">{{ displayNames }}</p>
+          </div>
         </div>
+
+        <h1 class="main-title">{{ displayNames }}</h1>
+        <div class="film-line"></div>
+        <p class="film-date">{{ displayDate }}</p>
+        <p v-if="displayLocation" class="film-loc">{{ displayLocation }}</p>
+        <p class="film-intro">{{ config.content?.intro_text || 'Quelques instants volés, à garder pour toujours.' }}</p>
+      </div>
     </div>
 
-    <!-- Content Sections -->
-    <div v-if="mode === 'full'" class="body-content">
-
-        <!-- Feature Presentation -->
-        <section class="presentation-section">
-            <div class="container">
-                <div class="frame-border p-12">
-                    <h2 class="section-title ArtDeco">{{ config.content?.section_title || 'Première Mondiale' }}</h2>
-                    <p class="description italic">{{ config.content?.intro_text || '"Une histoire d\'amour pour l\'éternité."' }}</p>
-                    <div class="film-divider-fancy"></div>
-                    <div class="details-grid">
-                        <div class="d-item">
-                            <span class="d-label">DATE</span>
-                            <p>{{ displayDate }}</p>
-                        </div>
-                        <div v-if="displayLocation" class="d-item">
-                            <span class="d-label">LIEU</span>
-                            <p>{{ displayLocation }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Gallery style "Contact Sheet" -->
-        <section class="contact-sheet py-20">
-            <div class="sheet-grid">
-                <div v-for="(src, i) in [
-                  config.content?.image_url   || 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400',
-                  config.content?.image_url_2 || 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400',
-                  config.content?.image_url_2 || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400',
-                ]" :key="i" class="sheet-item">
-                    <div class="frame-num">{{ 100 + i + 1 }}</div>
-                    <img
-                      :src="src"
-                      class="sepia-photo"
-                      :class="{ 'cursor-pointer ring-0 hover:ring-2 hover:ring-blue-400 transition-all': isEditorMode }"
-                      @click="isEditorMode ? emit('click-image', i === 0 ? 'image_url' : 'image_url_2') : null"
-                    >
-                </div>
-            </div>
-        </section>
-    </div>
   </div>
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
-
-.ArtDeco { font-family: var(--card-font, 'Cormorant SC'), serif; letter-spacing: 0.1em; }
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400&display=swap');
 
 .film-template {
-  background-color: var(--card-bg);
-  color: var(--card-text);
+  background-color: var(--color-bg, #F2E9DB);
+  color: var(--color-text, #3A2E24);
   min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip;
+  font-family: var(--card-font, 'Jost'), sans-serif;
 }
 
-/* Film Grain Overlay */
-.film-grain {
+/* Léger grain papier */
+.paper-grain {
   position: absolute;
   inset: 0;
-  z-index: 100;
+  z-index: 0;
   pointer-events: none;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
-
-/* Projector Spotlight Effect */
-.projector-spotlight {
-    position: absolute;
-    inset: 0;
-    z-index: 90;
-    pointer-events: none;
-    background: radial-gradient(circle 300px at var(--spot-x) var(--spot-y), transparent 0%, rgba(0,0,0,0.8) 100%);
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .hero-section {
-    height: 100vh;
-    padding: 20px 60px;
-    position: relative;
+  min-height: auto;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: clamp(56px, 16cqi, 110px) clamp(20px, 6cqi, 48px);
 }
 
-.film-perforations {
-    position: absolute;
-    top: 0; bottom: 0; width: 40px;
-    background-image: radial-gradient(circle, var(--card-bg) 50%, transparent 50%);
-    background-size: 20px 40px;
-    background-repeat: repeat-y;
-}
-.film-perforations.left { left: 10px; }
-.film-perforations.right { right: 10px; }
+.album { width: 100%; max-width: 520px; }
 
-.hero-frame {
-    width: 100%; height: 100%; border: 1px solid rgba(255,248,240,0.2); position: relative; overflow: hidden;
+.film-eyebrow {
+  font-size: clamp(0.55rem, 2cqi, 0.7rem);
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--color-countdown, #C77F4E);
+  opacity: 0;
+  margin-bottom: clamp(28px, 8cqi, 48px);
+  animation: fadeUp 0.9s ease-out 0.1s forwards;
 }
 
-.frame-shake { animation: shake 0.2s infinite; }
-@keyframes shake {
-    0% { transform: translate(0.5px, 0.5px); }
-    50% { transform: translate(-0.5px, -0.5px); }
-    100% { transform: translate(0.5px, 0.5px); }
+/* Pile de photos instantanées */
+.photo-stack {
+  position: relative;
+  width: clamp(180px, 56cqi, 260px);
+  margin: 0 auto clamp(36px, 9cqi, 56px);
+  aspect-ratio: 1 / 1.18;
 }
 
-.vignette { position: absolute; inset: 0; background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.7) 100%); z-index: 2; }
-.sepia-photo { filter: sepia(1) contrast(1.1) brightness(0.9); }
-.hero-img { width: 100%; height: 100%; object-fit: cover; }
-
-.hero-overlay-content {
-    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; text-align: center;
+.polaroid {
+  position: absolute;
+  inset: 0;
+  background: #FBF8F1;
+  padding: 10px 10px 0;
+  box-shadow: 0 12px 30px rgba(58, 46, 36, 0.22);
+}
+.ph-frame { width: 100%; aspect-ratio: 1 / 1; overflow: clip; background: #ddd; }
+.ph-img { width: 100%; height: 100%; object-fit: cover; filter: sepia(0.35) saturate(1.05) contrast(1.02); display: block; }
+.ph-caption {
+  font-family: 'Caveat', cursive;
+  font-size: clamp(1.1rem, 4cqi, 1.5rem);
+  color: #4a3b2e;
+  padding: 8px 4px 12px;
+  line-height: 1;
 }
 
-.film-intro { font-size: 0.7rem; letter-spacing: 0.5em; margin-bottom: 20px; opacity: 0.6; }
-.main-title { font-size: var(--size-names, 5rem); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
-.film-line { width: 60px; height: 2px; background: var(--card-accent); margin: 30px 0; }
-.film-date { font-size: 1.2rem; letter-spacing: 0.3em; font-weight: 300; }
+.p-back {
+  transform: rotate(-7deg) translate(-14px, 6px);
+  opacity: 0;
+}
+.p-front {
+  transform: rotate(4deg);
+  opacity: 0;
+}
+.album.loaded .p-back  { animation: dropIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s forwards; }
+.album.loaded .p-front { animation: dropInFront 0.9s cubic-bezier(0.16,1,0.3,1) 0.45s forwards; }
 
-.body-content { background-color: var(--card-text); color: var(--card-bg); position: relative; z-index: 5; }
-.container { max-width: 800px; margin: 0 auto; padding: 0 40px; }
+/* Scotch */
+.tape {
+  position: absolute;
+  width: 64px;
+  height: 22px;
+  background: color-mix(in srgb, var(--color-countdown, #C77F4E) 22%, #fff);
+  opacity: 0.55;
+  top: -10px;
+  z-index: 3;
+}
+.tape-1 { left: 50%; transform: translateX(-50%) rotate(-3deg); }
+.tape-2 { left: 30%; transform: rotate(6deg); }
 
-.presentation-section { padding: 80px 0; }
-.frame-border { border: 1px solid var(--card-bg); border-style: double; border-width: 6px; text-align: center; }
-.section-title { font-size: 3.5rem; margin-bottom: 10px; }
-.description { font-size: 1.1rem; line-height: 1.7; opacity: 0.75; margin-top: 10px; }
-.film-divider-fancy { height: 1px; background: var(--card-bg); width: 100px; margin: 30px auto; position: relative; }
-.film-divider-fancy::after { content: '◈'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--card-text); padding: 0 10px; }
-
-.details-grid { display: flex; justify-content: center; gap: 60px; margin-top: 40px; }
-.d-label { font-size: 0.7rem; opacity: 0.5; letter-spacing: 3px; }
-
-.sheet-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-.sheet-item { width: 200px; position: relative; padding: 10px; background: #000; }
-.frame-num { position: absolute; top: 0; left: 5px; color: #fff; font-size: 8px; font-family: monospace; }
-
-@media (max-width: 768px) {
-    .main-title { font-size: 14vw; line-height: 1; }
-    .hero-section { padding: 10px 40px; }
-    .film-perforations { width: 30px; background-size: 15px 30px; }
-    .film-date { font-size: 0.9rem; letter-spacing: 0.2em; }
-    .section-title { font-size: 12vw; }
-    .sheet-item { width: calc(50% - 10px); }
-    .container { padding: 0 20px; }
-    .details-grid { gap: 20px; flex-wrap: wrap; }
-    .frame-border { padding: 30px 16px; }
+.main-title {
+  font-family: var(--card-font, 'Cormorant Garamond'), serif;
+  font-style: italic;
+  font-size: var(--size-names, clamp(2.4rem, 13cqi, 4.5rem));
+  line-height: 1.05;
+  color: var(--color-names, #2E2419);
+  opacity: 0;
+  animation: fadeUp 1s ease-out 0.6s forwards;
 }
 
-@media (max-width: 480px) {
-    .main-title { font-size: 16vw; }
+.film-line {
+  width: 48px; height: 1px;
+  background: var(--color-countdown, #C77F4E);
+  margin: clamp(18px, 5cqi, 28px) auto;
+  opacity: 0;
+  animation: fadeUp 1s ease-out 0.7s forwards;
 }
+
+.film-date {
+  font-size: clamp(0.7rem, 2.6cqi, 0.85rem);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: fadeUp 1s ease-out 0.8s forwards;
+}
+.film-loc {
+  font-size: clamp(0.6rem, 2.2cqi, 0.72rem);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--color-countdown, #C77F4E);
+  margin-top: 8px;
+  opacity: 0;
+  animation: fadeUp 1s ease-out 0.9s forwards;
+}
+.film-intro {
+  font-family: var(--card-font, 'Cormorant Garamond'), serif;
+  font-style: italic;
+  font-size: clamp(0.95rem, 3cqi, 1.15rem);
+  max-width: 26ch;
+  margin: clamp(22px, 6cqi, 32px) auto 0;
+  opacity: 0;
+  animation: fadeUp 1s ease-out 1s forwards;
+  color: color-mix(in srgb, var(--color-text, #3A2E24) 75%, transparent);
+}
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes dropIn { from { opacity: 0; transform: rotate(-14deg) translate(-30px, -30px); } to { opacity: 1; transform: rotate(-7deg) translate(-14px, 6px); } }
+@keyframes dropInFront { from { opacity: 0; transform: rotate(12deg) translateY(-40px); } to { opacity: 1; transform: rotate(4deg) translateY(0); } }
 </style>

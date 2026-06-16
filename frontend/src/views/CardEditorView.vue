@@ -20,13 +20,11 @@ const TEMPLATE_FIELDS = {
     { key: 'dress_code',   label: 'Tenue vestimentaire',  type: 'text' },
     { key: 'image_url',    label: 'Image de couverture',  type: 'image' },
   ],
-  'noir-eternel':     [
+  'tel-aviv':         [
     { key: 'names',         label: 'Prénoms',              type: 'text' },
-    { key: 'monogram',      label: 'Monogramme',           type: 'text', placeholder: 'E & L' },
     { key: 'date_display',  label: 'Date affichée',         type: 'text', placeholder: '15 JUIN 2026' },
     { key: 'address',       label: 'Lieu',                  type: 'text' },
     { key: 'intro_text',    label: 'Texte d\'introduction', type: 'textarea' },
-    { key: 'divider_symbol',label: 'Symbole décoratif',     type: 'text', placeholder: '✦' },
   ],
   'riviera-blanche':  [
     { key: 'names',        label: 'Prénoms',             type: 'text' },
@@ -101,7 +99,6 @@ const TEMPLATE_FIELDS = {
   ],
   'japonais':         null, // alias → arch
   'riviera':          null, // alias → split
-  'brutaliste':       null, // alias → es
   'film':             null, // alias → typography-focus
   'cinema': [
     { key: 'names',        label: 'Prénoms',              type: 'text' },
@@ -131,13 +128,6 @@ const TEMPLATE_FIELDS = {
     { key: 'dress_code',   label: 'Tenue vestimentaire',   type: 'text' },
     { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
   ],
-  'editorial': [
-    { key: 'names',        label: 'Prénoms',              type: 'text' },
-    { key: 'date_display', label: 'Date affichée',         type: 'text' },
-    { key: 'address',      label: 'Lieu',                  type: 'text' },
-    { key: 'intro_text',   label: 'Texte éditorial',       type: 'textarea' },
-    { key: 'image_url',    label: 'Photo éditoriale',      type: 'image' },
-  ],
   'velvet-noir': [
     { key: 'names',        label: 'Prénoms',              type: 'text' },
     { key: 'date_display', label: 'Date affichée',         type: 'text' },
@@ -150,7 +140,6 @@ const TEMPLATE_FIELDS = {
 // Résoudre les alias
 TEMPLATE_FIELDS['japonais']   = TEMPLATE_FIELDS['arch'];
 TEMPLATE_FIELDS['riviera']    = TEMPLATE_FIELDS['split'];
-TEMPLATE_FIELDS['brutaliste'] = TEMPLATE_FIELDS['es'];
 TEMPLATE_FIELDS['film']       = TEMPLATE_FIELDS['typography-focus'];
 import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';
@@ -220,7 +209,7 @@ const config = reactive({
   sections: ['hero', 'countdown', 'program', 'rsvp', 'footer'],
   theme: {
     background: '#FAFAF8', accent: '#2E6E8E', text: '#1C2B3A',
-    titleColor: '#1C2B3A', namesColor: '#2E6E8E',
+    sectionTitleColor: '#1C2B3A', namesColor: '#2E6E8E', countdownColor: '',
     fontFamily: 'Playfair Display', textScale: 'medium'
   },
   content: {
@@ -447,7 +436,7 @@ const contextFields = computed(() => {
       label: 'Formulaire de confirmation',
       fields: [
         { type: 'text', label: 'Titre RSVP', model: 'content.rsvp_title' },
-        { type: 'text', label: 'Date limite', model: 'content.rsvp_deadline_text' }
+        { type: 'textarea', label: 'Descriptif', model: 'content.rsvp_deadline_text', placeholder: 'Ex : Réponse souhaitée avant le 1er mai.' }
       ]
     },
     'countdown': {
@@ -1187,9 +1176,9 @@ onUnmounted(() => {
               Palette de couleurs
             </h3>
             <div class="grid grid-cols-2 gap-3">
-              <div v-for="(label, key) in { background: 'Fond', text: 'Texte', titleColor: 'Titres', namesColor: 'Prénoms', accent: 'Sous-titre' }" :key="key"
+              <div v-for="(label, key) in { namesColor: 'Noms', countdownColor: 'Compte à rebours', sectionTitleColor: 'Titre', text: 'Textes', background: 'Fond' }" :key="key"
                    class="bg-white border border-gray-200 p-2 rounded-xl flex items-center">
-                <input type="color" v-model="config.theme[key]" class="w-8 h-8 rounded-lg cursor-pointer border-0 p-0 bg-transparent">
+                <input type="color" :value="config.theme[key] || '#2E6E8E'" @input="config.theme[key] = $event.target.value" class="w-8 h-8 rounded-lg cursor-pointer border-0 p-0 bg-transparent">
                 <span class="ml-2 text-[10px] font-bold uppercase text-gray-500">{{ label }}</span>
               </div>
             </div>

@@ -102,7 +102,7 @@ const parallaxStyle = (factor) => ({
 </script>
 
 <template>
-  <div class="celestial-wrap" :style="{ '--card-bg': theme.bg, '--card-text': theme.text, '--card-accent': theme.accent }">
+  <div class="celestial-wrap">
 
     <!-- ── HERO ── -->
     <div v-if="mode === 'hero' || mode === 'full'" class="hero">
@@ -120,7 +120,7 @@ const parallaxStyle = (factor) => ({
             <line
               :x1="node[0]*100" :y1="node[1]*100"
               :x2="CONSTELLATION_NODES[i+1][0]*100" :y2="CONSTELLATION_NODES[i+1][1]*100"
-              :stroke="theme.accent"
+              stroke="var(--color-countdown)"
               stroke-width="0.15"
               :stroke-dasharray="40"
               :stroke-dashoffset="Math.max(0, 40 - 40 * Math.max(0, constellProgress - i/CONSTELLATION_NODES.length) * CONSTELLATION_NODES.length)"
@@ -129,7 +129,7 @@ const parallaxStyle = (factor) => ({
           </template>
           <circle
             :cx="node[0]*100" :cy="node[1]*100" r="0.5"
-            :fill="theme.accent"
+            fill="var(--color-countdown)"
             :opacity="constellProgress > i/CONSTELLATION_NODES.length ? 0.9 : 0"
             style="transition: opacity 0.5s"
           />
@@ -145,8 +145,8 @@ const parallaxStyle = (factor) => ({
         <p class="over-text">INVITATION COSMIQUE</p>
         <h1 class="names">{{ displayNames }}</h1>
         <svg class="orbit-ring" viewBox="0 0 200 20" aria-hidden="true">
-          <ellipse cx="100" cy="10" rx="96" ry="7" fill="none" :stroke="theme.accent" stroke-width="0.6" opacity="0.35" />
-          <circle cx="100" cy="3" r="2" :fill="theme.accent" opacity="0.7">
+          <ellipse cx="100" cy="10" rx="96" ry="7" fill="none" stroke="var(--color-countdown)" stroke-width="0.6" opacity="0.35" />
+          <circle cx="100" cy="3" r="2" fill="var(--color-countdown)" opacity="0.7">
             <animateTransform attributeName="transform" type="rotate" from="0 100 10" to="360 100 10" dur="12s" repeatCount="indefinite" />
           </circle>
         </svg>
@@ -182,10 +182,10 @@ const parallaxStyle = (factor) => ({
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@1,300;1,400&display=swap');
 
 .celestial-wrap {
-  background: var(--card-bg);
-  color: var(--card-text);
+  background: var(--color-bg);
+  color: var(--color-text);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
 }
 
@@ -196,7 +196,7 @@ const parallaxStyle = (factor) => ({
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .stars-canvas {
@@ -262,17 +262,17 @@ const parallaxStyle = (factor) => ({
   font-family: var(--card-font, 'Cinzel'), serif;
   font-size: 0.5rem;
   letter-spacing: 0.75em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.7;
   margin-bottom: 24px;
 }
 
 .names {
   font-family: var(--card-font, 'Cinzel'), serif;
-  font-size: var(--size-names, clamp(2.8rem, 14vw, 7.5rem));
+  font-size: var(--size-names, clamp(2.8rem, 14cqi, 7.5rem));
   font-weight: 700;
   letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #fff 30%, var(--card-accent) 70%, #fff 100%);
+  background: linear-gradient(135deg, #fff 30%, var(--color-countdown) 70%, #fff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -298,13 +298,13 @@ const parallaxStyle = (factor) => ({
   font-size: 0.6rem;
   letter-spacing: 0.45em;
   text-transform: uppercase;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   margin-top: 8px;
   opacity: 0.75;
 }
 
 /* Body */
-.body { background: var(--card-bg); }
+.body { background: var(--color-bg); }
 
 .quote-section {
   padding: 80px 40px;
@@ -315,14 +315,14 @@ const parallaxStyle = (factor) => ({
   gap: 22px;
 }
 .quote-star {
-  color: var(--card-accent);
+  color: var(--color-countdown);
   font-size: 1rem;
   opacity: 0.55;
 }
 .quote-text {
   font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
-  font-size: clamp(1.1rem, 3vw, 1.55rem);
+  font-size: clamp(1.1rem, 3cqi, 1.55rem);
   line-height: 1.8;
   opacity: 0.65;
   max-width: 560px;
@@ -341,7 +341,7 @@ const parallaxStyle = (factor) => ({
   font-family: var(--card-font, 'Cinzel'), serif;
   font-size: 0.5rem;
   letter-spacing: 0.55em;
-  color: var(--card-accent);
+  color: var(--color-countdown);
   opacity: 0.65;
   margin-bottom: 10px;
 }

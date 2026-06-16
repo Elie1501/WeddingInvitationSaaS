@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 
 const props = defineProps({
   targetDate: { type: String, required: true },
@@ -26,10 +26,16 @@ const calculateTimeLeft = () => {
   }
 };
 
-onMounted(() => {
+const startTimer = () => {
+  if (timer) clearInterval(timer);
+  isExpired.value = false;
   calculateTimeLeft();
   timer = setInterval(calculateTimeLeft, 1000);
-});
+};
+
+onMounted(startTimer);
+
+watch(() => props.targetDate, startTimer);
 
 onUnmounted(() => { if (timer) clearInterval(timer); });
 

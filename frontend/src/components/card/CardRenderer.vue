@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted, inject } from 'vue';
+import { computed, ref, inject } from 'vue';
 import { getContrastColor } from '../../service/colorUtils';
 import { useCardStyle } from '../../composables/useCardStyle';
 
@@ -7,25 +7,25 @@ import { useCardStyle } from '../../composables/useCardStyle';
 import CardSectionBanner from './CardSectionBanner.vue';
 import CardSectionText from './CardSectionText.vue';
 import CardSectionRSVP from './CardSectionRSVP.vue';
+import CardSectionCountdown from './CardSectionCountdown.vue';
+import CardSectionProgramme from './CardSectionProgramme.vue';
 import CardSplashScreen from './CardSplashScreen.vue';
 
 // Templates (Hero-only refactored)
 import CardTemplateOra from './CardTemplateOra.vue';
 import CardTemplateJaponais from './CardTemplateJaponais.vue';
 import CardTemplateRiviera from './CardTemplateRiviera.vue';
-import CardTemplateBrutaliste from './CardTemplateBrutaliste.vue';
 import CardTemplateFilm from './CardTemplateFilm.vue';
-import CardTemplateNoirEternel from './CardTemplateNoirEternel.vue';
+import CardTemplateTelAviv from './CardTemplateTelAviv.vue';
 import CardTemplateRivieraBlanche from './CardTemplateRivieraBlanche.vue';
 import CardTemplateJardinCeleste from './CardTemplateJardinCeleste.vue';
 import CardTemplateEmpireAbstrait from './CardTemplateEmpireAbstrait.vue';
-import CardTemplateCouture from './CardTemplateCouture.vue';
 import CardTemplateCinema from './CardTemplateCinema.vue';
 import CardTemplateCelestial from './CardTemplateCelestial.vue';
-import CardTemplateWabiSabi from './CardTemplateWabiSabi.vue';
 import CardTemplateGatsby from './CardTemplateGatsby.vue';
-import CardTemplateEditorial from './CardTemplateEditorial.vue';
 import CardTemplateVelvetNoir from './CardTemplateVelvetNoir.vue';
+import CardTemplateEclipse from './CardTemplateEclipse.vue';
+import CardTemplateAmour from './CardTemplateAmour.vue';
 
 const props = defineProps({
   config: {
@@ -100,31 +100,6 @@ const displayData = computed(() => ({
   image: safeConfig.value.media?.image_url || safeConfig.value.content?.image_url || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200'
 }));
 
-// Logic de compte à rebours global
-const timeLeft = ref({ days: 0, hours: 0, mins: 0, secs: 0 });
-let timer = null;
-const updateCountdown = () => {
-  const dateToUse = props.event?.date || safeConfig.value?.content?.date;
-  if (!dateToUse) return;
-  const targetDate = new Date(dateToUse).getTime();
-  const now = new Date().getTime();
-  const diff = targetDate - now;
-  if (diff > 0) {
-    timeLeft.value = {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      mins: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      secs: Math.floor((diff % (1000 * 60)) / 1000)
-    };
-  }
-};
-
-onMounted(() => {
-  updateCountdown();
-  timer = setInterval(updateCountdown, 1000);
-});
-onUnmounted(() => clearInterval(timer));
-
 const theme = computed(() => safeConfig.value.theme);
 const layout = computed(() => safeConfig.value.layout);
 
@@ -138,22 +113,20 @@ const isTemplateHero = (id) => {
 
 const currentTemplate = computed(() => {
   const l = layout.value;
-  if (l === 'noir-eternel') return CardTemplateNoirEternel;
+  if (l === 'tel-aviv') return CardTemplateTelAviv;
   if (l === 'riviera-blanche') return CardTemplateRivieraBlanche;
   if (l === 'jardin-celeste') return CardTemplateJardinCeleste;
   if (l === 'empire-abstrait') return CardTemplateEmpireAbstrait;
   if (l === 'ora') return CardTemplateOra;
   if (l === 'japonais' || l === 'arch') return CardTemplateJaponais;
   if (l === 'riviera' || l === 'split') return CardTemplateRiviera;
-  if (l === 'brutaliste' || l === 'es') return CardTemplateBrutaliste;
   if (l === 'film' || l === 'typography-focus') return CardTemplateFilm;
-  if (l === 'couture') return CardTemplateCouture;
   if (l === 'cinema') return CardTemplateCinema;
   if (l === 'celestial') return CardTemplateCelestial;
-  if (l === 'wabi-sabi') return CardTemplateWabiSabi;
   if (l === 'gatsby') return CardTemplateGatsby;
-  if (l === 'editorial') return CardTemplateEditorial;
   if (l === 'velvet-noir') return CardTemplateVelvetNoir;
+  if (l === 'eclipse') return CardTemplateEclipse;
+  if (l === 'amour') return CardTemplateAmour;
   return null;
 });
 </script>
@@ -172,7 +145,7 @@ const currentTemplate = computed(() => {
   />
 
   <div v-show="!(isEditorMode && selectedBlock === 'splash')"
-       class="card-engine w-full flex flex-col items-center overflow-x-hidden pb-10 relative"
+       class="card-engine w-full flex flex-col items-center pb-10 relative"
        :style="cssVars">
     
     <div v-for="sectionId in sections" :key="sectionId"
@@ -191,27 +164,15 @@ const currentTemplate = computed(() => {
       <!-- BLOCS GÉNÉRIQUES -->
       <CardSectionText v-if="sectionId.startsWith('custom-text')" :id="sectionId" :config="safeConfig" :event="event" />
 
-      <div v-if="sectionId === 'countdown' && safeConfig.show_countdown" class="w-full py-16 text-center z-10 relative" :style="{ color: theme.text, fontFamily: theme.fontFamily }">
-         <p class="font-bold uppercase tracking-[0.5em] mb-8 opacity-40" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">Le grand décompte</p>
-         <div class="flex justify-center items-center space-x-8">
-            <div v-for="(val, label) in { Jours:timeLeft.days, Heures:timeLeft.hours, Min:timeLeft.mins, Sec:timeLeft.secs }" :key="label" class="flex flex-col">
-               <span class="font-light" :style="{ color: theme.accent, fontSize: 'var(--size-countdown, 3rem)', fontFamily: theme.fontFamily }">{{ val }}</span>
-               <span class="uppercase tracking-widest opacity-40 mt-2" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ label }}</span>
-            </div>
-         </div>
-      </div>
+      <CardSectionCountdown
+        v-if="sectionId === 'countdown' && safeConfig.show_countdown"
+        :config="safeConfig" :event="event"
+      />
 
-      <div v-if="sectionId === 'program'" class="w-full py-20 px-8 text-center space-y-12 z-10 relative" :style="{ color: theme.text, fontFamily: theme.fontFamily }">
-        <h2 class="italic" :style="{ fontSize: 'var(--size-headings, 2.5rem)', fontFamily: theme.fontFamily }">Le Programme</h2>
-        <div v-if="subEvents && subEvents.length > 0" class="max-w-xl mx-auto space-y-12">
-          <div v-for="(se, idx) in subEvents" :key="idx" class="space-y-4">
-              <p class="font-bold uppercase tracking-[0.4em]" :style="{ color: theme.accent, fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ se.time }}</p>
-              <h3 class="font-light italic" :style="{ fontSize: 'var(--size-body, 1.25rem)', fontFamily: theme.fontFamily }">{{ se.title }}</h3>
-              <p v-if="se.location" class="uppercase tracking-widest opacity-60" :style="{ fontSize: 'var(--size-label, 0.7rem)', fontFamily: theme.fontFamily }">{{ se.location }}</p>
-              <p v-if="se.description" class="opacity-50 italic" :style="{ fontSize: 'var(--size-body, 0.875rem)', fontFamily: theme.fontFamily }">{{ se.description }}</p>
-          </div>
-        </div>
-      </div>
+      <CardSectionProgramme
+        v-if="sectionId === 'program'"
+        :config="safeConfig" :event="event" :sub-events="subEvents"
+      />
 
       <!-- BLOC IMAGE avec placeholder élégant -->
       <div v-if="sectionId.startsWith('image-')" class="w-full relative group">
@@ -250,7 +211,11 @@ const currentTemplate = computed(() => {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;600;700&family=Dancing+Script:wght@400;600;700&display=swap');
 
-.card-engine { font-family: var(--card-font, 'Playfair Display'), serif; }
+.card-engine {
+  container-type: inline-size;
+  font-family: var(--card-font, 'Playfair Display'), serif;
+  overflow-x: clip; /* clip ne crée pas de contexte de scroll (contrairement à hidden) */
+}
 .card-engine * { transition: color 0.3s ease, background-color 0.3s ease; }
 
 /* Annuler le text-gray-900 global sur les titres */
@@ -263,13 +228,14 @@ const currentTemplate = computed(() => {
   color: inherit;
 }
 
-/* Reset Tailwind's gray-900 default on headings — templates set their own color */
-.card-engine h1,
-.card-engine h2,
-.card-engine h3,
-.card-engine h4,
-.card-engine h5,
-.card-engine h6 {
-  color: inherit;
+/* ── Couleur des noms des mariés : override global pour tous les templates ── */
+/* Cible les classes utilisées pour l'h1 des prénoms dans chaque template    */
+.card-engine .template-title,
+.card-engine .names,
+.card-engine .main-names,
+.card-engine .main-title,
+.card-engine h1.title,
+.card-engine .name-giant {
+  color: var(--color-names, var(--card-names, inherit)) !important;
 }
 </style>
