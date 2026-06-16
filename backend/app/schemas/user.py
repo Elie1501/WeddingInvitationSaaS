@@ -24,3 +24,4 @@ class UserUpdateStatus(BaseModel):
 
 class GoogleLoginRequest(BaseModel):
     id_token: str
+    plan: str = "classic"  # plan choisi à l'inscription (nouveau compte uniquement)

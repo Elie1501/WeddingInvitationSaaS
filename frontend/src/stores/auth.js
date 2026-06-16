@@ -17,13 +17,14 @@ export const useAuthStore = defineStore('auth', {
         };
     },
     actions: {
-        async loginWithGoogle() {
+        async loginWithGoogle(plan = 'classic') {
             try {
                 const result = await signInWithPopup(auth, provider);
                 const idToken = await result.user.getIdToken();
 
                 const response = await api.post('/auth/google', {
-                    id_token: idToken
+                    id_token: idToken,
+                    plan
                 });
 
                 this.token = response.data.access_token;
