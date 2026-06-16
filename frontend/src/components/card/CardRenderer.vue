@@ -15,21 +15,17 @@ import CardSplashScreen from './CardSplashScreen.vue';
 import CardTemplateOra from './CardTemplateOra.vue';
 import CardTemplateJaponais from './CardTemplateJaponais.vue';
 import CardTemplateRiviera from './CardTemplateRiviera.vue';
-import CardTemplateBrutaliste from './CardTemplateBrutaliste.vue';
 import CardTemplateFilm from './CardTemplateFilm.vue';
-import CardTemplateNoirEternel from './CardTemplateNoirEternel.vue';
+import CardTemplateTelAviv from './CardTemplateTelAviv.vue';
 import CardTemplateRivieraBlanche from './CardTemplateRivieraBlanche.vue';
 import CardTemplateJardinCeleste from './CardTemplateJardinCeleste.vue';
 import CardTemplateEmpireAbstrait from './CardTemplateEmpireAbstrait.vue';
 import CardTemplateCinema from './CardTemplateCinema.vue';
 import CardTemplateCelestial from './CardTemplateCelestial.vue';
 import CardTemplateGatsby from './CardTemplateGatsby.vue';
-import CardTemplateEditorial from './CardTemplateEditorial.vue';
 import CardTemplateVelvetNoir from './CardTemplateVelvetNoir.vue';
 import CardTemplateEclipse from './CardTemplateEclipse.vue';
-import CardTemplateLettre from './CardTemplateLettre.vue';
-import CardTemplateLumiere from './CardTemplateLumiere.vue';
-import CardTemplateSanctuaire from './CardTemplateSanctuaire.vue';
+import CardTemplateAmour from './CardTemplateAmour.vue';
 
 const props = defineProps({
   config: {
@@ -117,24 +113,20 @@ const isTemplateHero = (id) => {
 
 const currentTemplate = computed(() => {
   const l = layout.value;
-  if (l === 'noir-eternel') return CardTemplateNoirEternel;
+  if (l === 'tel-aviv') return CardTemplateTelAviv;
   if (l === 'riviera-blanche') return CardTemplateRivieraBlanche;
   if (l === 'jardin-celeste') return CardTemplateJardinCeleste;
   if (l === 'empire-abstrait') return CardTemplateEmpireAbstrait;
   if (l === 'ora') return CardTemplateOra;
   if (l === 'japonais' || l === 'arch') return CardTemplateJaponais;
   if (l === 'riviera' || l === 'split') return CardTemplateRiviera;
-  if (l === 'brutaliste' || l === 'es') return CardTemplateBrutaliste;
   if (l === 'film' || l === 'typography-focus') return CardTemplateFilm;
   if (l === 'cinema') return CardTemplateCinema;
   if (l === 'celestial') return CardTemplateCelestial;
   if (l === 'gatsby') return CardTemplateGatsby;
-  if (l === 'editorial') return CardTemplateEditorial;
   if (l === 'velvet-noir') return CardTemplateVelvetNoir;
   if (l === 'eclipse') return CardTemplateEclipse;
-  if (l === 'lettre') return CardTemplateLettre;
-  if (l === 'lumiere') return CardTemplateLumiere;
-  if (l === 'sanctuaire') return CardTemplateSanctuaire;
+  if (l === 'amour') return CardTemplateAmour;
   return null;
 });
 </script>

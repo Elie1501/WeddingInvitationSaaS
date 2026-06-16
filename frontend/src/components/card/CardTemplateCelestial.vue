@@ -185,7 +185,7 @@ const parallaxStyle = (factor) => ({
   background: var(--color-bg);
   color: var(--color-text);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
 }
 
@@ -196,7 +196,7 @@ const parallaxStyle = (factor) => ({
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .stars-canvas {

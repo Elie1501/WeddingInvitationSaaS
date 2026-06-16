@@ -114,7 +114,7 @@ onMounted(() => {
   font-family: var(--card-font, 'Cormorant'), serif;
   min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .mosaic-bg {

@@ -155,7 +155,7 @@ onMounted(() => {
   background: var(--color-bg);
   color: var(--color-text);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
   font-family: var(--card-font, 'Cormorant Garamond'), serif;
 }
@@ -176,7 +176,7 @@ onMounted(() => {
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  overflow: hidden;
+  overflow: clip;
 }
 .particle {
   position: absolute;
@@ -198,7 +198,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: clip;
 }
 
 /* Curtain panels */

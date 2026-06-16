@@ -109,7 +109,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   color: var(--color-text);
   min-height: 100vh;
   font-family: var(--card-font, 'Montserrat'), sans-serif;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ── Hero ── */
@@ -121,7 +121,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .hero-photo {

@@ -1,5 +1,6 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted, inject } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { getContrastColor } from '../../service/colorUtils';
 
 const props = defineProps({
   config: { type: Object, required: true },
@@ -7,345 +8,155 @@ const props = defineProps({
   mode:   { type: String, default: 'full' }
 });
 
-const emit = defineEmits(['click-image']);
-const isEditorMode = inject('isEditorMode', false);
-
-const theme = computed(() => ({
-  bg:     props.config.theme?.background || '#080808',
-  text:   props.config.theme?.text       || '#F0EAE0',
-  accent: props.config.theme?.accent     || '#D4853A',
-}));
+const theme = computed(() => {
+  const bgColor = props.config.theme?.background || '#080808';
+  return {
+    bg: bgColor,
+    text: props.config.theme?.text || getContrastColor(bgColor),
+    accent: props.config.theme?.accent || '#D4853A',
+  };
+});
 
 const displayNames = computed(() =>
   props.config.content?.names ||
-  (props.event.groom_name && props.event.bride_name
-    ? `${props.event.groom_name} & ${props.event.bride_name}` : '')
-);
+  (props.event.groom_name && props.event.bride_name ? `${props.event.groom_name} & ${props.event.bride_name}` : ''));
 const displayDate = computed(() =>
   props.config.content?.date_display ||
-  (props.event.date ? new Date(props.event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '15 juin 2026')
-);
+  (props.event.date ? new Date(props.event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '15 juin 2026'));
 const displayLocation = computed(() => props.config.content?.address || props.event.location || '');
-const imageUrl = computed(() => props.config.content?.image_url || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200');
+const year = computed(() => (displayDate.value.match(/\d{4}/) || ['2026'])[0]);
 
-// ── Film grain canvas ──────────────────────────────────────
+// Révélation lettre par lettre du titre
+const chars = ref([]);
+const cursor = ref(true);
+let timers = [];
+const reveal = (text) => {
+  chars.value = []; timers.forEach(clearTimeout); timers = [];
+  [...text].forEach((ch, i) => {
+    timers.push(setTimeout(() => {
+      chars.value.push(ch);
+      if (i === text.length - 1) cursor.value = false;
+    }, 800 + i * 70));
+  });
+};
+
+// Grain animé
 const canvasRef = ref(null);
-let grainFrame = null;
+let raf = null;
 const drawGrain = () => {
   const c = canvasRef.value;
   if (!c) return;
   const ctx = c.getContext('2d');
-  c.width  = c.offsetWidth  || window.innerWidth;
-  c.height = c.offsetHeight || window.innerHeight;
+  c.width = c.offsetWidth || 390; c.height = c.offsetHeight || 700;
   const img = ctx.createImageData(c.width, c.height);
   for (let i = 0; i < img.data.length; i += 4) {
-    const v = (Math.random() * 80) | 0;
+    const v = (Math.random() * 70) | 0;
     img.data[i] = img.data[i+1] = img.data[i+2] = v;
-    img.data[i+3] = (Math.random() * 45) | 0;
+    img.data[i+3] = (Math.random() * 30) | 0;
   }
   ctx.putImageData(img, 0, 0);
-  grainFrame = requestAnimationFrame(drawGrain);
-};
-
-// ── Letter-by-letter reveal ────────────────────────────────
-const chars = ref([]);
-const cursorVisible = ref(true);
-let charTimers = [];
-const revealLetters = (text) => {
-  chars.value = [];
-  charTimers.forEach(clearTimeout);
-  charTimers = [];
-  [...text].forEach((ch, i) => {
-    charTimers.push(setTimeout(() => {
-      chars.value.push(ch);
-      if (i === text.length - 1) cursorVisible.value = false;
-    }, 900 + i * 75));
-  });
+  raf = requestAnimationFrame(drawGrain);
 };
 
 const isLoaded = ref(false);
 onMounted(() => {
-  setTimeout(() => { isLoaded.value = true; revealLetters(displayNames.value); }, 400);
+  setTimeout(() => { isLoaded.value = true; reveal(displayNames.value); }, 400);
   drawGrain();
 });
-onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTimeout); });
+onUnmounted(() => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); });
 </script>
 
 <template>
-  <div class="cinema-wrap">
+  <div class="cin-wrap">
+    <!-- Photo de fond floutée -->
+    <div v-if="config.content?.image_url" class="cin-bg" :style="{ backgroundImage: `url(${config.content.image_url})` }" aria-hidden="true"></div>
+    <div class="cin-veil" aria-hidden="true"></div>
+    <canvas ref="canvasRef" class="cin-grain" aria-hidden="true"></canvas>
 
-    <!-- ── HERO ── -->
-    <div v-if="mode === 'hero' || mode === 'full'" class="hero">
+    <!-- Balayage lumineux du projecteur -->
+    <div class="cin-sweep" aria-hidden="true"></div>
 
-      <!-- Background photo -->
-      <div class="hero-bg"
-           :style="{ backgroundImage: `url(${imageUrl})` }"
-           :class="{ 'editor-img': isEditorMode }"
-           @click="isEditorMode ? emit('click-image', 'image_url') : null" />
+    <!-- Letterbox -->
+    <div class="cin-bar top"><span class="rec" :class="{ on: isLoaded }">● REC</span><span class="tc">00:01:{{ year.slice(-2) }}</span></div>
+    <div class="cin-bar bottom"></div>
 
-      <!-- Cinematic grading -->
-      <div class="noir-veil" />
-      <canvas ref="canvasRef" class="grain" />
-
-      <!-- Letterbox bars -->
-      <div class="bar bar-top" />
-      <div class="bar bar-bottom" />
-
-      <!-- Film perforations (decorative) -->
-      <div class="perfs perfs-l">
-        <div v-for="n in 14" :key="n" class="hole" />
-      </div>
-      <div class="perfs perfs-r">
-        <div v-for="n in 14" :key="n" class="hole" />
-      </div>
-
-      <!-- Hero copy -->
-      <div class="hero-copy" :class="{ reveal: isLoaded }">
-        <p class="eyebrow">UNE HISTOIRE D'AMOUR</p>
-        <div class="rule" />
-        <h1 class="title" :aria-label="displayNames">
-          <span v-for="(ch, i) in chars" :key="i">{{ ch }}</span>
-          <span v-if="cursorVisible" class="cursor">_</span>
-        </h1>
-        <div class="rule" />
-        <p class="sub-date">{{ displayDate }}</p>
-        <p v-if="displayLocation" class="sub-loc">{{ displayLocation }}</p>
-      </div>
-    </div>
-
-    <!-- ── BODY ── -->
-    <div v-if="mode === 'full'" class="body">
-
-      <!-- Credits strip -->
-      <section class="credits">
-        <div class="c-item">
-          <span class="c-role">RÉALISÉ PAR</span>
-          <span class="c-val">L'Amour</span>
-        </div>
-        <div class="c-sep" />
-        <div class="c-item">
-          <span class="c-role">AVEC</span>
-          <span class="c-val">{{ displayNames }}</span>
-        </div>
-        <div class="c-sep" />
-        <div class="c-item">
-          <span class="c-role">EN PRÉSENCE DE</span>
-          <span class="c-val">Vous</span>
-        </div>
-      </section>
-
-      <!-- Synopsis -->
-      <section class="synopsis">
-        <span class="syn-label">SYNOPSIS</span>
-        <p class="syn-text">{{ config.content?.intro_text || 'Deux âmes que le destin avait prédestinées. Une rencontre, une histoire, une vie entière à écrire ensemble. Le film commence maintenant.' }}</p>
-      </section>
-
+    <div class="cin-content" :class="{ reveal: isLoaded }">
+      <p class="cin-eyebrow">L'amour présente</p>
+      <h1 class="cin-title main-title" :aria-label="displayNames">
+        <span v-for="(ch, i) in chars" :key="i">{{ ch }}</span><span v-if="cursor" class="cin-cursor">_</span>
+      </h1>
+      <div class="cin-line"></div>
+      <p class="cin-meta">UN FILM DE {{ year }}</p>
+      <p class="cin-date">{{ displayDate }}</p>
+      <p v-if="displayLocation" class="cin-loc">{{ displayLocation }}</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:ital,wght@0,400;1,400&family=Special+Elite&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:wght@400;700&display=swap');
 
-.cinema-wrap {
-  background: var(--color-bg);
-  color: var(--color-text);
+.cin-wrap {
+  position: relative;
   min-height: 100vh;
-  overflow-x: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-bg, #080808);
+  color: var(--color-text, #F0EAE0);
   font-family: var(--card-font, 'Courier Prime'), monospace;
-}
-
-/* Hero */
-.hero {
-  height: 100vh;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  filter: grayscale(0.6) brightness(0.38) contrast(1.15);
-  transform: scale(1.03);
-  transition: filter 0.4s;
-}
-.hero-bg.editor-img { cursor: pointer; }
-.hero-bg.editor-img:hover { filter: grayscale(0.3) brightness(0.5) contrast(1.15); }
-
-.noir-veil {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 20%, rgba(0,0,0,0.88) 100%);
-}
-
-.grain {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  mix-blend-mode: overlay;
-  opacity: 0.55;
-}
-
-.bar {
-  position: absolute;
-  left: 0; right: 0;
-  height: 11vh;
-  background: #000;
-  z-index: 20;
-}
-.bar-top    { top: 0; }
-.bar-bottom { bottom: 0; }
-
-/* Perforations */
-.perfs {
-  position: absolute;
-  top: 11vh; bottom: 11vh;
-  width: 26px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: center;
-  background: rgba(0,0,0,0.65);
-  z-index: 21;
-}
-.perfs-l { left: 0; }
-.perfs-r { right: 0; }
-.hole {
-  width: 13px;
-  height: 9px;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 2px;
-  background: transparent;
-}
-
-/* Copy */
-.hero-copy {
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  padding: 0 56px;
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 1.6s ease-out, transform 1.6s ease-out;
-}
-.hero-copy.reveal { opacity: 1; transform: translateY(0); }
-
-.eyebrow {
-  font-size: 0.52rem;
-  letter-spacing: 0.68em;
-  color: var(--color-countdown);
-  opacity: 0.9;
-  margin-bottom: 22px;
-}
-
-.rule {
-  width: 100px;
-  height: 1px;
-  background: var(--color-countdown);
-  margin: 16px auto;
-  opacity: 0.5;
-}
-
-.title {
-  font-family: var(--card-font, 'Bebas Neue'), sans-serif;
-  font-size: var(--size-names, clamp(3.2rem, 18cqi, 9.5rem));
-  letter-spacing: 0.07em;
-  color: #fff;
-  line-height: 0.9;
-  text-shadow: 0 0 100px rgba(212,133,58,0.25);
-}
-
-.cursor {
-  color: var(--color-countdown);
-  animation: blink 0.9s step-end infinite;
-}
-@keyframes blink { 50% { opacity: 0; } }
-
-.sub-date {
-  font-size: 0.66rem;
-  letter-spacing: 0.38em;
-  text-transform: uppercase;
-  opacity: 0.58;
-  margin-top: 20px;
-}
-.sub-loc {
-  font-size: 0.58rem;
-  letter-spacing: 0.32em;
-  color: var(--color-countdown);
-  margin-top: 7px;
-  opacity: 0.85;
-}
-
-/* Body */
-.body { background: var(--color-bg); }
-
-.credits {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0;
-  padding: 56px 40px;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  flex-wrap: wrap;
-}
-.c-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 0 48px;
-}
-.c-sep {
-  width: 1px;
-  height: 50px;
-  background: rgba(255,255,255,0.12);
-}
-.c-role {
-  font-size: 0.5rem;
-  letter-spacing: 0.55em;
-  color: var(--color-countdown);
-  opacity: 0.7;
-}
-.c-val {
-  font-family: var(--card-font, 'Bebas Neue'), sans-serif;
-  font-size: 1.5rem;
-  letter-spacing: 0.15em;
-}
-
-.synopsis {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 64px 40px 88px;
+  overflow: clip;
   text-align: center;
 }
-.syn-label {
-  display: block;
-  font-size: 0.5rem;
-  letter-spacing: 0.65em;
-  color: var(--color-countdown);
-  opacity: 0.6;
-  margin-bottom: 28px;
-}
-.syn-text {
-  font-family: var(--card-font, 'Special Elite'), cursive;
-  font-size: 1.1rem;
-  line-height: 2.1;
-  opacity: 0.62;
-}
 
-@media (max-width: 768px) {
-  .perfs { display: none; }
-  .credits { gap: 24px; padding: 40px 20px; }
-  .c-sep { display: none; }
-  .c-item { padding: 12px 0; }
-  .synopsis { padding: 48px 24px 72px; }
+.cin-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+  filter: grayscale(0.7) brightness(0.35) contrast(1.15);
+  transform: scale(1.04);
 }
+.cin-veil {
+  position: absolute; inset: 0; z-index: 1;
+  background: radial-gradient(ellipse 75% 75% at 50% 50%, transparent 15%, color-mix(in srgb, var(--color-bg, #080808) 92%, #000) 100%);
+}
+.cin-grain { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: overlay; opacity: 0.5; }
+
+.cin-sweep {
+  position: absolute; top: 0; bottom: 0; width: 60%; z-index: 2; pointer-events: none;
+  background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--color-countdown, #D4853A) 10%, transparent), transparent);
+  animation: sweep 9s ease-in-out infinite;
+}
+@keyframes sweep { 0% { transform: translateX(-120%); } 60%,100% { transform: translateX(220%); } }
+
+/* Letterbox */
+.cin-bar {
+  position: absolute; left: 0; right: 0; height: clamp(34px, 9cqi, 56px);
+  background: #000; z-index: 5; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px;
+  font-size: clamp(0.5rem, 2cqi, 0.62rem); letter-spacing: 0.3em; color: rgba(255,255,255,0.5);
+}
+.cin-bar.top { top: 0; }
+.cin-bar.bottom { bottom: 0; }
+.rec { color: var(--color-countdown, #D4853A); opacity: 0; }
+.rec.on { animation: blink 1.4s step-end infinite; }
+@keyframes blink { 50% { opacity: 0.25; } 0%,100% { opacity: 1; } }
+.tc { font-variant-numeric: tabular-nums; }
+
+.cin-content { position: relative; z-index: 4; padding: 0 clamp(28px, 8cqi, 56px); opacity: 0; transform: translateY(16px); transition: opacity 1.4s ease-out, transform 1.4s ease-out; }
+.cin-content.reveal { opacity: 1; transform: translateY(0); }
+
+.cin-eyebrow {
+  font-size: clamp(0.55rem, 2.2cqi, 0.68rem); letter-spacing: 0.5em; text-transform: uppercase;
+  color: var(--color-countdown, #D4853A); opacity: 0.85; margin-bottom: 22px;
+}
+.cin-title {
+  font-family: var(--card-font, 'Bebas Neue'), sans-serif;
+  font-size: var(--size-names, clamp(3rem, 18cqi, 8rem));
+  letter-spacing: 0.06em; line-height: 0.92;
+  color: var(--color-names, #FFFFFF);
+  text-shadow: 0 0 90px color-mix(in srgb, var(--color-countdown, #D4853A) 30%, transparent);
+}
+.cin-cursor { color: var(--color-countdown, #D4853A); animation: blink 0.9s step-end infinite; }
+.cin-line { width: 90px; height: 1px; background: var(--color-countdown, #D4853A); margin: clamp(18px,5cqi,28px) auto; opacity: 0.6; }
+.cin-meta { font-size: clamp(0.56rem, 2.2cqi, 0.7rem); letter-spacing: 0.42em; opacity: 0.55; margin-bottom: 14px; }
+.cin-date { font-size: clamp(0.6rem, 2.4cqi, 0.74rem); letter-spacing: 0.34em; text-transform: uppercase; opacity: 0.6; }
+.cin-loc { font-size: clamp(0.54rem, 2cqi, 0.64rem); letter-spacing: 0.28em; text-transform: uppercase; color: var(--color-countdown, #D4853A); margin-top: 7px; opacity: 0.85; }
 </style>

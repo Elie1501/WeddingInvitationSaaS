@@ -35,17 +35,17 @@ const monogram = computed(() => {
 </script>
 
 <template>
-  <div class="hero-riviera min-h-dvh relative overflow-hidden flex flex-col justify-center px-6 py-20"
+  <div class="hero-riviera relative overflow-clip flex flex-col justify-center px-6"
       >
     <div class="riviera-layout flex flex-col gap-12 items-center max-w-7xl mx-auto w-full">
 
       <!-- ILLUSTRATION SVG -->
-      <div class="flex justify-center relative overflow-hidden w-full">
+      <div class="flex justify-center relative overflow-clip w-full">
         <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none scale-150">
            <span class="text-[25cqi] italic" :style="{ color: 'var(--color-names)', fontFamily: 'var(--card-font)' }">{{ monogram }}</span>
         </div>
 
-        <svg class="w-full max-w-[320px] h-auto" viewBox="0 0 200 400" fill="none">
+        <svg class="w-full max-w-[150px] h-auto" viewBox="0 0 200 400" fill="none">
           <!-- Branche principale -->
           <path d="M100 400 Q120 300 80 200 T100 0" stroke="var(--color-countdown)" stroke-width="1" class="olive-path" :class="{ 'drawn': isDrawn }" />
           <!-- Feuilles -->
@@ -89,6 +89,8 @@ const monogram = computed(() => {
   font-family: var(--card-font, 'Jost'), sans-serif;
   background: var(--color-bg, #FAFAF8);
   color: var(--color-text, #1C2B3A);
+  padding-top: clamp(56px, 15cqi, 100px);
+  padding-bottom: clamp(70px, 18cqi, 120px);
 }
 .template-title { font-family: var(--card-font, 'Libre Baskerville'), serif; font-size: var(--size-names, clamp(3rem, 10cqi, 5.5rem)); line-height: 1.1; }
 .template-body { font-size: clamp(1.1rem, 2.5cqi, 1.25rem); }

@@ -20,13 +20,11 @@ const TEMPLATE_FIELDS = {
     { key: 'dress_code',   label: 'Tenue vestimentaire',  type: 'text' },
     { key: 'image_url',    label: 'Image de couverture',  type: 'image' },
   ],
-  'noir-eternel':     [
+  'tel-aviv':         [
     { key: 'names',         label: 'Prénoms',              type: 'text' },
-    { key: 'monogram',      label: 'Monogramme',           type: 'text', placeholder: 'E & L' },
     { key: 'date_display',  label: 'Date affichée',         type: 'text', placeholder: '15 JUIN 2026' },
     { key: 'address',       label: 'Lieu',                  type: 'text' },
     { key: 'intro_text',    label: 'Texte d\'introduction', type: 'textarea' },
-    { key: 'divider_symbol',label: 'Symbole décoratif',     type: 'text', placeholder: '✦' },
   ],
   'riviera-blanche':  [
     { key: 'names',        label: 'Prénoms',             type: 'text' },
@@ -101,7 +99,6 @@ const TEMPLATE_FIELDS = {
   ],
   'japonais':         null, // alias → arch
   'riviera':          null, // alias → split
-  'brutaliste':       null, // alias → es
   'film':             null, // alias → typography-focus
   'cinema': [
     { key: 'names',        label: 'Prénoms',              type: 'text' },
@@ -131,13 +128,6 @@ const TEMPLATE_FIELDS = {
     { key: 'dress_code',   label: 'Tenue vestimentaire',   type: 'text' },
     { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
   ],
-  'editorial': [
-    { key: 'names',        label: 'Prénoms',              type: 'text' },
-    { key: 'date_display', label: 'Date affichée',         type: 'text' },
-    { key: 'address',      label: 'Lieu',                  type: 'text' },
-    { key: 'intro_text',   label: 'Texte éditorial',       type: 'textarea' },
-    { key: 'image_url',    label: 'Photo éditoriale',      type: 'image' },
-  ],
   'velvet-noir': [
     { key: 'names',        label: 'Prénoms',              type: 'text' },
     { key: 'date_display', label: 'Date affichée',         type: 'text' },
@@ -150,7 +140,6 @@ const TEMPLATE_FIELDS = {
 // Résoudre les alias
 TEMPLATE_FIELDS['japonais']   = TEMPLATE_FIELDS['arch'];
 TEMPLATE_FIELDS['riviera']    = TEMPLATE_FIELDS['split'];
-TEMPLATE_FIELDS['brutaliste'] = TEMPLATE_FIELDS['es'];
 TEMPLATE_FIELDS['film']       = TEMPLATE_FIELDS['typography-focus'];
 import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';

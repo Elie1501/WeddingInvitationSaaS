@@ -187,7 +187,7 @@ onMounted(() => {
   background: var(--color-bg);
   color: var(--color-text);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   font-family: var(--card-font, 'Playfair Display'), serif;
 }
 
@@ -198,7 +198,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .hero-bg {

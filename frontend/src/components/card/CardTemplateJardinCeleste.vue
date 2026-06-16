@@ -56,7 +56,7 @@ const fireflies = Array.from({ length: 12 }, () => ({
 </script>
 
 <template>
-  <div class="hero-jardin h-dvh relative overflow-hidden flex items-center justify-center text-center px-6"
+  <div class="hero-jardin h-dvh relative overflow-clip flex items-center justify-center text-center px-6"
       >
     <!-- Ciel étoilé -->
     <div class="sky-overlay absolute inset-0 pointer-events-none" aria-hidden="true">
