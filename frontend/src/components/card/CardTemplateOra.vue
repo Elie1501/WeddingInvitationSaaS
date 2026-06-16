@@ -175,7 +175,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
   font-weight: 300;
-  font-size: var(--size-names, clamp(2.8rem, 11vw, 6.5rem));
+  font-size: var(--size-names, clamp(2.8rem, 11cqi, 6.5rem));
   color: #ffffff;
   line-height: 1.05;
   letter-spacing: 0.01em;
@@ -245,7 +245,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
   font-weight: 300;
-  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-size: clamp(1.1rem, 3cqi, 1.5rem);
   line-height: 1.8;
   opacity: 0.72;
 }
@@ -311,7 +311,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
   font-weight: 300;
-  font-size: clamp(1rem, 3vw, 1.35rem);
+  font-size: clamp(1rem, 3cqi, 1.35rem);
   opacity: 0.82;
   line-height: 1.45;
 }
@@ -327,7 +327,7 @@ onMounted(() => setTimeout(() => isLoaded.value = true, 80));
   font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
   font-weight: 300;
-  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  font-size: clamp(1.4rem, 4cqi, 2.1rem);
   margin-bottom: 40px;
   opacity: 0.82;
 }

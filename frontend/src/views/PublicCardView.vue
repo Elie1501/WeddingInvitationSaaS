@@ -14,6 +14,7 @@ const cardData   = ref(null);
 const loading    = ref(true);
 const error      = ref('');
 const showSplash = ref(false);
+const showCard   = ref(false);
 
 const cfg = computed(() => {
   if (!cardData.value?.config_json) return {};
@@ -48,6 +49,7 @@ onMounted(async () => {
     document.title = names ? `${names} · Invitation` : 'Invitation de mariage';
 
     showSplash.value = !!cfg.value.show_splash;
+    showCard.value   = !showSplash.value;
   } catch {
     error.value = 'Invitation introuvable.';
   } finally {
@@ -66,8 +68,18 @@ onMounted(async () => {
   </div>
 
   <template v-else>
-    <!-- Invitation — rendue en dessous, visible dès que le splash part -->
-    <div class="pv-outer" :style="{ background: themeBg }">
+    <!-- Page de garde — affiché seul en premier -->
+    <CardSplashScreen
+      v-if="showSplash"
+      :config="cfg"
+      :event="eventObj"
+      :templateId="cfg.layout"
+      :isPreview="false"
+      @close="showSplash = false; showCard = true"
+    />
+
+    <!-- Invitation — affichée uniquement après fermeture de la garde -->
+    <div v-if="showCard" class="pv-outer" :style="{ background: themeBg }">
       <div class="pv-col">
         <CardRenderer
           :config="cfgForRenderer"
@@ -77,24 +89,15 @@ onMounted(async () => {
         />
       </div>
     </div>
-
-    <!-- Page de garde en overlay fixe — séparée du scroll de la carte -->
-    <!-- La transition de sortie est gérée par CardSplashScreen lui-même (1200ms) -->
-    <CardSplashScreen
-      v-if="showSplash"
-      :config="cfg"
-      :event="eventObj"
-      :templateId="cfg.layout"
-      :isPreview="false"
-      @close="showSplash = false"
-    />
   </template>
 </template>
 
 <style scoped>
-/* Empêche uniquement le scroll horizontal parasite */
+/* overflow-x: clip coupe le débordement horizontal sans créer de contexte de scroll
+   (contrairement à overflow-x: hidden qui force overflow-y: auto sur les deux éléments
+   via la spec CSS, créant deux scrollbars verticales) */
 :global(html), :global(body) {
-  overflow-x: hidden;
+  overflow-x: clip;
   margin: 0;
   padding: 0;
 }

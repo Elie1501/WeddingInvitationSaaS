@@ -193,7 +193,7 @@ const dateDigits = computed(() => {
 }
 .name-giant {
   font-family: var(--card-font, 'Bebas Neue'), sans-serif;
-  font-size: var(--size-names, clamp(4rem, 22vw, 14rem));
+  font-size: var(--size-names, clamp(4rem, 22cqi, 14rem));
   letter-spacing: -0.01em;
   line-height: 0.88;
   text-transform: uppercase;
@@ -201,7 +201,7 @@ const dateDigits = computed(() => {
 .amp-mark {
   font-family: var(--card-font, 'Playfair Display'), serif;
   font-style: italic;
-  font-size: clamp(2rem, 10vw, 7rem);
+  font-size: clamp(2rem, 10cqi, 7rem);
   margin-left: 12px;
   line-height: 1.2;
 }
@@ -262,7 +262,7 @@ const dateDigits = computed(() => {
 
 .clock-digits {
   font-family: var(--card-font, 'Bebas Neue'), sans-serif;
-  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-size: clamp(1.8rem, 5cqi, 3rem);
   letter-spacing: 0.08em;
   color: var(--color-countdown);
   line-height: 1;
@@ -346,12 +346,12 @@ const dateDigits = computed(() => {
 
 @media (max-width: 768px) {
   .editorial-section { grid-template-columns: 1fr; }
-  .ed-photo-wrap { height: 55vw; border-right: none; border-bottom: 2px solid var(--color-text); }
+  .ed-photo-wrap { height: 55cqi; border-right: none; border-bottom: 2px solid var(--color-text); }
   .ed-text-col { padding: 40px 24px; }
   .meta-row { padding: 16px 24px; }
 }
 
 @media (max-width: 480px) {
-  .name-giant { font-size: clamp(3rem, 22vw, 14rem); }
+  .name-giant { font-size: clamp(3rem, 22cqi, 14rem); }
 }
 </style>

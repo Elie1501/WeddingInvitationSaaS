@@ -164,15 +164,15 @@ onMounted(() => {
 
 .hero-section {
     height: 100vh;
-    padding: 20px 60px;
+    padding: 20px clamp(16px, 8cqi, 60px);
     position: relative;
 }
 
 .film-perforations {
     position: absolute;
-    top: 0; bottom: 0; width: 40px;
+    top: 0; bottom: 0; width: clamp(15px, 5cqi, 40px);
     background-image: radial-gradient(circle, var(--color-bg) 50%, transparent 50%);
-    background-size: 20px 40px;
+    background-size: clamp(10px, 2.5cqi, 20px) clamp(20px, 5cqi, 40px);
     background-repeat: repeat-y;
 }
 .film-perforations.left { left: 10px; }
@@ -197,41 +197,25 @@ onMounted(() => {
     position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; text-align: center;
 }
 
-.film-intro { font-size: 0.7rem; letter-spacing: 0.5em; margin-bottom: 20px; opacity: 0.6; }
-.main-title { font-size: var(--size-names, 5rem); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+.film-intro { font-size: clamp(0.6rem, 2cqi, 0.7rem); letter-spacing: 0.5em; margin-bottom: 20px; opacity: 0.6; }
+.main-title { font-size: var(--size-names, clamp(2rem, 14cqi, 5rem)); line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); }
 .film-line { width: 60px; height: 2px; background: var(--color-countdown); margin: 30px 0; }
-.film-date { font-size: 1.2rem; letter-spacing: 0.3em; font-weight: 300; }
+.film-date { font-size: clamp(0.85rem, 3cqi, 1.2rem); letter-spacing: 0.25em; font-weight: 300; }
 
 .body-content { background-color: var(--color-text); color: var(--color-bg); position: relative; z-index: 5; }
-.container { max-width: 800px; margin: 0 auto; padding: 0 40px; }
+.container { max-width: 800px; margin: 0 auto; padding: 0 clamp(16px, 6cqi, 40px); }
 
 .presentation-section { padding: 80px 0; }
-.frame-border { border: 1px solid var(--color-bg); border-style: double; border-width: 6px; text-align: center; }
-.section-title { font-size: 3.5rem; margin-bottom: 10px; }
-.description { font-size: 1.1rem; line-height: 1.7; opacity: 0.75; margin-top: 10px; }
+.frame-border { border: 1px solid var(--color-bg); border-style: double; border-width: 6px; text-align: center; padding: clamp(16px, 6cqi, 48px); }
+.section-title { font-size: clamp(1.8rem, 12cqi, 3.5rem); margin-bottom: 10px; }
+.description { font-size: clamp(0.9rem, 3cqi, 1.1rem); line-height: 1.7; opacity: 0.75; margin-top: 10px; }
 .film-divider-fancy { height: 1px; background: var(--color-bg); width: 100px; margin: 30px auto; position: relative; }
 .film-divider-fancy::after { content: '◈'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--color-text); padding: 0 10px; }
 
-.details-grid { display: flex; justify-content: center; gap: 60px; margin-top: 40px; }
+.details-grid { display: flex; justify-content: center; gap: clamp(20px, 6cqi, 60px); margin-top: 40px; flex-wrap: wrap; }
 .d-label { font-size: 0.7rem; opacity: 0.5; letter-spacing: 3px; }
 
 .sheet-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-.sheet-item { width: 200px; position: relative; padding: 10px; background: #000; }
+.sheet-item { flex: 1 1 140px; max-width: 200px; position: relative; padding: 10px; background: #000; }
 .frame-num { position: absolute; top: 0; left: 5px; color: #fff; font-size: 8px; font-family: monospace; }
-
-@media (max-width: 768px) {
-    .main-title { font-size: 14vw; line-height: 1; }
-    .hero-section { padding: 10px 40px; }
-    .film-perforations { width: 30px; background-size: 15px 30px; }
-    .film-date { font-size: 0.9rem; letter-spacing: 0.2em; }
-    .section-title { font-size: 12vw; }
-    .sheet-item { width: calc(50% - 10px); }
-    .container { padding: 0 20px; }
-    .details-grid { gap: 20px; flex-wrap: wrap; }
-    .frame-border { padding: 30px 16px; }
-}
-
-@media (max-width: 480px) {
-    .main-title { font-size: 16vw; }
-}
 </style>

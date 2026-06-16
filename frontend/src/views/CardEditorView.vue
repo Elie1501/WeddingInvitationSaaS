@@ -220,7 +220,7 @@ const config = reactive({
   sections: ['hero', 'countdown', 'program', 'rsvp', 'footer'],
   theme: {
     background: '#FAFAF8', accent: '#2E6E8E', text: '#1C2B3A',
-    titleColor: '#1C2B3A', namesColor: '#2E6E8E',
+    sectionTitleColor: '#1C2B3A', namesColor: '#2E6E8E', countdownColor: '',
     fontFamily: 'Playfair Display', textScale: 'medium'
   },
   content: {
@@ -447,7 +447,7 @@ const contextFields = computed(() => {
       label: 'Formulaire de confirmation',
       fields: [
         { type: 'text', label: 'Titre RSVP', model: 'content.rsvp_title' },
-        { type: 'text', label: 'Date limite', model: 'content.rsvp_deadline_text' }
+        { type: 'textarea', label: 'Descriptif', model: 'content.rsvp_deadline_text', placeholder: 'Ex : Réponse souhaitée avant le 1er mai.' }
       ]
     },
     'countdown': {
@@ -1187,9 +1187,9 @@ onUnmounted(() => {
               Palette de couleurs
             </h3>
             <div class="grid grid-cols-2 gap-3">
-              <div v-for="(label, key) in { background: 'Fond', text: 'Texte', titleColor: 'Titres', namesColor: 'Prénoms', accent: 'Sous-titre' }" :key="key"
+              <div v-for="(label, key) in { namesColor: 'Noms', countdownColor: 'Compte à rebours', sectionTitleColor: 'Titre', text: 'Textes', background: 'Fond' }" :key="key"
                    class="bg-white border border-gray-200 p-2 rounded-xl flex items-center">
-                <input type="color" v-model="config.theme[key]" class="w-8 h-8 rounded-lg cursor-pointer border-0 p-0 bg-transparent">
+                <input type="color" :value="config.theme[key] || '#2E6E8E'" @input="config.theme[key] = $event.target.value" class="w-8 h-8 rounded-lg cursor-pointer border-0 p-0 bg-transparent">
                 <span class="ml-2 text-[10px] font-bold uppercase text-gray-500">{{ label }}</span>
               </div>
             </div>

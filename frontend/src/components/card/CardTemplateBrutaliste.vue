@@ -154,10 +154,10 @@ onMounted(() => {
     pointer-events: none;
 }
 
-.hero-content { padding: 0 5vw; z-index: 10; }
+.hero-content { padding: 0 5cqi; z-index: 10; }
 
 .main-names {
-    font-size: var(--size-names, 15vw);
+    font-size: var(--size-names, 15cqi);
     font-weight: 900;
     text-transform: uppercase;
     line-height: 0.8;
@@ -196,16 +196,16 @@ onMounted(() => {
 .brutal-radio-box input:checked + span { text-decoration: underline; text-decoration-thickness: 4px; }
 
 @media (max-width: 768px) {
-    .main-names { font-size: 18vw; line-height: 0.9; }
-    .section-title-brutal { font-size: 15vw; }
-    .absolute-bg-num { font-size: 40vw; top: 10%; right: 0; }
+    .main-names { font-size: 18cqi; line-height: 0.9; }
+    .section-title-brutal { font-size: 15cqi; }
+    .absolute-bg-num { font-size: 40cqi; top: 10%; right: 0; }
     .hero-section { margin: 10px; border-width: 4px; padding: 20px; }
-    .block-number { font-size: 20vw; top: 10px; left: 10px; }
+    .block-number { font-size: 20cqi; top: 10px; left: 10px; }
     .hero-meta .val { font-size: 1.1rem; }
     .container-brutal { padding: 0 20px; }
 }
 
 @media (max-width: 480px) {
-    .main-names { font-size: 22vw; }
+    .main-names { font-size: 22cqi; }
 }
 </style>

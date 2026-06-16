@@ -45,23 +45,29 @@ export function useCardStyle(configRef) {
     const text     = (!t.text || t.text === '#1A1A1A') ? autoText : t.text
     const accent   = t.accent     || '#C5A059'
     const names    = t.namesColor || accent
-    const headings = t.titleColor || text
+    const headings = t.sectionTitleColor || text
     const font     = t.fontFamily || 'Playfair Display'
 
     const vars = {
-      '--card-bg':       bg,
-      '--card-text':     text,
-      '--card-accent':   accent,
-      '--card-names':    names,
-      '--card-headings': headings,
-      '--card-font':     font,
-      '--accent':        accent,
-      '--accent-color':  accent,
-      '--names-color':   names,
-      '--title-color':   headings,
-      fontFamily:        font,
-      backgroundColor:   bg,
-      color:             text,
+      '--card-bg':         bg,
+      '--card-text':       text,
+      '--card-accent':     accent,
+      '--card-names':      names,
+      '--card-headings':   headings,
+      '--card-font':       font,
+      '--accent':          accent,
+      '--accent-color':    accent,
+      '--names-color':     names,
+      '--title-color':     headings,
+      // Nouvelles variables nommées explicitement
+      '--color-bg':        bg,
+      '--color-text':      text,
+      '--color-names':          names,
+      '--color-countdown':      t.countdownColor || accent,
+      '--color-section-title':  headings,
+      fontFamily:          font,
+      backgroundColor:     bg,
+      color:               text,
     }
 
     // Taille du texte — preset Petit / Moyen / Grand

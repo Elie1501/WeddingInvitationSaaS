@@ -257,7 +257,7 @@ onMounted(() => {
 
 .names {
   font-family: var(--card-font, 'Cinzel Decorative'), serif;
-  font-size: var(--size-names, clamp(2rem, 10vw, 5.5rem));
+  font-size: var(--size-names, clamp(2rem, 10cqi, 5.5rem));
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--color-countdown);

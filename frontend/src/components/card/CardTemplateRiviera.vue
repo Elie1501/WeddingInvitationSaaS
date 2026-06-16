@@ -107,6 +107,8 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@1,300;1,600&family=Montserrat:wght@800&display=swap');
 
 .riviera-template {
+  --sand: #E8D5B0;
+  --turquoise: #2E86AB;
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--card-font, 'Cormorant'), serif;
@@ -223,16 +225,16 @@ onMounted(() => {
 .vintage-photo { width: 100%; height: 100%; object-fit: cover; filter: sepia(0.3) contrast(1.1); }
 
 @media (max-width: 768px) {
-    .main-title { font-size: 15vw; line-height: 1; margin: 15px 0; }
+    .main-title { font-size: 15cqi; line-height: 1; margin: 15px 0; }
     .hero-image-wrapper { width: 220px; height: 320px; }
     .hero-date { font-size: 0.9rem; letter-spacing: 0.3em; }
-    .section-title { font-size: 14vw; }
+    .section-title { font-size: 14cqi; }
     .angled-block { margin: 60px 0; }
     .image-card { width: 80%; margin: 0 auto; }
 }
 
 @media (max-width: 480px) {
-    .main-title { font-size: 18vw; }
-    .section-title { font-size: 16vw; }
+    .main-title { font-size: 18cqi; }
+    .section-title { font-size: 16cqi; }
 }
 </style>

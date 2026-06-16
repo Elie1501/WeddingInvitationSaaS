@@ -284,8 +284,9 @@ onUnmounted(() => {
 
             <div class="relative aspect-[3/4] overflow-hidden rounded-2xl bg-neutral-100 shadow-md
                         group-hover:shadow-xl transition-shadow duration-500">
-              <img :src="`/previews/${tpl.id}.webp`" :alt="tpl.name" loading="lazy"
-                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <img :src="tpl.image || `/previews/${tpl.id}.webp`" :alt="tpl.name" loading="lazy"
+                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                   @error="$event.target.src='https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=600'" />
 
               <div class="absolute inset-0 flex items-center justify-center
                           bg-black/0 group-hover:bg-black/25 transition-colors duration-500">

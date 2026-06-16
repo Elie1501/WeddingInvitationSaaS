@@ -136,8 +136,8 @@ const monogram = computed(() => {
 .text-gold { color: var(--gold); }
 .vignette { background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.8) 100%); }
 
-.template-title { font-family: var(--card-font, 'Cormorant Garamond'), serif; font-size: var(--size-names, clamp(2.5rem, 12vw, 6rem)); line-height: 1.1; }
-.template-body  { font-family: var(--card-font, 'Cormorant Garamond'), serif; font-size: clamp(1rem, 3vw, 1.4rem); }
+.template-title { font-family: var(--card-font, 'Cormorant Garamond'), serif; font-size: var(--size-names, clamp(2.5rem, 12cqi, 6rem)); line-height: 1.1; }
+.template-body  { font-family: var(--card-font, 'Cormorant Garamond'), serif; font-size: clamp(1rem, 3cqi, 1.4rem); }
 .monogram       { font-family: var(--card-font, 'Cinzel'), serif; }
 .template-label { font-family: var(--card-font, 'Cinzel'), serif; letter-spacing: 0.3em; font-size: 0.7rem; }
 

@@ -113,7 +113,7 @@ const verse = computed(() => props.config.verse || props.config.content?.verse |
 
 .san-symbol {
   font-family: 'EB Garamond', serif;
-  font-size: clamp(1.8rem, 6vw, 2.8rem);
+  font-size: clamp(1.8rem, 6cqi, 2.8rem);
   color: var(--color-countdown, #B8963C);
   opacity: 0.72;
   margin-bottom: 28px;
@@ -141,7 +141,7 @@ const verse = computed(() => props.config.verse || props.config.content?.verse |
 .san-names {
   font-family: 'EB Garamond', serif;
   font-weight: 400;
-  font-size: var(--size-names, clamp(2.8rem, 12vw, 7rem));
+  font-size: var(--size-names, clamp(2.8rem, 12cqi, 7rem));
   line-height: 1.06;
   color: var(--color-names, #1A1208);
   letter-spacing: 0.05em;
@@ -179,7 +179,7 @@ const verse = computed(() => props.config.verse || props.config.content?.verse |
   font-family: 'EB Garamond', serif;
   font-style: italic;
   font-weight: 400;
-  font-size: clamp(0.95rem, 2.5vw, 1.18rem);
+  font-size: clamp(0.95rem, 2.5cqi, 1.18rem);
   line-height: 2.05;
   opacity: 0.46;
   max-width: 420px;

@@ -220,6 +220,7 @@ const currentTemplate = computed(() => {
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;600;700&family=Dancing+Script:wght@400;600;700&display=swap');
 
 .card-engine {
+  container-type: inline-size;
   font-family: var(--card-font, 'Playfair Display'), serif;
   overflow-x: clip; /* clip ne crée pas de contexte de scroll (contrairement à hidden) */
 }

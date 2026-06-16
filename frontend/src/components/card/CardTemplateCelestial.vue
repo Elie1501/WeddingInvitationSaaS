@@ -269,7 +269,7 @@ const parallaxStyle = (factor) => ({
 
 .names {
   font-family: var(--card-font, 'Cinzel'), serif;
-  font-size: var(--size-names, clamp(2.8rem, 14vw, 7.5rem));
+  font-size: var(--size-names, clamp(2.8rem, 14cqi, 7.5rem));
   font-weight: 700;
   letter-spacing: 0.05em;
   background: linear-gradient(135deg, #fff 30%, var(--color-countdown) 70%, #fff 100%);
@@ -322,7 +322,7 @@ const parallaxStyle = (factor) => ({
 .quote-text {
   font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
-  font-size: clamp(1.1rem, 3vw, 1.55rem);
+  font-size: clamp(1.1rem, 3cqi, 1.55rem);
   line-height: 1.8;
   opacity: 0.65;
   max-width: 560px;

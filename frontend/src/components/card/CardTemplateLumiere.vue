@@ -74,7 +74,7 @@ const verse = computed(() => props.config.verse || props.config.content?.verse |
   top: -10%;
   left: 50%;
   transform: translateX(-50%);
-  width: 140vw;
+  width: 140cqi;
   height: 90vh;
   background: radial-gradient(
     ellipse 55% 55% at 50% 5%,
@@ -118,7 +118,7 @@ const verse = computed(() => props.config.verse || props.config.content?.verse |
 .lum-names {
   font-family: 'Newsreader', serif;
   font-weight: 300;
-  font-size: var(--size-names, clamp(3rem, 14vw, 8rem));
+  font-size: var(--size-names, clamp(3rem, 14cqi, 8rem));
   line-height: 1.04;
   color: var(--color-names, #1C2028);
   letter-spacing: -0.015em;
@@ -136,7 +136,7 @@ const verse = computed(() => props.config.verse || props.config.content?.verse |
   font-family: 'Newsreader', serif;
   font-style: italic;
   font-weight: 300;
-  font-size: clamp(0.9rem, 2.4vw, 1.12rem);
+  font-size: clamp(0.9rem, 2.4cqi, 1.12rem);
   line-height: 1.95;
   opacity: 0.5;
   max-width: 440px;

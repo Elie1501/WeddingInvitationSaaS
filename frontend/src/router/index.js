@@ -86,7 +86,14 @@ const router = createRouter({
             name: 'demo-card',
             component: () => import('../views/DemoCardView.vue')
             // Aucune meta requiresAuth — accessible sans connexion
-        }
+        },
+        // ── Dev only — hors navigation publique ─────────────────────────────
+        {
+            path: '/dev/templates',
+            name: 'dev-templates',
+            component: () => import('@/views/dev/TemplateQAView.vue'),
+            beforeEnter: () => import.meta.env.DEV ? true : { path: '/' },
+        },
     ]
 });
 

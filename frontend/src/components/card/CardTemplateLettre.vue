@@ -122,7 +122,7 @@ const monogram = computed(() => {
 
 .ltr-monogram {
   font-family: 'Pinyon Script', cursive;
-  font-size: clamp(2.2rem, 9vw, 4rem);
+  font-size: clamp(2.2rem, 9cqi, 4rem);
   color: var(--color-countdown, #B89850);
   opacity: 0.55;
   margin-bottom: 20px;
@@ -180,7 +180,7 @@ const monogram = computed(() => {
 
 .ltr-names {
   font-family: 'Pinyon Script', cursive !important;
-  font-size: var(--size-names, clamp(3.5rem, 16vw, 8.5rem));
+  font-size: var(--size-names, clamp(3.5rem, 16cqi, 8.5rem));
   line-height: 1.1;
   color: var(--color-names, #4A3220);
   letter-spacing: 0.03em;

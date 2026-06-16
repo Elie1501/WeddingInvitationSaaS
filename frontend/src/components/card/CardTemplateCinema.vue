@@ -255,7 +255,7 @@ onUnmounted(() => { cancelAnimationFrame(grainFrame); charTimers.forEach(clearTi
 
 .title {
   font-family: var(--card-font, 'Bebas Neue'), sans-serif;
-  font-size: var(--size-names, clamp(3.2rem, 18vw, 9.5rem));
+  font-size: var(--size-names, clamp(3.2rem, 18cqi, 9.5rem));
   letter-spacing: 0.07em;
   color: #fff;
   line-height: 0.9;

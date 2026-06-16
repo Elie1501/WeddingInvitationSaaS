@@ -80,6 +80,7 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;700&family=Playfair+Display:ital,wght@1,400&display=swap');
 
 .japonais-template {
+  --red: #C0392B;
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--card-font, 'Noto Serif JP'), serif;
@@ -204,7 +205,7 @@ onMounted(() => {
 
 
 @media (max-width: 600px) {
-    .main-title { font-size: 14vw; line-height: 1.1; margin: 15px 0; }
+    .main-title { font-size: 14cqi; line-height: 1.1; margin: 15px 0; }
     .stamp { width: 40px; height: 40px; font-size: 1.2rem; }
     .date-text { font-size: 0.9rem; letter-spacing: 0.3em; }
     .section-title { font-size: 2.5rem; }
@@ -214,7 +215,7 @@ onMounted(() => {
 }
 
 @media (max-width: 400px) {
-    .main-title { font-size: 16vw; }
+    .main-title { font-size: 16cqi; }
     .stamp-grid { gap: 10px; }
     .stamp-item { width: 60px; height: 75px; }
 }

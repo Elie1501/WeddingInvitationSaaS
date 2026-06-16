@@ -305,7 +305,7 @@ onMounted(() => {
   font-family: var(--card-font, 'Cormorant Garamond'), serif;
   font-style: italic;
   font-weight: 300;
-  font-size: var(--size-names, clamp(3rem, 14vw, 7.5rem));
+  font-size: var(--size-names, clamp(3rem, 14cqi, 7.5rem));
   color: #fff;
   line-height: 1.05;
   letter-spacing: 0.02em;
@@ -350,7 +350,7 @@ onMounted(() => {
 }
 .rev-text {
   font-style: italic;
-  font-size: clamp(1.1rem, 3vw, 1.55rem);
+  font-size: clamp(1.1rem, 3cqi, 1.55rem);
   line-height: 1.9;
   opacity: 0.65;
 }

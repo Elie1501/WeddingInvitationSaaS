@@ -99,7 +99,7 @@ const { displayNames, displayDate, displayLocation, isLoaded }
 .ecl-names {
   font-family: 'Fraunces', serif;
   font-weight: 100;
-  font-size: var(--size-names, clamp(3.5rem, 17vw, 9.5rem));
+  font-size: var(--size-names, clamp(3.5rem, 17cqi, 9.5rem));
   line-height: 0.92;
   letter-spacing: -0.025em;
   color: var(--color-names, #1A1512);
