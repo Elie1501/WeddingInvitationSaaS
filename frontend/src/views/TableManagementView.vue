@@ -142,6 +142,13 @@ const onDrop = async (e, tableId) => {
   if (guestId) await assignToTable(tableId, parseInt(guestId));
 };
 
+// Mobile : assignation via menu déroulant (le drag & drop HTML5 ne fonctionne pas au toucher)
+const onMobileAssign = async (e, guestId) => {
+  const tableId = parseInt(e.target.value);
+  if (tableId) await assignToTable(tableId, guestId);
+  e.target.value = '';
+};
+
 // ── Export CSV ────────────────────────────────────────────────────────────────
 const exportCsv = async () => {
   if (!isPremium.value) { showUpgradeModal.value = true; return; }
@@ -178,20 +185,20 @@ onMounted(fetchData);
   <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
 
     <!-- ── NAVBAR ── -->
-    <nav class="bg-white border-b border-gray-200 h-16 flex items-center px-8 sticky top-0 z-10 justify-between">
-      <div class="flex items-center gap-4">
-        <button @click="router.push('/dashboard')" class="text-gray-400 hover:text-primary-600 transition-colors">
+    <nav class="bg-white border-b border-gray-200 min-h-16 py-2 flex items-center px-4 sm:px-8 sticky top-0 z-10 justify-between gap-2">
+      <div class="flex items-center gap-2 sm:gap-4 min-w-0">
+        <button @click="router.push('/dashboard')" class="text-gray-400 hover:text-primary-600 transition-colors shrink-0">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
         </button>
-        <h1 class="text-lg font-semibold text-gray-900">Plan de Table</h1>
+        <h1 class="text-base sm:text-lg font-semibold text-gray-900 truncate">Plan de Table</h1>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
         <!-- Export CSV — Premium only -->
         <button
           @click="exportCsv"
           :disabled="exportingCsv"
-          class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+          class="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition-all"
           :class="isPremium
             ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
             : 'bg-gray-50 text-gray-400 border border-gray-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200'"
@@ -204,20 +211,21 @@ onMounted(fetchData);
             <path d="M18 8h-1V6A5 5 0 007 6v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zm-6 9a2 2 0 110-4 2 2 0 010 4zm3.1-9H8.9V6a3.1 3.1 0 016.2 0v2z"/>
           </svg>
           <span v-if="exportingCsv" class="w-3.5 h-3.5 border-2 border-emerald-300 border-t-emerald-600 rounded-full animate-spin"></span>
-          Export CSV
+          <span class="hidden sm:inline">Export CSV</span>
+          <span class="sm:hidden">CSV</span>
         </button>
 
-        <button @click="showAddTable = true" class="px-6 py-2 bg-primary-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-primary-600/20 hover:bg-primary-700 transition-all">
-          + Ajouter une table
+        <button @click="showAddTable = true" class="px-3 sm:px-6 py-2 bg-primary-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-primary-600/20 hover:bg-primary-700 transition-all whitespace-nowrap">
+          + <span class="hidden sm:inline">Ajouter une </span>Table
         </button>
       </div>
     </nav>
 
     <!-- ── CORPS ── -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
 
-      <!-- ─ Sidebar : invités à placer ─ -->
-      <aside class="w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm">
+      <!-- ─ Sidebar : invités à placer (en haut sur mobile) ─ -->
+      <aside class="w-full lg:w-80 max-h-[38vh] lg:max-h-none bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col shadow-sm shrink-0">
         <div class="p-5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
           <h2 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
             À placer ({{ unassignedGuests.length }})
@@ -244,18 +252,29 @@ onMounted(fetchData);
               <span v-if="guest.parent_id" class="text-[9px] text-gray-400 uppercase font-black tracking-widest mt-0.5">Accompagnant</span>
             </div>
             <div class="flex items-center gap-1 shrink-0 ml-2">
-              <!-- Icône crayon -->
+              <!-- Mobile : menu d'assignation tactile -->
+              <select
+                v-if="tables.length"
+                @click.stop
+                @change="onMobileAssign($event, guest.id)"
+                class="lg:hidden text-[11px] border border-gray-200 rounded-lg px-1.5 py-1 bg-gray-50 text-gray-600 max-w-[92px]"
+                title="Placer à une table"
+              >
+                <option value="">Placer à…</option>
+                <option v-for="t in tables" :key="t.id" :value="t.id">{{ t.name }}</option>
+              </select>
+              <!-- Icône crayon (toujours visible sur mobile) -->
               <button
                 @click.stop="openEditGuest(guest)"
-                class="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-all"
+                class="p-1.5 rounded-lg opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-all"
                 title="Modifier"
               >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                 </svg>
               </button>
-              <!-- Poignée drag -->
-              <svg class="w-4 h-4 text-gray-300 group-hover:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+              <!-- Poignée drag (desktop) -->
+              <svg class="hidden lg:block w-4 h-4 text-gray-300 group-hover:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
             </div>
           </div>
 
@@ -266,13 +285,13 @@ onMounted(fetchData);
       </aside>
 
       <!-- ─ Zone tables ─ -->
-      <main class="flex-1 overflow-y-auto p-10 bg-gray-50 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 content-start">
+      <main class="flex-1 overflow-y-auto p-4 sm:p-10 bg-gray-50 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-10 content-start">
         <div
           v-for="table in tables"
           :key="table.id"
           @dragover.prevent
           @drop="onDrop($event, table.id)"
-          class="bg-white rounded-[3rem] border-2 border-dashed border-gray-200 p-8 flex flex-col h-fit min-h-[350px] transition-all hover:border-primary-300 group relative"
+          class="bg-white rounded-3xl sm:rounded-[3rem] border-2 border-dashed border-gray-200 p-5 sm:p-8 flex flex-col h-fit min-h-[280px] sm:min-h-[350px] transition-all hover:border-primary-300 group relative"
         >
           <div class="flex justify-between items-start mb-6">
             <div>
@@ -307,7 +326,7 @@ onMounted(fetchData);
                 <span class="font-bold truncate">{{ guest.first_name }} {{ guest.last_name }}</span>
                 <span v-if="guest.parent_id" class="text-[8px] uppercase opacity-50 font-black shrink-0">ACC.</span>
               </div>
-              <div class="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-all shrink-0">
+              <div class="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover/item:opacity-100 transition-all shrink-0">
                 <!-- Crayon -->
                 <button @click="openEditGuest(guest)" class="p-1 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-100 transition-colors" title="Modifier">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -20,6 +20,9 @@ frontend/dist/
 .env.local
 frontend/.env
 backend/.env
+# Les fichiers d'exemple (placeholders) doivent rester suivis
+!*.env.example
+!frontend/.env.example
 
 # Editor directories and files
 .vscode/*
@@ -50,3 +53,5 @@ login*.json
 backend/firebase-service-account.json
 # Certificats TLS auto-signés (dev local)
 backend/certs/
+
+frontend/certs/

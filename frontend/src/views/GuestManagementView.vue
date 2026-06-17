@@ -122,16 +122,16 @@ onMounted(fetchGuests);
 
 <template>
   <div class="min-h-screen bg-gray-50 pb-20 font-sans">
-    <nav class="bg-white border-b border-gray-200 h-16 flex items-center px-8 sticky top-0 z-10 justify-between">
-      <div class="flex items-center">
-        <button @click="router.push('/dashboard')" class="text-gray-400 hover:text-primary-600 mr-4">
+    <nav class="bg-white border-b border-gray-200 min-h-16 py-2 flex items-center px-4 sm:px-8 sticky top-0 z-10 justify-between gap-2">
+      <div class="flex items-center min-w-0">
+        <button @click="router.push('/dashboard')" class="text-gray-400 hover:text-primary-600 mr-2 sm:mr-4 shrink-0">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         </button>
-        <h1 class="text-lg font-semibold text-gray-900">Gestion des Invités</h1>
+        <h1 class="text-base sm:text-lg font-semibold text-gray-900 truncate">Gestion des Invités</h1>
       </div>
-      <div class="flex space-x-3">
-        <button @click="showAddGuest = true" class="bg-primary-600 text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
-          + Ajouter un Invité / Groupe
+      <div class="flex space-x-3 shrink-0">
+        <button @click="showAddGuest = true" class="bg-primary-600 text-white px-3 sm:px-6 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 whitespace-nowrap">
+          + <span class="hidden sm:inline">Ajouter un Invité / Groupe</span><span class="sm:hidden">Invité</span>
         </button>
       </div>
     </nav>
@@ -154,7 +154,7 @@ onMounted(fetchGuests);
       </div>
 
       <!-- Filtres -->
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex gap-4">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row gap-3">
         <input v-model="searchQuery" type="text" placeholder="Rechercher..." class="flex-1 px-4 py-2 border border-gray-100 bg-gray-50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500">
         <select v-model="filterStatus" class="bg-gray-50 border border-gray-100 rounded-xl text-sm px-4 py-2">
           <option value="all">Tous les statuts</option>
@@ -164,7 +164,7 @@ onMounted(fetchGuests);
       </div>
 
       <!-- Liste -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-100">
           <thead class="bg-gray-50">
             <tr>

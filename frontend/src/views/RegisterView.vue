@@ -15,9 +15,17 @@ const router = useRouter();
 const route = useRoute();
 const loading = ref(false);
 
-onMounted(() => {
+onMounted(async () => {
   if (route.query.plan) {
     selectedPlan.value = route.query.plan;
+  }
+  // Finalise une connexion Google initiée par redirection (Safari / iOS).
+  try {
+    const res = await auth.finishGoogleRedirect();
+    if (res) handleGoogleSuccess(res);
+  } catch (err) {
+    console.error("Google Redirect Error:", err);
+    error.value = "Une erreur est survenue lors de la connexion avec Google.";
   }
 });
 
@@ -86,10 +94,10 @@ const handleRegister = async () => {
     <div class="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary-200/30 blur-3xl"></div>
     <div class="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-200/30 blur-3xl"></div>
 
-    <div class="w-full max-w-md bg-white p-10 rounded-2xl shadow-xl shadow-primary-900/5 relative z-10 border border-primary-100">
-      
-      <div class="text-center mb-10">
-        <h1 class="text-4xl text-primary-800 mb-2">Rejoignez-nous</h1>
+    <div class="w-full max-w-md bg-white p-6 sm:p-10 rounded-2xl shadow-xl shadow-primary-900/5 relative z-10 border border-primary-100">
+
+      <div class="text-center mb-8 sm:mb-10">
+        <h1 class="text-3xl sm:text-4xl text-primary-800 mb-2">Rejoignez-nous</h1>
         <p class="text-sm text-gray-500 font-sans tracking-wide uppercase text-pretty">Commencez l'aventure Saas Wedding</p>
       </div>
 

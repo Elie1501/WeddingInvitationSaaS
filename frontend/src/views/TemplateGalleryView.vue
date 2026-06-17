@@ -214,33 +214,36 @@ onMounted(async () => {
 <template>
   <div class="min-h-screen bg-[#F9F7F2] font-serif selection:bg-[#C5A059] selection:text-white">
     
-    <nav class="p-8 flex justify-between items-center border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-      <div class="flex items-center space-x-4">
-        <span class="text-2xl font-bold tracking-tighter uppercase">Saas Wedding</span>
-        <div class="h-4 w-[1px] bg-gray-200"></div>
-        <span class="text-xs uppercase tracking-widest text-[#C5A059]">
-          Pour {{ wizardData.groomName }} & {{ wizardData.brideName }}
-        </span>
+    <nav class="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+      <div class="flex justify-between items-center gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="text-lg sm:text-2xl font-bold tracking-tighter uppercase whitespace-nowrap">Saas Wedding</span>
+          <div class="hidden sm:block h-4 w-[1px] bg-gray-200"></div>
+          <span class="hidden sm:block text-xs uppercase tracking-widest text-[#C5A059] truncate">
+            Pour {{ wizardData.groomName }} & {{ wizardData.brideName }}
+          </span>
+        </div>
+
+        <button @click="router.push('/dashboard')" class="text-[10px] sm:text-xs uppercase tracking-widest text-gray-400 hover:text-black transition-colors whitespace-nowrap shrink-0">
+          Quitter
+        </button>
       </div>
-      
-      <div class="flex items-center space-x-8">
-        <div v-for="s in styles" :key="s.id" 
+
+      <!-- Filtres de style : scroll horizontal sur mobile pour éviter l'écrasement -->
+      <div class="mt-3 sm:mt-4 flex items-center gap-5 sm:gap-8 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+        <button v-for="s in styles" :key="s.id"
              @click="selectedStyle = s.id"
              :class="selectedStyle === s.id ? 'text-[#1A1A1A] border-b border-[#C5A059]' : 'text-gray-400 hover:text-gray-600'"
-             class="cursor-pointer text-xs uppercase tracking-[0.2em] pb-1 transition-all">
+             class="cursor-pointer text-[10px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] pb-1 transition-all whitespace-nowrap shrink-0">
           {{ s.label }}
-        </div>
+        </button>
       </div>
-
-      <button @click="router.push('/dashboard')" class="text-xs uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
-        Quitter
-      </button>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-8 py-20">
-      
-      <header class="mb-24 text-center space-y-12">
-        <h1 class="text-7xl text-[#1A1A1A] leading-none">Votre design idéal.</h1>
+    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-20">
+
+      <header class="mb-12 sm:mb-24 text-center space-y-6 sm:space-y-12">
+        <h1 class="text-4xl sm:text-6xl lg:text-7xl text-[#1A1A1A] leading-none">Votre design idéal.</h1>
         <div class="max-w-md mx-auto relative group">
             <input 
               v-model="searchQuery"
@@ -259,7 +262,7 @@ onMounted(async () => {
         <span class="text-[10px] uppercase tracking-widest text-[#C5A059]">Préparation de votre univers...</span>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+      <div v-else class="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8 sm:gap-12 lg:gap-16">
         <div
           v-for="tpl in filteredTemplates"
           :key="tpl.id"
@@ -287,7 +290,7 @@ onMounted(async () => {
             </div>
 
             <!-- Overlay hover : différent selon plan requis -->
-            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-center p-12 text-center space-y-6"
+            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-center p-4 sm:p-12 text-center space-y-4 sm:space-y-6"
                  :class="tpl.required_plan === 'premium' && !isPremium ? 'bg-[#0C0906]/92' : 'bg-[#1A1A1A]/90'">
 
               <!-- CTA premium verrouillé -->
@@ -316,17 +319,17 @@ onMounted(async () => {
             </div>
 
             <!-- Preview nom couple -->
-            <div class="absolute bottom-12 inset-x-0 text-center pointer-events-none group-hover:opacity-0 transition-opacity duration-300 px-4">
-                <div class="bg-white/95 backdrop-blur-sm py-4 px-6 inline-block rounded-sm shadow-xl border border-gray-100">
-                    <p class="text-[10px] uppercase tracking-[0.3em] text-[#C5A059] mb-1">Célébration</p>
-                    <h4 class="text-xl text-[#1A1A1A]">{{ wizardData.groomName }} & {{ wizardData.brideName }}</h4>
+            <div class="absolute bottom-5 sm:bottom-12 inset-x-0 text-center pointer-events-none group-hover:opacity-0 transition-opacity duration-300 px-3">
+                <div class="bg-white/95 backdrop-blur-sm py-2.5 px-3 sm:py-4 sm:px-6 inline-block rounded-sm shadow-xl border border-gray-100 max-w-full">
+                    <p class="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[#C5A059] mb-1">Célébration</p>
+                    <h4 class="text-sm sm:text-xl text-[#1A1A1A] truncate">{{ wizardData.groomName }} & {{ wizardData.brideName }}</h4>
                 </div>
             </div>
           </div>
 
           <!-- Nom + badge plan -->
           <div class="text-center space-y-2">
-            <h4 class="text-sm uppercase tracking-[0.3em] text-[#1A1A1A]">{{ tpl.name }}</h4>
+            <h4 class="text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[#1A1A1A]">{{ tpl.name }}</h4>
             <span class="inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full"
                   :class="tpl.required_plan === 'premium'
                     ? 'text-[#C5A059] bg-[#C5A059]/10 border border-[#C5A059]/30'
@@ -350,4 +353,7 @@ onMounted(async () => {
 .animate-loading-bar {
   animation: loading-bar 1.5s infinite linear;
 }
+/* Masque la barre de scroll des filtres horizontaux (mobile) */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 </style>

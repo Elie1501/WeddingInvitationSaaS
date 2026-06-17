@@ -195,7 +195,7 @@ export const DEMO_CONFIGS = {
 const U = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&q=80&w=600`;
 export const LANDING_TEMPLATES = [
   { id: 'riviera-blanche', name: 'Riviera Blanche', isPremium: false, image: U('photo-1519225421980-715cb0215aed') },
-  { id: 'tel-aviv',        name: 'Tel Aviv',        isPremium: false, image: U('photo-1502602898657-3e91760cbb34') },
+  { id: 'tel-aviv',        name: 'Tel Aviv',        isPremium: false, image: U('photo-1547483036-24bc77c79804') },
   { id: 'amour',           name: 'Amour',           isPremium: false, image: U('photo-1494955870715-979ca4f13bf0') },
   { id: 'velvet-noir',     name: 'Velvet Noir',     isPremium: true,  image: U('photo-1606800052052-a08af7148866') },
   { id: 'gatsby',          name: 'Art Déco',        isPremium: true,  image: U('photo-1511795409834-ef04bbd61622') },

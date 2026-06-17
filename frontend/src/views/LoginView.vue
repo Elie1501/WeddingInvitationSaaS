@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import GoogleLoginButton from '../components/GoogleLoginButton.vue';
@@ -15,6 +15,17 @@ const loading = ref(false);
 const showPlanSelection = ref(false);
 const selectedPlan = ref('classic');
 const planLoading = ref(false);
+
+// Finalise une connexion Google initiée par redirection (Safari / iOS).
+onMounted(async () => {
+  try {
+    const res = await auth.finishGoogleRedirect();
+    if (res) handleGoogleSuccess(res);
+  } catch (err) {
+    console.error("Google Redirect Error:", err);
+    error.value = "Une erreur est survenue lors de la connexion avec Google.";
+  }
+});
 
 const handleGoogleSuccess = ({ isNewUser }) => {
   if (isNewUser) {
@@ -77,10 +88,10 @@ const handleLogin = async () => {
     <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-secondary-200/30 blur-3xl"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary-200/30 blur-3xl"></div>
 
-    <div class="w-full max-w-md bg-white p-10 rounded-2xl shadow-xl shadow-primary-900/5 relative z-10 border border-primary-100">
-      
-      <div class="text-center mb-10">
-        <h1 class="text-4xl text-primary-800 mb-2">Saas Wedding</h1>
+    <div class="w-full max-w-md bg-white p-6 sm:p-10 rounded-2xl shadow-xl shadow-primary-900/5 relative z-10 border border-primary-100">
+
+      <div class="text-center mb-8 sm:mb-10">
+        <h1 class="text-3xl sm:text-4xl text-primary-800 mb-2">Saas Wedding</h1>
         <p class="text-sm text-gray-500 font-sans tracking-wide uppercase">L'art de l'invitation digitale</p>
       </div>
 

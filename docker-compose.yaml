@@ -29,7 +29,7 @@ services:
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
     # On force la commande de démarrage ici pour être sûr du chemin
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --ssl-keyfile=/app/certs/localhost-key.pem --ssl-certfile=/app/certs/localhost.pem
     ports:
       - "8000:8000"
     depends_on:
@@ -58,6 +58,6 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=https://localhost:8000
     depends_on:
       - backend

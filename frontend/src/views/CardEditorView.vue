@@ -149,6 +149,14 @@ import { useAuthStore } from '../stores/auth';
 
 const authStore = useAuthStore();
 const isPremium = computed(() => authStore.user?.plan === 'premium');
+
+// Blocs réservés au Premium (doit rester synchronisé avec PREMIUM_SECTION_IDS du backend)
+const PREMIUM_SECTIONS = ['countdown', 'program', 'custom-text', 'image'];
+// Sections par défaut : un compte Classic ne doit jamais recevoir de bloc Premium,
+// sinon l'auto-save est rejeté par le backend (« blocs réservés au forfait Premium »).
+const defaultSections = () => isPremium.value
+  ? ['hero', 'countdown', 'program', 'rsvp', 'footer']
+  : ['hero', 'rsvp', 'footer'];
 const eventTitle = computed(() =>
   eventData.groom_name && eventData.bride_name
     ? `${eventData.groom_name} & ${eventData.bride_name}`
@@ -206,7 +214,7 @@ const handleQuickUpload = async (event) => {
 // ==========================================
 const config = reactive({
   layout: 'riviera-blanche',
-  sections: ['hero', 'countdown', 'program', 'rsvp', 'footer'],
+  sections: defaultSections(),
   theme: {
     background: '#FAFAF8', accent: '#2E6E8E', text: '#1C2B3A',
     sectionTitleColor: '#1C2B3A', namesColor: '#2E6E8E', countdownColor: '',
@@ -553,7 +561,7 @@ const fetchCard = async () => {
 
       // Garantir que les sections de base sont toujours présentes
       if (!config.sections || config.sections.length === 0) {
-        config.sections = ['hero', 'countdown', 'program', 'rsvp', 'footer'];
+        config.sections = defaultSections();
       } else if (!config.sections.some(s => s.includes('hero') || s.includes('full'))) {
         config.sections.unshift('hero');
       }
@@ -562,7 +570,13 @@ const fetchCard = async () => {
       // composant). Désormais countdown/programme/RSVP/footer sont des blocs gérés
       // par CardRenderer → on les rétablit comme blocs déplaçables s'ils manquent.
       if (config.sections.length === 1 && config.sections[0] === 'hero') {
-        config.sections = ['hero', 'countdown', 'program', 'rsvp', 'footer'];
+        config.sections = defaultSections();
+      }
+
+      // Un compte Classic ne peut pas enregistrer de blocs Premium : on les retire
+      // d'une carte existante pour éviter le rejet 403 à l'auto-save.
+      if (!isPremium.value) {
+        config.sections = config.sections.filter(s => !PREMIUM_SECTIONS.includes(s));
       }
 
       // Initialiser l'historique
@@ -817,20 +831,20 @@ onUnmounted(() => {
     <header class="h-14 flex-shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-40 shadow-sm">
 
       <!-- LEFT : ← Galerie -->
-      <div class="flex items-center min-w-[140px]">
+      <div class="flex items-center min-w-0 lg:min-w-[140px]">
         <button @click="router.push('/templates')"
                 class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-gray-500 hover:text-[#C5A059] transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
           </svg>
-          Galerie
+          <span class="hidden sm:inline">Galerie</span>
         </button>
       </div>
 
       <!-- CENTER : nom événement + undo/redo -->
-      <div class="flex items-center gap-3 flex-1 justify-center px-4 min-w-0">
-        <span class="text-sm font-semibold text-gray-800 truncate max-w-[200px]">{{ eventTitle }}</span>
-        <div class="flex items-center gap-1 border-l border-gray-200 pl-3">
+      <div class="flex items-center gap-3 flex-1 justify-center px-2 sm:px-4 min-w-0">
+        <span class="text-xs sm:text-sm font-semibold text-gray-800 truncate max-w-[90px] sm:max-w-[200px]">{{ eventTitle }}</span>
+        <div class="hidden sm:flex items-center gap-1 border-l border-gray-200 pl-3">
           <button @click="undo" :disabled="historyIndex <= 0"
                   class="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-20 transition-all" title="Annuler (Ctrl+Z)">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -850,13 +864,13 @@ onUnmounted(() => {
       </div>
 
       <!-- RIGHT : statut + actions publication + Mon espace -->
-      <div class="flex items-center gap-3 min-w-[320px] justify-end">
+      <div class="flex items-center gap-2 sm:gap-3 min-w-0 lg:min-w-[320px] justify-end">
 
         <!-- Statut de publication -->
         <div class="flex items-center gap-1.5">
           <span v-if="isPublished" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
           <span v-else class="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0"></span>
-          <span class="text-[10px] font-bold uppercase tracking-widest"
+          <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-widest"
                 :class="isPublished ? 'text-emerald-600' : 'text-gray-400'">
             {{ isPublished ? 'En ligne' : 'Hors ligne' }}
           </span>
@@ -894,12 +908,12 @@ onUnmounted(() => {
         </button>
 
         <!-- Séparateur -->
-        <div class="w-px h-6 bg-gray-200 flex-shrink-0"></div>
+        <div class="hidden sm:block w-px h-6 bg-gray-200 flex-shrink-0"></div>
 
         <!-- Mon espace -->
         <button @click="router.push('/dashboard')"
                 class="text-[10px] font-black uppercase tracking-[0.12em] text-gray-500 hover:text-[#C5A059] transition-colors flex items-center gap-1.5 whitespace-nowrap">
-          Mon espace
+          <span class="hidden sm:inline">Mon espace</span>
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
           </svg>
@@ -908,10 +922,10 @@ onUnmounted(() => {
     </header>
 
     <!-- ═══ CORPS : SIDEBAR + PREVIEW ═══ -->
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-    <!-- SIDEBAR GAUCHE -->
-    <aside class="w-[360px] flex flex-col bg-white border-r border-gray-200 shadow-sm z-30 flex-shrink-0">
+    <!-- SIDEBAR GAUCHE (en bas sur mobile, à gauche sur desktop) -->
+    <aside class="order-2 lg:order-1 w-full lg:w-[360px] basis-1/2 lg:basis-auto min-h-0 flex flex-col bg-white border-t lg:border-t-0 lg:border-r border-gray-200 shadow-sm z-30 flex-shrink-0">
 
       <!-- ONGLETS -->
       <div class="flex overflow-x-auto custom-scrollbar border-b border-gray-100 bg-gray-50/50">
@@ -1418,10 +1432,10 @@ onUnmounted(() => {
     </aside>
 
     <!-- ZONE PREVIEW -->
-    <main class="flex-1 relative flex flex-col items-center justify-center p-8 bg-[#F3F4F6] overflow-hidden">
-      
+    <main class="order-1 lg:order-2 basis-1/2 lg:basis-auto flex-1 min-h-0 relative flex flex-col items-center justify-center p-2 sm:p-8 bg-[#F3F4F6] overflow-hidden">
+
       <!-- Toolbar flottante Preview -->
-      <div class="absolute top-6 flex items-center space-x-2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 shadow-sm z-20">
+      <div class="absolute top-2 sm:top-6 flex items-center space-x-2 bg-white/90 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-gray-200 shadow-sm z-20">
         <button @click="previewDevice = 'mobile'" :class="previewDevice === 'mobile' ? 'text-black' : 'text-gray-400'" class="p-1 hover:text-black transition-colors" title="Vue Mobile">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" stroke-width="2"/><path d="M12 18h.01" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
@@ -1438,7 +1452,7 @@ onUnmounted(() => {
       <div class="transition-all duration-500 ease-out origin-top flex items-center justify-center h-full w-full"
            :style="{ transform: `scale(${zoomLevel / 100})` }">
         
-        <div :class="previewDevice === 'mobile' ? 'w-[400px] h-[850px] rounded-[3rem] ring-[12px] ring-gray-900 shadow-2xl' : 'w-full max-w-5xl h-[800px] rounded-xl shadow-2xl'"
+        <div :class="previewDevice === 'mobile' ? 'w-[min(88vw,400px)] h-full max-h-[850px] rounded-[2.2rem] sm:rounded-[3rem] ring-8 sm:ring-[12px] ring-gray-900 shadow-2xl' : 'w-full max-w-5xl h-full max-h-[800px] rounded-xl shadow-2xl'"
              class="bg-white overflow-hidden relative flex flex-col transition-all duration-500 border border-gray-200">
           
           <div v-if="previewDevice === 'mobile'" class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-2xl z-50"></div>
