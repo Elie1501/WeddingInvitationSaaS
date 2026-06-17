@@ -17,6 +17,7 @@ const showApiModal = ref(false);
 const showPlanModal = ref(false);
 const planUpdateLoading = ref(false);
 const canCreateEvent = computed(() => events.value.length < planInfo.value.max_sites);
+const paymentBanner = ref(null); // { type: 'info'|'success'|'error', text }
 
 // ─── Delete modal ──────────────────────────────────────────────────────────
 const deleteModal = ref({ show: false, eventId: null, eventTitle: '' });
@@ -73,6 +74,12 @@ const handleLogout = () => {
 const handleUpdatePlan = async (newPlan) => {
   try {
     planUpdateLoading.value = true;
+    // Mise à niveau Classic → Premium : on ne facture que la différence (50 €).
+    if (newPlan === 'premium' && auth.user?.plan === 'classic') {
+      const res = await api.post('/payments/create-upgrade-session');
+      if (res.data.checkout_url) window.location.href = res.data.checkout_url;
+      return;
+    }
     const res = await api.post('/payments/create-checkout-session', { plan_name: newPlan });
     if (res.data.checkout_url) window.location.href = res.data.checkout_url;
   } catch {
@@ -96,11 +103,22 @@ onMounted(async () => {
   const sessionId = route.query.session_id;
   const paymentSuccess = route.query.payment_success;
   if (paymentSuccess === 'true' && sessionId) {
+    paymentBanner.value = { type: 'info', text: 'Confirmation de votre paiement en cours…' };
     try {
       await api.post('/payments/confirm-payment', { session_id: sessionId });
       await auth.fetchMe();
+      paymentBanner.value = {
+        type: 'success',
+        text: `Paiement confirmé 🎉 Votre forfait est maintenant ${planInfo.value.name}.`,
+      };
+    } catch (e) {
+      paymentBanner.value = {
+        type: 'error',
+        text: e.response?.data?.detail || "Le paiement a abouti mais la confirmation a échoué. Rechargez la page ou contactez le support.",
+      };
+    } finally {
       router.replace({ query: {} });
-    } catch { /* silent */ }
+    }
   }
 
   try {
@@ -173,6 +191,21 @@ onMounted(async () => {
         </div>
       </div>
     </nav>
+
+    <!-- ── Bannière paiement ── -->
+    <div v-if="paymentBanner" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div
+        class="flex items-start gap-3 rounded-xl px-4 py-3 text-sm font-sans border"
+        :class="{
+          'bg-green-50 border-green-200 text-green-800': paymentBanner.type === 'success',
+          'bg-red-50 border-red-200 text-red-800': paymentBanner.type === 'error',
+          'bg-blue-50 border-blue-200 text-blue-800': paymentBanner.type === 'info',
+        }"
+      >
+        <span class="flex-1">{{ paymentBanner.text }}</span>
+        <button @click="paymentBanner = null" class="text-current/60 hover:text-current shrink-0" aria-label="Fermer">✕</button>
+      </div>
+    </div>
 
     <!-- ── Main ── -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
@@ -434,7 +467,10 @@ onMounted(async () => {
             <div class="flex justify-between items-start mb-4">
               <div>
                 <h3 class="font-bold text-lg text-gray-900">Premium</h3>
-                <span class="text-primary-600 font-bold text-sm">79 €</span>
+                <span class="text-primary-600 font-bold text-sm">
+                  {{ auth.user.plan === 'classic' ? '+ 50 €' : '79 €' }}
+                </span>
+                <span v-if="auth.user.plan === 'classic'" class="block text-[10px] text-gray-400 font-sans">forfait à 79 € · mise à niveau depuis Classic</span>
               </div>
               <span v-if="auth.user.plan === 'premium'" class="bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">Actuel</span>
             </div>

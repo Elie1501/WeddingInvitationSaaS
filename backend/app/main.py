@@ -19,7 +19,7 @@ TEMPLATE_CATALOG = {
     "velvet-noir":       ("minimal", "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=800&q=80", "Velvet Noir"),
     "gatsby":            ("classic", "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80", "Art Déco"),
     "celestial":         ("art",     "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=800&q=80", "Céleste"),
-    "tel-aviv":          ("classic", "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80", "Tel Aviv"),
+    "tel-aviv":          ("classic", "https://images.unsplash.com/photo-1547483036-24bc77c79804?w=800&q=80", "Tel Aviv"),
     "japonais":          ("boho",    "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=800&q=80", "Japonais"),
     "riviera":           ("boho",    "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=800&q=80", "Riviera"),
     "cinema":            ("classic", "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=80", "Cinéma"),

@@ -19,7 +19,9 @@ const handleGoogleLogin = async () => {
   try {
     loading.value = true;
     error.value = null;
-    const { isNewUser } = await auth.loginWithGoogle(props.plan);
+    const { isNewUser, redirecting } = await auth.loginWithGoogle(props.plan);
+    // Safari / iOS : la page redirige vers Google, on garde l'état de chargement.
+    if (redirecting) return;
     emit('success', { isNewUser });
   } catch (err: any) {
     console.error("Google Auth Error:", err);

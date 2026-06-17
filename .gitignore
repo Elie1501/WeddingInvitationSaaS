@@ -50,3 +50,5 @@ login*.json
 backend/firebase-service-account.json
 # Certificats TLS auto-signés (dev local)
 backend/certs/
+
+frontend/certs/
