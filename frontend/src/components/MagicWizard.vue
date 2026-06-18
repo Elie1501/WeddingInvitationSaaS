@@ -246,7 +246,7 @@ const canStep3 = computed(() => !!wizard.location.trim());
                 @input="onLocationInput"
                 @blur="closeSuggestions"
                 @keydown.escape="showSuggestions = false"
-                class="w-full bg-transparent border-b-2 border-gray-200 py-4 text-2xl
+                class="w-full bg-transparent border-b-2 border-gray-200 py-4 text-lg sm:text-2xl
                        focus:border-[#C5A059] outline-none transition-colors text-center"
               />
 
