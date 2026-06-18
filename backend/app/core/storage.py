@@ -89,12 +89,12 @@ def generate_signed_url(s3_key: str, expiration=3600) -> str:
         
     if s3_key.startswith("local://"):
         relative_path = s3_key.replace("local://", "")
-        # Assuming the API is on port 8000 and has a /uploads static mount
-        return f"http://localhost:8000/uploads/{relative_path}"
+        # Médias servis par le mount statique /uploads du backend.
+        return f"{settings.BACKEND_URL.rstrip('/')}/uploads/{relative_path}"
 
     if not s3_client:
         # If it was stored locally without the local:// prefix (old logic)
-        return f"http://localhost:8000/uploads/{s3_key}"
+        return f"{settings.BACKEND_URL.rstrip('/')}/uploads/{s3_key}"
 
     try:
         url = s3_client.generate_presigned_url(
@@ -105,4 +105,4 @@ def generate_signed_url(s3_key: str, expiration=3600) -> str:
         return url
     except ClientError as e:
         print(f"S3 Signed URL Error: {e}")
-        return f"http://localhost:8000/uploads/{s3_key}"
+        return f"{settings.BACKEND_URL.rstrip('/')}/uploads/{s3_key}"
