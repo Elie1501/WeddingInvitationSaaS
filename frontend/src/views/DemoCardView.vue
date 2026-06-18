@@ -51,17 +51,19 @@ const goRegister = () => router.push({ path: '/register', query: { template: slu
     </div>
 
     <!-- CTA flottant : Créer avec ce design -->
-    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+    <div class="fixed bottom-5 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-max max-w-[92vw]">
       <button @click="goRegister"
-              class="flex items-center gap-3 px-7 py-4
+              class="flex items-center gap-2 sm:gap-3 px-5 sm:px-7 py-3 sm:py-4
                      bg-neutral-900 text-white rounded-full shadow-2xl shadow-neutral-900/30
-                     text-[11px] font-bold uppercase tracking-[0.25em]
+                     text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.25em]
+                     whitespace-nowrap
                      hover:bg-primary-700 transition-all
                      transform hover:-translate-y-0.5 active:scale-95">
         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        Créer mon invitation avec ce design
+        <span class="sm:hidden">Créer avec ce design</span>
+        <span class="hidden sm:inline">Créer mon invitation avec ce design</span>
       </button>
     </div>
 
