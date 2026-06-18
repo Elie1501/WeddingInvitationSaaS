@@ -19,6 +19,7 @@ const loading = ref(true);
 // ── Modals ────────────────────────────────────────────────────────────────────
 const showAddTable    = ref(false);
 const newTable        = ref({ name: '', capacity: 10 });
+const showGuestPanel  = ref(true); // panneau "à placer" — visible seulement s'il y a des tables
 
 const showAddGuest    = ref(false);
 const newGuest        = ref({ first_name: '', last_name: '' });
@@ -194,6 +195,17 @@ onMounted(fetchData);
       </div>
 
       <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <!-- Rouvrir le panneau "à placer" (visible s'il est masqué) -->
+        <button
+          v-if="tables.length > 0 && !showGuestPanel"
+          @click="showGuestPanel = true"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 transition-colors whitespace-nowrap"
+          title="Afficher les invités à placer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z"/></svg>
+          <span class="hidden sm:inline">À placer ({{ unassignedGuests.length }})</span>
+          <span class="sm:hidden">{{ unassignedGuests.length }}</span>
+        </button>
         <!-- Export CSV — Premium only -->
         <button
           @click="exportCsv"
@@ -224,19 +236,28 @@ onMounted(fetchData);
     <!-- ── CORPS ── -->
     <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
 
-      <!-- ─ Sidebar : invités à placer (en haut sur mobile) ─ -->
-      <aside class="w-full lg:w-80 max-h-[38vh] lg:max-h-none bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col shadow-sm shrink-0">
-        <div class="p-5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+      <!-- ─ Sidebar : invités à placer (visible seulement s'il y a au moins une table) ─ -->
+      <aside v-if="tables.length > 0 && showGuestPanel" class="w-full lg:w-80 max-h-[38vh] lg:max-h-none bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col shadow-sm shrink-0">
+        <div class="p-5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between gap-2">
           <h2 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
             À placer ({{ unassignedGuests.length }})
           </h2>
-          <button
-            @click="showAddGuest = true"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-primary-600 bg-primary-50 hover:bg-primary-100 transition-colors"
-          >
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-            Personne
-          </button>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button
+              @click="showAddGuest = true"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-primary-600 bg-primary-50 hover:bg-primary-100 transition-colors"
+            >
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+              Personne
+            </button>
+            <button
+              @click="showGuestPanel = false"
+              class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              title="Masquer le panneau"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
         </div>
 
         <div class="flex-1 overflow-y-auto p-4 space-y-2">

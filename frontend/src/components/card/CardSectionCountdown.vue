@@ -17,8 +17,11 @@ const { timeLeft } = useTemplateData(() => props.config, () => props.event);
 const theme   = computed(() => props.config.theme   || {});
 const content = computed(() => props.config.content || {});
 
-// Couleur des libellés : texte atténué (même recette que RSVP)
-const labelColor = computed(() => (theme.value.text || '#1A1A1A') + 'B3');
+// Couleur des libellés : même teinte que les chiffres (accent / countdown), atténuée.
+const labelColor = computed(() => {
+  const base = theme.value.countdownColor || theme.value.accent || theme.value.text || '#1A1A1A';
+  return base + 'B3';
+});
 
 // Couleur des chiffres : var custom de l'éditeur, fallback sur l'accent du thème.
 // Le fallback évite l'écueil "chiffres invisibles si la var n'est pas définie".

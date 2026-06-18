@@ -225,7 +225,7 @@ onMounted(async () => {
         </div>
 
         <button @click="router.push('/dashboard')" class="text-[10px] sm:text-xs uppercase tracking-widest text-gray-400 hover:text-black transition-colors whitespace-nowrap shrink-0">
-          Quitter
+          Mon espace
         </button>
       </div>
 
