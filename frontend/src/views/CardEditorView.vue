@@ -191,6 +191,18 @@ const quickUploadInput = ref(null);
 const previewDevice = ref('mobile'); // 'mobile' | 'desktop'
 const zoomLevel = ref(100);
 
+// Mobile (< lg) : on n'affiche qu'un panneau à la fois en plein écran, avec une
+// bascule Éditer ↔ Aperçu. Le desktop affiche toujours les deux côte à côte.
+const mobileView = ref('preview'); // 'edit' | 'preview' — ignoré en >= lg
+const lgUp = ref(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+const onResize = () => { lgUp.value = window.innerWidth >= 1024; };
+
+// Sélection d'un bloc depuis l'aperçu → bascule en mode édition sur mobile.
+const selectBlockFromPreview = (block) => {
+  selectedBlock.value = block;
+  if (!lgUp.value) mobileView.value = 'edit';
+};
+
 const tabs = [
   { id: 'cover',     label: 'Garde'  },
   { id: 'design',    label: 'Style'  },
@@ -792,6 +804,7 @@ onMounted(async () => {
 
   fetchCard();
   document.addEventListener('keydown', handleKeyboard);
+  window.addEventListener('resize', onResize);
 
   // Retour depuis Stripe Checkout → confirmer le paiement et rafraîchir le plan
   const sessionId = route.query.session_id;
@@ -807,6 +820,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyboard);
+  window.removeEventListener('resize', onResize);
   if (saveTimeout) clearTimeout(saveTimeout);
 });
 </script>
@@ -926,11 +940,30 @@ onUnmounted(() => {
       </div>
     </header>
 
+    <!-- BASCULE MOBILE : Éditer ↔ Aperçu (caché en >= lg) -->
+    <div class="lg:hidden flex-shrink-0 bg-white border-b border-gray-200 px-3 py-2 flex justify-center">
+      <div class="inline-flex bg-gray-100 rounded-full p-1">
+        <button @click="mobileView = 'edit'"
+                class="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5"
+                :class="mobileView === 'edit' ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-gray-400'">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a1 1 0 00-1 1v14a1 1 0 001 1h14a1 1 0 001-1v-7M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Éditer
+        </button>
+        <button @click="mobileView = 'preview'"
+                class="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5"
+                :class="mobileView === 'preview' ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-gray-400'">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
+          Aperçu
+        </button>
+      </div>
+    </div>
+
     <!-- ═══ CORPS : SIDEBAR + PREVIEW ═══ -->
     <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-    <!-- SIDEBAR GAUCHE (en bas sur mobile, à gauche sur desktop) -->
-    <aside class="order-2 lg:order-1 w-full lg:w-[360px] basis-3/5 lg:basis-auto min-h-0 flex flex-col bg-white border-t lg:border-t-0 lg:border-r border-gray-200 shadow-sm z-30 flex-shrink-0">
+    <!-- SIDEBAR GAUCHE — plein écran sur mobile (mode Éditer), 360px à gauche sur desktop -->
+    <aside class="w-full lg:w-[360px] flex-1 lg:flex-none min-h-0 flex-col bg-white lg:border-r border-gray-200 shadow-sm z-30"
+           :class="mobileView === 'edit' ? 'flex' : 'hidden lg:flex'">
 
       <!-- ONGLETS -->
       <div class="flex overflow-x-auto custom-scrollbar border-b border-gray-100 bg-gray-50/50">
@@ -958,7 +991,7 @@ onUnmounted(() => {
               <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
             </div>
             <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">
-              Cliquez sur un bloc<br>dans l'aperçu à droite
+              Sélectionnez un bloc<br>dans l'aperçu
             </p>
           </div>
 
@@ -1436,11 +1469,12 @@ onUnmounted(() => {
 
     </aside>
 
-    <!-- ZONE PREVIEW -->
-    <main class="order-1 lg:order-2 basis-2/5 lg:basis-auto lg:flex-1 min-h-0 relative flex flex-col items-center justify-center p-2 sm:p-8 bg-[#F3F4F6] overflow-hidden">
+    <!-- ZONE PREVIEW — plein écran sur mobile (mode Aperçu), à droite sur desktop -->
+    <main class="flex-1 min-h-0 relative flex-col items-center justify-center p-0 lg:p-8 bg-[#F3F4F6] overflow-hidden"
+          :class="mobileView === 'preview' ? 'flex' : 'hidden lg:flex'">
 
-      <!-- Toolbar flottante Preview -->
-      <div class="absolute top-2 sm:top-6 flex items-center space-x-2 bg-white/90 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-gray-200 shadow-sm z-20">
+      <!-- Toolbar flottante Preview (desktop uniquement — sur mobile la carte occupe tout l'écran) -->
+      <div class="absolute top-6 hidden lg:flex items-center space-x-2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 shadow-sm z-20">
         <button @click="previewDevice = 'mobile'" :class="previewDevice === 'mobile' ? 'text-black' : 'text-gray-400'" class="p-1 hover:text-black transition-colors" title="Vue Mobile">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" stroke-width="2"/><path d="M12 18h.01" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
@@ -1453,18 +1487,19 @@ onUnmounted(() => {
         <button @click="zoomLevel = Math.min(150, zoomLevel + 10)" class="p-1 text-gray-400 hover:text-black">+</button>
       </div>
 
-      <!-- Container Rendu -->
+      <!-- Container Rendu — le zoom ne s'applique qu'au desktop ; sur mobile la carte remplit l'écran -->
       <div class="transition-all duration-500 ease-out origin-top flex items-center justify-center h-full w-full"
-           :style="{ transform: `scale(${zoomLevel / 100})` }">
-        
+           :style="lgUp ? { transform: `scale(${zoomLevel / 100})` } : {}">
+
         <div :class="previewDevice === 'mobile' ? 'w-[min(88vw,400px)] h-full max-h-[850px] rounded-[2.2rem] sm:rounded-[3rem] ring-8 sm:ring-[12px] ring-gray-900 shadow-2xl' : 'w-full max-w-5xl h-full max-h-[800px] rounded-xl shadow-2xl'"
-             class="bg-white overflow-hidden relative flex flex-col transition-all duration-500 border border-gray-200">
-          
-          <div v-if="previewDevice === 'mobile'" class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-2xl z-50"></div>
+             class="bg-white overflow-hidden relative flex flex-col transition-all duration-500 border border-gray-200
+                    max-lg:!w-full max-lg:!h-full max-lg:!max-h-none max-lg:!rounded-none max-lg:!ring-0 max-lg:!border-0">
+
+          <div v-if="previewDevice === 'mobile'" class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-2xl z-50 max-lg:hidden"></div>
           
           <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-white relative" @click.self="selectedBlock = null">
             <!-- INJECTION DU MOTEUR DE RENDU -->
-            <CardRenderer :config="config" :event="eventData" :subEvents="subEvents" :selectedBlock="selectedBlock" @select-block="selectedBlock = $event" />
+            <CardRenderer :config="config" :event="eventData" :subEvents="subEvents" :selectedBlock="selectedBlock" @select-block="selectBlockFromPreview" />
 
             <!-- Bouton retour carte (visible uniquement en mode préview garde) -->
             <Transition name="fade-up">
