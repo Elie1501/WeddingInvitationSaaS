@@ -66,6 +66,30 @@ const copyToClipboard = async (text, eventId) => {
   }
 };
 
+// Lien public court de l'invitation
+const inviteUrl = (event) => `${baseUrl}/i/${event.card.slug}`;
+
+// Message de partage personnalisé (noms du couple + date) pour un rendu soigné
+const shareText = (event) => {
+  const names = [event.groom_name, event.bride_name].filter(Boolean).join(' & ');
+  const dateStr = event.date
+    ? new Date(event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+  const intro = names ? `💍 ${names} vous invitent` : 'Vous êtes convié·e à notre mariage';
+  const when = dateStr ? ` — ${dateStr}` : '';
+  return `${intro}${when}.\nDécouvrez notre invitation : ${inviteUrl(event)}`;
+};
+
+// Partage natif (iMessage, Mail, réseaux…) avec repli WhatsApp si indisponible
+const nativeShare = async (event) => {
+  const text = shareText(event);
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Notre invitation de mariage', text, url: inviteUrl(event) }); return; }
+    catch { /* annulé par l'utilisateur */ return; }
+  }
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+};
+
 const handleLogout = () => {
   auth.logout();
   router.push('/login');
@@ -363,8 +387,17 @@ onMounted(async () => {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                   </svg>
                 </button>
+                <button
+                  @click="nativeShare(event)"
+                  class="p-2 bg-white border border-gray-200 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors shadow-sm"
+                  title="Partager (iMessage, Mail…)"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                  </svg>
+                </button>
                 <a
-                  :href="'https://wa.me/?text=' + encodeURIComponent('Découvrez notre invitation de mariage : ' + baseUrl + '/i/' + event.card.slug)"
+                  :href="'https://wa.me/?text=' + encodeURIComponent(shareText(event))"
                   target="_blank"
                   class="p-2 bg-white border border-gray-200 rounded-lg text-green-600 hover:bg-green-50 transition-colors shadow-sm"
                   title="Partager sur WhatsApp"
