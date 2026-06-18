@@ -28,6 +28,8 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      # URL du front pour les redirections Stripe (HTTPS en dev — voir mkcert)
+      - FRONTEND_URL=${FRONTEND_URL:-https://localhost:5173}
     # On force la commande de démarrage ici pour être sûr du chemin
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --ssl-keyfile=/app/certs/localhost-key.pem --ssl-certfile=/app/certs/localhost.pem
     ports:
