@@ -23,6 +23,12 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(reusabl
     user = db.query(User).filter(User.id == token_data.sub).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    # Un compte désactivé ne doit plus passer, même avec un token encore valide.
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Votre compte a été désactivé. Veuillez contacter l'administrateur.",
+        )
     return user
 
 def get_current_user_optional(

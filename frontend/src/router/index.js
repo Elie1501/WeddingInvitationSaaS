@@ -106,7 +106,12 @@ const router = createRouter({
 // Garde de navigation pour protéger les routes
 router.beforeEach(async (to, from) => {
     const token = localStorage.getItem('token');
-    
+
+    // Déjà connecté → on ne revient pas sur les pages d'auth (login/register).
+    if (token && (to.name === 'login' || to.name === 'register')) {
+        return '/dashboard';
+    }
+
     if (to.meta.requiresAuth && !token) {
         return '/login';
     }

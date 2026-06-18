@@ -42,6 +42,17 @@ def create_checkout_session(
     if request.plan_name not in prices:
         raise HTTPException(status_code=400, detail="Plan invalide")
 
+    # Empêche le double-paiement : on ne peut pas (re)payer un forfait déjà détenu,
+    # ni "rétrograder" en payant. Seule une vraie montée en gamme est autorisée.
+    plan_rank = {"classic": 1, "premium": 2}
+    current_rank = plan_rank.get(current_user.plan or "classic", 1)
+    requested_rank = plan_rank.get(request.plan_name, 0)
+    if requested_rank <= current_rank:
+        raise HTTPException(
+            status_code=400,
+            detail="Vous bénéficiez déjà de ce forfait (ou d'un forfait supérieur).",
+        )
+
     plan_data = prices[request.plan_name]
 
     try:
