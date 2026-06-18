@@ -70,7 +70,6 @@ frontend/src/
     ├── PublicCardView.vue       Vue publique de l'invitation (partageable)
     ├── GuestManagementView.vue  Gestion des invités + RSVP
     ├── TableManagementView.vue  Plan de table interactif
-    ├── CreateEventView.vue      Création d'événement
     └── AdminUsersView.vue       Administration (admin uniquement)
 ```
 
