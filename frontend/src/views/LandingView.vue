@@ -333,9 +333,6 @@ onUnmounted(() => {
       </div>
     </section>
 
-    <!-- ─── SOCIAL PROOF ──────────────────────────────────────────────────────── -->
-    <SocialProofBanner id="avis" />
-
     <!-- ─── FORFAITS ──────────────────────────────────────────────────────────── -->
     <section id="forfaits" class="py-24 bg-white">
       <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -464,6 +461,9 @@ onUnmounted(() => {
         </p>
       </div>
     </section>
+
+    <!-- ─── SOCIAL PROOF (avis en fin de page) ──────────────────────────────────── -->
+    <SocialProofBanner id="avis" />
 
     <!-- ─── FOOTER ────────────────────────────────────────────────────────────── -->
     <footer class="bg-neutral-900 pt-16 pb-10 border-t border-white/5">
