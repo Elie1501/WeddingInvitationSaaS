@@ -370,10 +370,10 @@ onMounted(async () => {
               <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Partager l'invitation</p>
               <div class="flex items-center gap-2">
                 <div class="flex-grow bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono text-gray-500 truncate">
-                  {{ baseUrl }}/i/{{ event.card.slug }}
+                  {{ inviteUrl(event) }}
                 </div>
                 <button
-                  @click="copyToClipboard(`${baseUrl}/i/${event.card.slug}`, event.id)"
+                  @click="copyToClipboard(inviteUrl(event), event.id)"
                   class="p-2 bg-white border rounded-lg transition-all shadow-sm"
                   :class="copiedEventId === event.id
                     ? 'border-green-300 text-green-600 bg-green-50'
