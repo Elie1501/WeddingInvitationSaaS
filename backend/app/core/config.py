@@ -19,7 +19,9 @@ class Settings(BaseSettings):
 
     STRIPE_SECRET_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
-    FRONTEND_URL: str = "http://localhost:5173"
+    # HTTPS car le front est servi en TLS (mkcert) en dev ; sinon les redirections
+    # Stripe vers http://localhost:5173 renvoient ERR_EMPTY_RESPONSE. À surcharger en prod.
+    FRONTEND_URL: str = "https://localhost:5173"
 
     # Configuration pour charger le fichier .env
     model_config = SettingsConfigDict(env_file=".env")
