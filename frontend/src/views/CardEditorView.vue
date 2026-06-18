@@ -347,6 +347,8 @@ const deleteBlock = (index) => {
   }
   config.sections.splice(index, 1);
   selectedBlock.value = null;
+  // Rester sur la liste des blocs plutôt que d'être renvoyé sur l'onglet Garde.
+  activeTab.value = 'structure';
 };
 
 const getBlockLabel = (id) => {
@@ -925,7 +927,7 @@ onUnmounted(() => {
     <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
     <!-- SIDEBAR GAUCHE (en bas sur mobile, à gauche sur desktop) -->
-    <aside class="order-2 lg:order-1 w-full lg:w-[360px] basis-1/2 lg:basis-auto min-h-0 flex flex-col bg-white border-t lg:border-t-0 lg:border-r border-gray-200 shadow-sm z-30 flex-shrink-0">
+    <aside class="order-2 lg:order-1 w-full lg:w-[360px] basis-3/5 lg:basis-auto min-h-0 flex flex-col bg-white border-t lg:border-t-0 lg:border-r border-gray-200 shadow-sm z-30 flex-shrink-0">
 
       <!-- ONGLETS -->
       <div class="flex overflow-x-auto custom-scrollbar border-b border-gray-100 bg-gray-50/50">
@@ -938,7 +940,7 @@ onUnmounted(() => {
       </div>
 
       <!-- CONTENU DES ONGLETS -->
-      <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#FAFAFA]">
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-[#FAFAFA]">
         
         <!-- ONGLET : CONTEXTE (auto-activé au clic sur un bloc, hors nav) -->
         <div v-if="activeTab === 'context'" class="animate-in space-y-6">
@@ -1432,7 +1434,7 @@ onUnmounted(() => {
     </aside>
 
     <!-- ZONE PREVIEW -->
-    <main class="order-1 lg:order-2 basis-1/2 lg:basis-auto flex-1 min-h-0 relative flex flex-col items-center justify-center p-2 sm:p-8 bg-[#F3F4F6] overflow-hidden">
+    <main class="order-1 lg:order-2 basis-2/5 lg:basis-auto lg:flex-1 min-h-0 relative flex flex-col items-center justify-center p-2 sm:p-8 bg-[#F3F4F6] overflow-hidden">
 
       <!-- Toolbar flottante Preview -->
       <div class="absolute top-2 sm:top-6 flex items-center space-x-2 bg-white/90 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-gray-200 shadow-sm z-20">

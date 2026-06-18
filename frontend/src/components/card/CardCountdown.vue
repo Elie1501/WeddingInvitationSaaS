@@ -50,7 +50,7 @@ const containerClass = computed(() => `countdown-${props.templateId}`);
         <div class="number-box relative flex items-center justify-center">
            <span class="text-3xl md:text-5xl font-bold transition-all group-hover:scale-110" :style="{ color: themeColor }">{{ val }}</span>
         </div>
-        <span class="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold mt-2 opacity-60">{{ unit }}</span>
+        <span class="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold mt-2 opacity-60" :style="{ color: themeColor }">{{ unit }}</span>
       </div>
     </template>
     <div v-else class="text-2xl italic text-center p-4" :style="{ color: themeColor }">

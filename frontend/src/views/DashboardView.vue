@@ -15,6 +15,7 @@ const baseUrl = window.location.origin;
 const planInfo = computed(() => getPlanInfo(auth.user?.plan || 'classic'));
 const showApiModal = ref(false);
 const showPlanModal = ref(false);
+const showAccountMenu = ref(false);
 const planUpdateLoading = ref(false);
 const canCreateEvent = computed(() => events.value.length < planInfo.value.max_sites);
 const paymentBanner = ref(null); // { type: 'info'|'success'|'error', text }
@@ -160,59 +161,71 @@ onMounted(async () => {
     <!-- ── Navbar ── -->
     <nav class="bg-white border-b border-primary-100 sticky top-0 z-50 shadow-sm shadow-primary-900/5">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-20">
+        <div class="flex justify-between items-center h-16 sm:h-20 gap-2">
 
-          <div class="flex items-center">
-            <h1 class="text-2xl text-primary-800">Saas Wedding</h1>
-          </div>
+          <h1 class="text-xl sm:text-2xl text-primary-800 truncate">Saas Wedding</h1>
 
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               v-if="auth.user?.is_admin"
               @click="router.push('/admin/users')"
-              class="bg-amber-50 text-amber-700 border border-amber-200 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-amber-100 transition-colors"
+              class="bg-amber-50 text-amber-700 border border-amber-200 px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-amber-100 transition-colors whitespace-nowrap"
             >
-              Panel Admin
+              <span class="hidden sm:inline">Panel </span>Admin
             </button>
 
-            <!-- User info + plan modifier -->
-            <div v-if="auth.user" class="flex flex-col items-end">
-              <span class="text-gray-900 font-sans text-sm font-medium">{{ auth.user.email }}</span>
-              <div class="flex items-center gap-1.5">
-                <span
-                  :class="auth.user.plan === 'premium' ? 'text-primary-600' : 'text-gray-500'"
-                  class="text-[10px] font-bold uppercase tracking-widest"
-                >{{ planInfo.name }}</span>
-                <!-- Pencil icon — modifier le forfait -->
+            <!-- Mon compte (dropdown : infos perso + forfait + statut) -->
+            <div v-if="auth.user" class="relative">
+              <button
+                @click="showAccountMenu = !showAccountMenu"
+                class="inline-flex items-center gap-2 pl-1.5 pr-2 sm:pr-3 py-1.5 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all text-sm font-medium"
+              >
+                <span class="w-7 h-7 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold uppercase shrink-0">{{ (auth.user.email || '?')[0] }}</span>
+                <span class="hidden sm:inline">Mon compte</span>
+                <svg class="w-3.5 h-3.5 text-gray-400 transition-transform" :class="showAccountMenu ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+
+              <!-- Panneau -->
+              <div v-if="showAccountMenu" class="absolute right-0 mt-2 w-72 max-w-[85vw] bg-white border border-gray-100 rounded-2xl shadow-xl shadow-primary-900/10 p-4 z-50">
+                <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Connecté·e en tant que</p>
+                <p class="text-sm font-semibold text-gray-900 truncate">{{ auth.user.email }}</p>
+
+                <div class="mt-4 flex items-end justify-between">
+                  <div>
+                    <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">Forfait</p>
+                    <p class="text-base font-bold" :class="auth.user.plan === 'premium' ? 'text-primary-600' : 'text-gray-700'">{{ planInfo.name }}</p>
+                  </div>
+                  <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-green-600">
+                    <span class="w-2 h-2 rounded-full bg-green-400"></span> Compte actif
+                  </span>
+                </div>
+
                 <button
-                  @click="showPlanModal = true"
-                  title="Modifier le forfait"
-                  aria-label="Modifier le forfait"
-                  class="text-primary-400 hover:text-primary-600 transition-colors p-0.5 rounded"
-                >
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                  </svg>
-                </button>
+                  @click="showPlanModal = true; showAccountMenu = false"
+                  class="mt-4 w-full py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >Gérer mon forfait</button>
               </div>
             </div>
 
-            <!-- Logout button -->
+            <!-- Déconnexion -->
             <button
               @click="handleLogout"
-              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-200 text-gray-600
+              class="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full border border-gray-200 text-gray-600
                      hover:border-red-200 hover:text-red-600 hover:bg-red-50 transition-all text-sm font-medium font-sans"
+              title="Déconnexion"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
               </svg>
-              Déconnexion
+              <span class="hidden sm:inline">Déconnexion</span>
             </button>
           </div>
 
         </div>
+
+        <!-- Ferme le menu compte au clic extérieur -->
+        <div v-if="showAccountMenu" @click="showAccountMenu = false" class="fixed inset-0 z-40"></div>
       </div>
     </nav>
 
@@ -487,12 +500,10 @@ onMounted(async () => {
               <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Plan de table complet</li>
               <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 1 site d'invitation</li>
             </ul>
-            <button
-              v-if="auth.user.plan !== 'classic'"
-              @click="handleUpdatePlan('classic')"
-              :disabled="planUpdateLoading"
-              class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-medium transition-colors"
-            >Choisir Classic</button>
+            <p
+              v-if="auth.user.plan === 'premium'"
+              class="text-center text-[11px] text-gray-400 font-sans italic leading-snug"
+            >Vous bénéficiez déjà du forfait supérieur. La rétrogradation vers Classic n'est pas disponible.</p>
           </div>
           <!-- Premium -->
           <div class="border-2 rounded-2xl p-6 transition-all"
