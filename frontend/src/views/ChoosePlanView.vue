@@ -18,7 +18,7 @@ const plans = [
     name: 'Classic',
     price: '29 €',
     tagline: "L'essentiel pour votre mariage",
-    features: ["Jusqu'à 3 pages", '1 site web', 'Formulaire RSVP', 'Plan de table', 'Personnalisation complète'],
+    features: ['1 site web', 'Formulaire RSVP', 'Plan de table', 'Personnalisation complète'],
     highlight: false,
   },
   {
@@ -26,7 +26,7 @@ const plans = [
     name: 'Premium',
     price: '79 €',
     tagline: 'Expérience complète et personnalisée',
-    features: ['Tout le Classic', 'Templates Premium', 'Compte à rebours & programme', 'Musique de fond', "Jusqu'à 20 pages & 5 sites", 'Export CSV invités'],
+    features: ['Tout le Classic', 'Templates Premium', 'Compte à rebours & programme', 'Musique de fond', "Jusqu'à 5 sites web", 'Export CSV invités'],
     highlight: true,
   },
 ];

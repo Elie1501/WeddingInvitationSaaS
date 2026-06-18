@@ -23,13 +23,6 @@ const reviews = [
     template: 'Velvet Noir',
   },
   {
-    initials: 'C & A',
-    names: 'Camille & Antoine',
-    stars: 5,
-    text: 'Le template Art Déco était exactement ce qu\'on cherchait. Parfait.',
-    template: 'Art Déco',
-  },
-  {
     initials: 'L & P',
     names: 'Lucie & Paul',
     stars: 5,
@@ -61,7 +54,7 @@ const reviews = [
       </div>
 
       <!-- Reviews -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <article v-for="review in reviews" :key="review.names"
                  class="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-primary-100 flex flex-col gap-4">
           <div class="flex gap-0.5" :aria-label="`${review.stars} étoiles`">

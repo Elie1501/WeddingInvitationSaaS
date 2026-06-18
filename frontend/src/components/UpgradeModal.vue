@@ -128,7 +128,6 @@ const errorMsg = ref('');
 const isDev = import.meta.env.DEV;
 
 const classicFeatures = [
-  "Jusqu'à 3 pages",
   '1 site web',
   'Formulaire RSVP',
   'Plan de table',
@@ -140,7 +139,7 @@ const blockedFeatures = [
   'Blocs : compte à rebours, programme…',
   'Musique de fond',
   'Typographie personnalisée',
-  "Jusqu'à 20 pages & 5 sites",
+  "Jusqu'à 5 sites web",
   'Export CSV invités',
 ];
 

@@ -27,6 +27,26 @@ const navVisible = computed(() => !heroInView.value);
 const menuOpen   = ref(false);
 let   heroIO     = null;
 
+// ─── Forfaits ──────────────────────────────────────────────────────────────────
+const plans = [
+  {
+    id: 'classic',
+    name: 'Classic',
+    price: '29',
+    tagline: "L'essentiel pour un mariage élégant.",
+    features: ['1 site web', 'Formulaire RSVP', 'Plan de table', 'Personnalisation complète'],
+    highlight: false,
+  },
+  {
+    id: 'premium',
+    name: 'Premium',
+    price: '79',
+    tagline: "L'expérience complète, sans limite.",
+    features: ['Tout le Classic', 'Tous les templates Premium', 'Compte à rebours, programme, musique', "Jusqu'à 5 sites web", 'Export CSV des invités'],
+    highlight: true,
+  },
+];
+
 // ─── Steps ───────────────────────────────────────────────────────────────────
 const steps = [
   { number: '01', title: 'Choisissez votre design',    description: '18 templates exclusifs, des plus classiques aux plus avant-gardistes.' },
@@ -316,6 +336,98 @@ onUnmounted(() => {
     <!-- ─── SOCIAL PROOF ──────────────────────────────────────────────────────── -->
     <SocialProofBanner id="avis" />
 
+    <!-- ─── FORFAITS ──────────────────────────────────────────────────────────── -->
+    <section id="forfaits" class="py-24 bg-white">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="text-center mb-14">
+          <span class="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.5em] text-primary-500 mb-5">
+            <span class="w-8 h-px bg-primary-300" aria-hidden="true"/>
+            Tarifs
+            <span class="w-8 h-px bg-primary-300" aria-hidden="true"/>
+          </span>
+          <h2 class="text-3xl md:text-4xl font-serif italic text-neutral-900 mb-3">Deux forfaits, un seul paiement</h2>
+          <p class="text-neutral-400 font-light max-w-md mx-auto">
+            Pas d'abonnement. Vous payez une fois, votre invitation reste en ligne jusqu'au grand jour.
+          </p>
+        </div>
+
+        <!-- Cards — prix compact, survol (ou focus clavier) révèle les détails.
+             Sur mobile (pas de survol) les détails restent toujours visibles. -->
+        <div data-section="forfaits"
+             class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-3xl mx-auto items-start transition-all duration-700"
+             :class="isVisible('forfaits') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'">
+          <div v-for="plan in plans" :key="plan.id" tabindex="0"
+               class="group relative rounded-3xl bg-white outline-none transition-all duration-500
+                      lg:hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-primary-300"
+               :class="plan.highlight
+                 ? 'border-2 border-primary-400 shadow-xl shadow-primary-200/40'
+                 : 'border border-neutral-200 shadow-sm hover:shadow-lg'">
+
+            <span v-if="plan.highlight"
+                  class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary-500
+                         text-white text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm z-10">
+              Recommandé
+            </span>
+
+            <!-- Face : prix (toujours visible) -->
+            <div class="px-8 pt-9 pb-7 text-center rounded-3xl transition-colors duration-500
+                        lg:group-hover:bg-primary-50/70 lg:group-focus-within:bg-primary-50/70">
+              <p class="text-[10px] font-bold uppercase tracking-[0.35em] mb-4"
+                 :class="plan.highlight ? 'text-primary-600' : 'text-neutral-400'">{{ plan.name }}</p>
+              <div class="flex items-baseline justify-center gap-1">
+                <span class="font-serif text-6xl text-neutral-900 leading-none">{{ plan.price }}</span>
+                <span class="text-2xl text-neutral-400">€</span>
+              </div>
+              <p class="mt-2 text-[10px] uppercase tracking-[0.25em] text-neutral-400">paiement unique</p>
+              <p class="mt-4 text-sm text-neutral-500 font-light">{{ plan.tagline }}</p>
+
+              <!-- Indice de survol (desktop, masqué quand déplié) -->
+              <span class="hidden lg:flex items-center justify-center gap-1.5 mt-5 text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-300
+                           transition-opacity duration-300 lg:group-hover:opacity-0 lg:group-focus-within:opacity-0">
+                Survolez pour les détails
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </span>
+            </div>
+
+            <!-- Détails révélés -->
+            <div class="overflow-hidden transition-all duration-500 ease-out
+                        max-h-[640px] opacity-100
+                        lg:max-h-0 lg:opacity-0
+                        lg:group-hover:max-h-[640px] lg:group-hover:opacity-100
+                        lg:group-focus-within:max-h-[640px] lg:group-focus-within:opacity-100">
+              <div class="px-8 pb-8 pt-1">
+                <div class="h-px bg-neutral-100 mb-6"></div>
+                <ul class="space-y-3 mb-7">
+                  <li v-for="feat in plan.features" :key="feat" class="flex items-start gap-3 text-sm text-neutral-700">
+                    <svg class="w-4 h-4 mt-0.5 shrink-0" :class="plan.highlight ? 'text-primary-500' : 'text-neutral-400'"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span class="font-light">{{ feat }}</span>
+                  </li>
+                </ul>
+                <button @click="handleCta"
+                        class="w-full py-4 rounded-2xl text-[10px] font-bold uppercase tracking-[0.25em] transition-all active:scale-95"
+                        :class="plan.highlight
+                          ? 'bg-neutral-900 text-white hover:bg-primary-700 shadow-lg shadow-neutral-900/10'
+                          : 'border border-neutral-300 text-neutral-700 hover:border-neutral-900 hover:text-neutral-900'">
+                  Choisir {{ plan.name }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-center mt-8 text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-300">
+          Passage de Classic à Premium possible à tout moment
+        </p>
+      </div>
+    </section>
+
     <!-- ─── CTA FINAL ─────────────────────────────────────────────────────────── -->
     <section class="py-24 bg-primary-50 relative overflow-hidden">
       <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -368,7 +480,7 @@ onUnmounted(() => {
             <div>
               <p class="text-[9px] font-bold uppercase tracking-widest text-neutral-600 mb-4">Navigation</p>
               <div class="flex flex-col gap-2.5">
-                <a v-for="[href, label] in [['#modeles','Designs'],['#concept','Comment ça marche'],['#avis','Avis']]"
+                <a v-for="[href, label] in [['#modeles','Designs'],['#concept','Comment ça marche'],['#forfaits','Tarifs'],['#avis','Avis']]"
                    :key="href" :href="href"
                    class="text-sm text-neutral-500 hover:text-white transition-colors">{{ label }}</a>
               </div>
