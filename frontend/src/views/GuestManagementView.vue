@@ -4,6 +4,9 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
 import { getPlanInfo } from '../service/plans';
+import { useToast } from '../composables/useToast';
+
+const { notifyError } = useToast();
 
 const route = useRoute();
 const router = useRouter();
@@ -59,7 +62,7 @@ const addGuest = async () => {
     newGuest.value = { first_name: '', last_name: '', email: '', rsvp_status: 'confirmed', plus_ones: 0, sub_guests: [], dietary_restrictions: '', message: '' };
     fetchGuests();
   } catch (err) {
-    alert(err.response?.data?.detail || "Erreur lors de l'ajout");
+    notifyError(err, { fallback: "Erreur lors de l'ajout de l'invité." });
   }
 };
 

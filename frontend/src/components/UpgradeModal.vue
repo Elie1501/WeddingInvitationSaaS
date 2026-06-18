@@ -11,10 +11,10 @@
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
         <!-- Panel -->
-        <div class="relative z-10 w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div class="relative z-10 w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
 
           <!-- Header -->
-          <div class="bg-gradient-to-r from-primary-700 to-primary-500 px-8 py-6 text-white">
+          <div class="bg-gradient-to-r from-primary-700 to-primary-500 px-6 sm:px-8 py-6 text-white">
             <button
               class="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
               @click="$emit('update:modelValue', false)"
@@ -29,8 +29,8 @@
           </div>
 
           <!-- Comparison -->
-          <div class="px-8 py-6">
-            <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="px-6 sm:px-8 py-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
 
               <!-- Classic column -->
               <div class="rounded-2xl border border-gray-200 p-4">

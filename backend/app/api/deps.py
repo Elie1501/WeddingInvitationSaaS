@@ -7,7 +7,7 @@ from app.db.session import get_db
 from app.core.config import settings
 from app.models.wedding import User
 from app.schemas.token import TokenPayload
-from app.api.plans import get_limits
+from app.api.plans import get_limits, has_paid_plan
 
 from typing import Optional
 
@@ -55,6 +55,20 @@ def check_plan_permission(permission: str):
             )
         return True
     return _check
+
+
+def require_paid_plan(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency pour toute route exigeant un forfait payé (Classic ou Premium).
+
+    Bloque les comptes fraîchement créés qui n'ont pas encore réglé leur forfait
+    (paywall strict). Renvoie 402 Payment Required.
+    """
+    if not has_paid_plan(current_user.plan):
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Veuillez choisir et régler un forfait pour accéder à cette fonctionnalité.",
+        )
+    return current_user
 
 
 def require_premium(current_user: User = Depends(get_current_user)) -> User:

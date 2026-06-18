@@ -4,6 +4,9 @@ import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
 import { useRouter, useRoute } from 'vue-router';
 import { getPlanInfo } from '../service/plans';
+import { useToast } from '../composables/useToast';
+
+const { notifyError, notifyWarning } = useToast();
 
 const events = ref([]);
 const loading = ref(true);
@@ -33,8 +36,8 @@ const confirmDelete = async () => {
   try {
     await api.delete(`/events/${eventId}`);
     events.value = events.value.filter(e => e.id !== eventId);
-  } catch {
-    alert('Erreur lors de la suppression de l\'événement.');
+  } catch (err) {
+    notifyError(err, { fallback: 'Erreur lors de la suppression de l\'événement.' });
   }
 };
 
@@ -44,8 +47,8 @@ const togglePublish = async (cardId) => {
     const res = await api.post(`/cards/${cardId}/publish`);
     const ev = events.value.find(e => e.card?.id === cardId);
     if (ev?.card) ev.card.is_published = res.data.is_published;
-  } catch {
-    alert('Erreur lors de la mise à jour du statut de publication.');
+  } catch (err) {
+    notifyError(err, { fallback: 'Erreur lors de la mise à jour du statut de publication.' });
   }
 };
 
@@ -107,8 +110,8 @@ const handleUpdatePlan = async (newPlan) => {
     }
     const res = await api.post('/payments/create-checkout-session', { plan_name: newPlan });
     if (res.data.checkout_url) window.location.href = res.data.checkout_url;
-  } catch {
-    alert('Impossible d\'initialiser le paiement. Veuillez réessayer.');
+  } catch (err) {
+    notifyError(err, { fallback: 'Impossible d\'initialiser le paiement. Veuillez réessayer.' });
   } finally {
     planUpdateLoading.value = false;
   }
@@ -116,7 +119,7 @@ const handleUpdatePlan = async (newPlan) => {
 
 const goToTables = (eventId) => {
   if (!planInfo.value.can_use_tables) {
-    alert(`Le plan de table est réservé aux forfaits Avancé. (Votre forfait actuel : ${planInfo.value.name})`);
+    notifyWarning(`Le plan de table est réservé aux forfaits Avancé. (Votre forfait actuel : ${planInfo.value.name})`);
     return;
   }
   router.push(`/events/${eventId}/tables`);

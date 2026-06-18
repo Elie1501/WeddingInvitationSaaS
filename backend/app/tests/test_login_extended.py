@@ -13,7 +13,8 @@ def test_signup_flow():
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == "newuser@example.com"
-    assert data["plan"] == "classic"
+    # Paywall strict : un nouveau compte démarre sans forfait payé.
+    assert data["plan"] == "none"
 
 def test_login_success():
     """Test de connexion réussie"""

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import api from '../service/api';
+import { useToast } from '../composables/useToast';
 
+const { notifyError } = useToast();
 const loadingPlan = ref<string | null>(null);
 
 const plans = [
@@ -49,7 +51,7 @@ const handleSubscription = async (planId: string) => {
     }
   } catch (error) {
     console.error('Erreur lors de la création de la session de paiement:', error);
-    alert('Une erreur est survenue. Veuillez réessayer.');
+    notifyError(error, { fallback: 'Une erreur est survenue. Veuillez réessayer.' });
   } finally {
     loadingPlan.value = null;
   }

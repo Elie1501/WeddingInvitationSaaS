@@ -23,47 +23,53 @@ const router = createRouter({
             component: () => import('../views/RegisterView.vue')
         },
         {
+            path: '/choose-plan',
+            name: 'choose-plan',
+            component: () => import('../views/ChoosePlanView.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/onboarding',
             name: 'onboarding',
             component: MagicWizard,
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true, requiresPlan: true }
         },
         {
             path: '/dashboard',
             name: 'dashboard',
             component: () => import('../views/DashboardView.vue'),
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true, requiresPlan: true }
         },
         {
             path: '/events/create',
             name: 'create-event',
             component: MagicWizard,
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true, requiresPlan: true }
         },
         {
           path: '/templates',
           name: 'templates',
           component: () => import('../views/TemplateGalleryView.vue'),
-          meta: { requiresAuth: true }
+          meta: { requiresAuth: true, requiresPlan: true }
         },
         {
           path: '/cards/edit/:id',
 
             name: 'edit-card',
             component: () => import('../views/CardEditorView.vue'),
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true, requiresPlan: true }
         },
         {
             path: '/events/:id/guests',
             name: 'event-guests',
             component: () => import('../views/GuestManagementView.vue'),
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true, requiresPlan: true }
         },
         {
             path: '/events/:id/tables',
             name: 'event-tables',
             component: () => import('../views/TableManagementView.vue'),
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true, requiresPlan: true }
         },
         {
           path: '/admin/users',
@@ -126,6 +132,21 @@ router.beforeEach(async (to, from) => {
             if (!user.is_admin) return '/dashboard';
         } else {
             return '/login';
+        }
+    }
+
+    // Paywall strict : les fonctionnalités produit exigent un forfait payé.
+    if (to.meta.requiresPlan) {
+        // Le retour de paiement atterrit sur le dashboard avec ?payment_success=true :
+        // on laisse passer pour que la confirmation Stripe active le forfait.
+        if (to.query.payment_success === 'true') return;
+
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem('user')); } catch {}
+        const paid = user && ['classic', 'premium'].includes(user.plan);
+        // Les admins ne sont pas soumis au paywall.
+        if (!paid && !(user && user.is_admin)) {
+            return '/choose-plan';
         }
     }
 });

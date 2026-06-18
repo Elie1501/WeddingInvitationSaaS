@@ -146,7 +146,9 @@ import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
 import UpgradeModal from '../components/UpgradeModal.vue';
 import { useAuthStore } from '../stores/auth';
+import { useToast } from '../composables/useToast';
 
+const { notifyError, notifyInfo } = useToast();
 const authStore = useAuthStore();
 const isPremium = computed(() => authStore.user?.plan === 'premium');
 
@@ -311,7 +313,7 @@ const addBlock = (blockId) => {
   // Éviter les doublons pour les blocs uniques
   if (['countdown', 'rsvp', 'footer', 'program'].includes(blockId)) {
     if (config.sections.includes(blockId)) {
-      alert("Ce bloc est déjà présent sur votre invitation.");
+      notifyInfo("Ce bloc est déjà présent sur votre invitation.");
       return;
     }
   }
@@ -342,7 +344,7 @@ const addBlock = (blockId) => {
 const deleteBlock = (index) => {
   const sec = config.sections[index];
   if (sec.includes('hero') || sec.includes('full')) {
-    alert("Le bloc principal ne peut pas être supprimé.");
+    notifyInfo("Le bloc principal ne peut pas être supprimé.");
     return;
   }
   config.sections.splice(index, 1);
@@ -645,6 +647,7 @@ const saveCard = async () => {
   } catch (err) {
     console.error("Save Error:", err);
     saving.value = false;
+    notifyError(err, { fallback: "Impossible d'enregistrer l'invitation. Veuillez réessayer." });
   }
 };
 
@@ -657,6 +660,7 @@ const publishCard = async () => {
     cardSlug.value = response.data.slug;
   } catch (err) {
     console.error('Publish Error:', err);
+    notifyError(err, { fallback: "Impossible de publier l'invitation. Veuillez réessayer." });
   } finally {
     publishing.value = false;
   }
@@ -691,7 +695,7 @@ const handleFileUpload = async (event, fieldPath) => {
     saveCard();
   } catch (err) {
     console.error("Upload Error:", err);
-    alert("Erreur lors de l'envoi de l'image.");
+    notifyError(err, { fallback: "Erreur lors de l'envoi de l'image." });
   }
 };
 
@@ -711,8 +715,7 @@ const handleMusicUpload = async (event) => {
     config.media.music_url = response.data.url;
     saveCard();
   } catch (err) {
-    const msg = err.response?.data?.detail || "Erreur lors de l'envoi de la musique.";
-    alert(msg);
+    notifyError(err, { fallback: "Erreur lors de l'envoi de la musique." });
   } finally {
     uploadingMusic.value = false;
   }

@@ -7,6 +7,7 @@ from app.db.session import get_db
 from app.core import security
 from app.core.config import settings
 from app.models.wedding import User
+from app.api.plans import UNPAID_PLAN
 from app.schemas.user import UserCreate, UserResponse, GoogleLoginRequest
 from app.schemas.token import Token, TokenPayload
 from app.api.deps import get_current_user
@@ -50,10 +51,12 @@ def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
 
         if not user:
             is_new_user = True
+            # Paywall strict : aucun forfait tant que Stripe n'a pas confirmé le
+            # paiement. Le plan choisi sert seulement à lancer le bon checkout côté front.
             user = User(
                 email=email,
                 hashed_password="google_auth_placeholder",
-                plan=request.plan or "classic"
+                plan=UNPAID_PLAN,
             )
             db.add(user)
             db.commit()
@@ -94,10 +97,12 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
         )
 
     # Création de l'utilisateur avec mot de passe haché
+    # Paywall strict : le compte démarre sans forfait. L'accès au produit est
+    # débloqué uniquement après confirmation du paiement Stripe.
     new_user = User(
         email=user_in.email,
         hashed_password=security.get_password_hash(user_in.password),
-        plan="classic"
+        plan=UNPAID_PLAN,
     )
     db.add(new_user)
     db.commit()
