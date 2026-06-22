@@ -88,9 +88,53 @@ docker exec wedding_api python scripts/seed_all.py
 | Docs API (Swagger)  | https://localhost:8000/docs    |
 | Adminer (BDD)       | http://localhost:8080          |
 
-Comptes de test (mot de passe `password123`) : `marie@classic.com`, `thomas@premium.com`, `admin@wedding.com`.
+Comptes de test (mot de passe `password123`) :
+
+| Email                | Plan    | Admin |
+|----------------------|---------|-------|
+| `marie@classic.com`  | classic | Non   |
+| `thomas@premium.com` | premium | Non   |
+| `admin@wedding.com`  | premium | Oui   |
 
 > À la première visite, le navigateur peut demander d'accepter le certificat de `https://localhost:8000` — visite l'URL une fois et accepte, sinon les appels API échouent silencieusement.
+
+---
+
+## 7. Accès à la base de données
+
+Deux façons d'inspecter / modifier PostgreSQL.
+
+### Option A — Adminer (interface web)
+
+Ouvrir **http://localhost:8080** et se connecter avec :
+
+| Champ        | Valeur       |
+|--------------|--------------|
+| Système      | `PostgreSQL` |
+| Serveur      | `db`         |
+| Utilisateur  | `user`       |
+| Mot de passe | `password`   |
+| Base         | `wedding_db` |
+
+> Le serveur est `db` (nom du service Docker), **pas** `localhost` : Adminer tourne dans le réseau Docker.
+
+### Option B — psql en ligne de commande
+
+```bash
+# Shell psql interactif
+docker exec -it wedding_db psql -U user -d wedding_db
+
+# Requête ponctuelle (ex. lister les comptes)
+docker exec wedding_db psql -U user -d wedding_db -c "SELECT id, email, plan, is_admin FROM users;"
+
+# Promouvoir un compte en admin / changer un forfait
+docker exec wedding_db psql -U user -d wedding_db -c "UPDATE users SET is_admin = true WHERE email = 'moi@test.com';"
+docker exec wedding_db psql -U user -d wedding_db -c "UPDATE users SET plan = 'premium' WHERE email = 'moi@test.com';"
+```
+
+Identifiants (définis dans `docker-compose.yaml`) : utilisateur `user`, mot de passe `password`, base `wedding_db`, port `5432` (exposé sur l'hôte).
+
+> 🔄 **Repartir d'une base vierge** : `docker compose down -v` (supprime le volume) puis `docker compose up -d` et re-seeder.
 
 ---
 
