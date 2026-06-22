@@ -15,7 +15,10 @@ client = TestClient(app)
 def signup_and_login(email: str, password: str = "password123") -> str:
     client.post("/auth/signup", json={"email": email, "password": password})
     resp = client.post("/auth/login", data={"username": email, "password": password})
-    return resp.json()["access_token"]
+    token = resp.json()["access_token"]
+    # Paywall strict : on part d'un forfait Classic actif pour les tests de gating.
+    set_user_plan(get_user_id(token), "classic")
+    return token
 
 
 def create_card_for_user(token: str) -> int:

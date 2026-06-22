@@ -44,9 +44,10 @@ def create_checkout_session(
 
     # Empêche le double-paiement : on ne peut pas (re)payer un forfait déjà détenu,
     # ni "rétrograder" en payant. Seule une vraie montée en gamme est autorisée.
-    plan_rank = {"classic": 1, "premium": 2}
-    current_rank = plan_rank.get(current_user.plan or "classic", 1)
-    requested_rank = plan_rank.get(request.plan_name, 0)
+    # Un compte non payé (rang 0) peut donc régler n'importe quel forfait, Classic inclus.
+    from app.api.plans import PLAN_RANK, UNPAID_PLAN
+    current_rank = PLAN_RANK.get(current_user.plan or UNPAID_PLAN, 0)
+    requested_rank = PLAN_RANK.get(request.plan_name, 0)
     if requested_rank <= current_rank:
         raise HTTPException(
             status_code=400,
@@ -74,7 +75,7 @@ def create_checkout_session(
             ],
             mode='payment',
             success_url=f"{frontend}/dashboard?payment_success=true&plan={request.plan_name}&session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{frontend}/templates?payment_cancel=true",
+            cancel_url=f"{frontend}/choose-plan?payment_cancel=true",
             metadata={
                 "user_id": current_user.id,
                 "plan": request.plan_name

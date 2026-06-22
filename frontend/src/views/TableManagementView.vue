@@ -4,6 +4,9 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
 import UpgradeModal from '../components/UpgradeModal.vue';
+import { useToast } from '../composables/useToast';
+
+const { notifyError } = useToast();
 
 const route = useRoute();
 const router = useRouter();
@@ -57,7 +60,7 @@ const createTable = async () => {
     showAddTable.value = false;
     newTable.value = { name: '', capacity: 10 };
   } catch (err) {
-    alert("Erreur création table");
+    notifyError(err, { fallback: "Erreur lors de la création de la table." });
   }
 };
 
@@ -87,7 +90,7 @@ const addGuest = async () => {
     newGuest.value = { first_name: '', last_name: '' };
     await fetchData();
   } catch (err) {
-    alert(err.response?.data?.detail || "Erreur lors de l'ajout");
+    notifyError(err, { fallback: "Erreur lors de l'ajout de l'invité." });
   } finally {
     savingGuest.value = false;
   }
@@ -112,7 +115,7 @@ const saveEditGuest = async () => {
     editingGuest.value = null;
     await fetchData();
   } catch (err) {
-    alert(err.response?.data?.detail || "Erreur lors de la modification");
+    notifyError(err, { fallback: "Erreur lors de la modification." });
   } finally {
     savingEdit.value = false;
   }
@@ -124,7 +127,7 @@ const assignToTable = async (tableId, guestId) => {
     await api.post(`/tables/${tableId}/assign/${guestId}`);
     fetchData();
   } catch (err) {
-    alert(err.response?.data?.detail || "Erreur d'assignation");
+    notifyError(err, { fallback: "Erreur d'assignation." });
   }
 };
 
@@ -166,8 +169,8 @@ const exportCsv = async () => {
     window.URL.revokeObjectURL(url);
   } catch (err) {
     if (err.response?.status === 403 && !isPremium.value) showUpgradeModal.value = true;
-    else if (err.response?.status === 403) alert("Accès refusé.");
-    else alert("Erreur lors de l'export CSV");
+    else if (err.response?.status === 403) notifyError("Accès refusé.");
+    else notifyError(err, { fallback: "Erreur lors de l'export CSV." });
   } finally {
     exportingCsv.value = false;
   }

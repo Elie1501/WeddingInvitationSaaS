@@ -4,9 +4,16 @@ import { useRouter, useRoute } from 'vue-router';
 import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
 import UpgradeModal from '../components/UpgradeModal.vue';
+import { useToast } from '../composables/useToast';
+
+const { notifyError } = useToast();
 
 const authStore = useAuthStore();
 const isPremium = computed(() => authStore.user?.plan === 'premium');
+
+// Blocs réservés au Premium (doit rester synchronisé avec PREMIUM_SECTION_IDS du
+// backend et PREMIUM_SECTIONS de CardEditorView).
+const PREMIUM_SECTIONS = ['countdown', 'program', 'custom-text', 'image'];
 
 const router = useRouter();
 const route = useRoute();
@@ -167,6 +174,13 @@ const selectTemplate = async (template) => {
       config.content.monogram = `${finalGroom[0].toUpperCase()} & ${finalBride[0].toUpperCase()}`;
     }
 
+    // Un compte Classic ne peut pas enregistrer de blocs Premium : on retire ces
+    // sections de la config du template avant l'enregistrement, sinon le backend
+    // rejette le /save (403 « blocs réservés au forfait Premium »).
+    if (!isPremium.value && Array.isArray(config.sections)) {
+      config.sections = config.sections.filter(s => !PREMIUM_SECTIONS.includes(s));
+    }
+
     await api.put(`/cards/${cardId}/save`, {
       template_id: template.id,
       config_json: JSON.stringify(config)
@@ -176,8 +190,7 @@ const selectTemplate = async (template) => {
     router.push(`/cards/edit/${cardId}`);
   } catch (err) {
     console.error("Erreur complète :", err);
-    const msg = err.response?.data?.detail || err.message || "Une erreur est survenue lors de la création de votre univers.";
-    alert(msg);
+    notifyError(err, { fallback: "Une erreur est survenue lors de la création de votre univers." });
   } finally {
     loading.value = false;
   }

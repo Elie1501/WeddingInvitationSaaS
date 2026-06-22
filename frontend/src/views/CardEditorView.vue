@@ -44,18 +44,13 @@ const TEMPLATE_FIELDS = {
   ],
   'empire-abstrait':  [
     { key: 'names',        label: 'Prénoms',             type: 'text' },
-    { key: 'monogram',     label: 'Monogramme',          type: 'text' },
     { key: 'date_display', label: 'Date affichée',        type: 'text' },
     { key: 'address',      label: 'Lieu',                 type: 'text' },
-    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
-    { key: 'divider_symbol',label: 'Symbole décoratif',   type: 'text' },
   ],
   'arch':             [
     { key: 'names',        label: 'Prénoms',             type: 'text' },
     { key: 'date_display', label: 'Date affichée',        type: 'text' },
     { key: 'address',      label: 'Lieu',                 type: 'text' },
-    { key: 'section_title',label: 'Titre de cérémonie',   type: 'text', placeholder: 'Union Sacrée' },
-    { key: 'intro_text',   label: 'Citation / intro',     type: 'textarea' },
   ],
   'split':            [
     { key: 'names',        label: 'Prénoms',             type: 'text' },
@@ -77,7 +72,6 @@ const TEMPLATE_FIELDS = {
     { key: 'names',        label: 'Prénoms',             type: 'text' },
     { key: 'date_display', label: 'Date affichée',        type: 'text' },
     { key: 'address',      label: 'Lieu',                 type: 'text' },
-    { key: 'section_title',label: 'Titre section',        type: 'text', placeholder: 'Première Mondiale' },
     { key: 'intro_text',   label: 'Citation / intro',     type: 'textarea' },
     { key: 'image_url',    label: 'Photo héro',           type: 'image' },
     { key: 'image_url_2',  label: 'Photos pellicule',     type: 'image' },
@@ -104,7 +98,6 @@ const TEMPLATE_FIELDS = {
     { key: 'names',        label: 'Prénoms',              type: 'text' },
     { key: 'date_display', label: 'Date affichée',         type: 'text' },
     { key: 'address',      label: 'Lieu',                  type: 'text' },
-    { key: 'intro_text',   label: 'Synopsis',              type: 'textarea' },
     { key: 'image_url',    label: 'Photo héro',            type: 'image' },
   ],
   'celestial': [
@@ -136,6 +129,17 @@ const TEMPLATE_FIELDS = {
     { key: 'dress_code',   label: 'Tenue vestimentaire',   type: 'text' },
     { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
   ],
+  // Templates épurés (prénoms / date / lieu uniquement, pas d'intro ni d'image héro)
+  'amour': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+  ],
+  'eclipse': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+  ],
 };
 // Résoudre les alias
 TEMPLATE_FIELDS['japonais']   = TEMPLATE_FIELDS['arch'];
@@ -146,7 +150,9 @@ import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
 import UpgradeModal from '../components/UpgradeModal.vue';
 import { useAuthStore } from '../stores/auth';
+import { useToast } from '../composables/useToast';
 
+const { notifyError, notifyInfo } = useToast();
 const authStore = useAuthStore();
 const isPremium = computed(() => authStore.user?.plan === 'premium');
 
@@ -188,6 +194,42 @@ const quickUploadField = ref(null);
 const quickUploadInput = ref(null);
 const previewDevice = ref('mobile'); // 'mobile' | 'desktop'
 const zoomLevel = ref(100);
+const editPanelScroll = ref(null); // conteneur scrollable du panneau d'édition
+// Garde-fou : pendant une navigation programmatique (clic sur un bloc dans
+// l'aperçu) on ne veut pas que le watcher d'activeTab efface la sélection.
+let internalNav = false;
+
+// Mobile (< lg) : on n'affiche qu'un panneau à la fois en plein écran, avec une
+// bascule Éditer ↔ Aperçu. Le desktop affiche toujours les deux côte à côte.
+const mobileView = ref('preview'); // 'edit' | 'preview' — ignoré en >= lg
+const lgUp = ref(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+const onResize = () => { lgUp.value = window.innerWidth >= 1024; };
+
+// Clic sur un bloc dans l'aperçu → on amène l'utilisateur DIRECTEMENT là où il
+// peut le modifier : onglet « Garde » pour le splash, onglet d'édition des
+// champs pour tout le reste. Sur mobile, on bascule en mode « Éditer ». Puis on
+// remonte le panneau en haut et on met le focus sur le premier champ éditable.
+const selectBlockFromPreview = (block) => {
+  internalNav = true;
+  selectedBlock.value = block;
+  activeTab.value = (block === 'splash') ? 'cover' : 'context';
+  if (!lgUp.value) mobileView.value = 'edit';
+  nextTick(() => {
+    internalNav = false;
+    const panel = editPanelScroll.value;
+    if (!panel) return;
+    panel.scrollTop = 0;
+    // Focus du premier champ éditable sur desktop uniquement (évite le clavier
+    // intrusif qui s'ouvrirait juste après la bascule d'onglet sur mobile).
+    // NB : le champ « Prénoms » est un <input> sans attribut type explicite, d'où
+    // l'exclusion par type plutôt qu'un ciblage sur [type="text"].
+    if (lgUp.value) {
+      panel.querySelector(
+        'input:not([type="color"]):not([type="checkbox"]):not([type="file"]):not([type="time"]), textarea'
+      )?.focus({ preventScroll: true });
+    }
+  });
+};
 
 const tabs = [
   { id: 'cover',     label: 'Garde'  },
@@ -311,7 +353,7 @@ const addBlock = (blockId) => {
   // Éviter les doublons pour les blocs uniques
   if (['countdown', 'rsvp', 'footer', 'program'].includes(blockId)) {
     if (config.sections.includes(blockId)) {
-      alert("Ce bloc est déjà présent sur votre invitation.");
+      notifyInfo("Ce bloc est déjà présent sur votre invitation.");
       return;
     }
   }
@@ -342,7 +384,7 @@ const addBlock = (blockId) => {
 const deleteBlock = (index) => {
   const sec = config.sections[index];
   if (sec.includes('hero') || sec.includes('full')) {
-    alert("Le bloc principal ne peut pas être supprimé.");
+    notifyInfo("Le bloc principal ne peut pas être supprimé.");
     return;
   }
   config.sections.splice(index, 1);
@@ -534,6 +576,9 @@ watch(selectedBlock, (newVal) => {
 
 // Onglet Garde : sync preview ↔ onglet
 watch(activeTab, (newTab, oldTab) => {
+  // Navigation programmatique (clic sur un bloc) : la sélection est déjà gérée
+  // par selectBlockFromPreview, ne pas l'écraser ici.
+  if (internalNav) return;
   if (newTab === 'cover') {
     // Entrer → montrer la garde dans la preview si activée
     selectedBlock.value = config.show_splash ? 'splash' : null;
@@ -645,6 +690,7 @@ const saveCard = async () => {
   } catch (err) {
     console.error("Save Error:", err);
     saving.value = false;
+    notifyError(err, { fallback: "Impossible d'enregistrer l'invitation. Veuillez réessayer." });
   }
 };
 
@@ -657,6 +703,7 @@ const publishCard = async () => {
     cardSlug.value = response.data.slug;
   } catch (err) {
     console.error('Publish Error:', err);
+    notifyError(err, { fallback: "Impossible de publier l'invitation. Veuillez réessayer." });
   } finally {
     publishing.value = false;
   }
@@ -691,7 +738,7 @@ const handleFileUpload = async (event, fieldPath) => {
     saveCard();
   } catch (err) {
     console.error("Upload Error:", err);
-    alert("Erreur lors de l'envoi de l'image.");
+    notifyError(err, { fallback: "Erreur lors de l'envoi de l'image." });
   }
 };
 
@@ -711,8 +758,7 @@ const handleMusicUpload = async (event) => {
     config.media.music_url = response.data.url;
     saveCard();
   } catch (err) {
-    const msg = err.response?.data?.detail || "Erreur lors de l'envoi de la musique.";
-    alert(msg);
+    notifyError(err, { fallback: "Erreur lors de l'envoi de la musique." });
   } finally {
     uploadingMusic.value = false;
   }
@@ -724,16 +770,8 @@ const removeMusic = () => {
 };
 
 // ==========================================
-// 10. COMPUTED TEMPLATE FIELDS & TAILLES
+// 10. TAILLES DE TEXTE & POLICES
 // ==========================================
-const currentTemplateFields = computed(() =>
-  TEMPLATE_FIELDS[config.layout] || [
-    { key: 'names',        label: 'Prénoms',      type: 'text' },
-    { key: 'date_display', label: 'Date affichée', type: 'text' },
-    { key: 'address',      label: 'Lieu',          type: 'text' },
-  ]
-);
-
 const TEXT_SIZES = [
   { id: 'small',  label: 'Petit' },
   { id: 'medium', label: 'Moyen' },
@@ -789,6 +827,7 @@ onMounted(async () => {
 
   fetchCard();
   document.addEventListener('keydown', handleKeyboard);
+  window.addEventListener('resize', onResize);
 
   // Retour depuis Stripe Checkout → confirmer le paiement et rafraîchir le plan
   const sessionId = route.query.session_id;
@@ -804,6 +843,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyboard);
+  window.removeEventListener('resize', onResize);
   if (saveTimeout) clearTimeout(saveTimeout);
 });
 </script>
@@ -923,11 +963,30 @@ onUnmounted(() => {
       </div>
     </header>
 
+    <!-- BASCULE MOBILE : Éditer ↔ Aperçu (caché en >= lg) -->
+    <div class="lg:hidden flex-shrink-0 bg-white border-b border-gray-200 px-3 py-2 flex justify-center">
+      <div class="inline-flex bg-gray-100 rounded-full p-1">
+        <button @click="mobileView = 'edit'"
+                class="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5"
+                :class="mobileView === 'edit' ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-gray-400'">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a1 1 0 00-1 1v14a1 1 0 001 1h14a1 1 0 001-1v-7M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Éditer
+        </button>
+        <button @click="mobileView = 'preview'"
+                class="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5"
+                :class="mobileView === 'preview' ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-gray-400'">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
+          Aperçu
+        </button>
+      </div>
+    </div>
+
     <!-- ═══ CORPS : SIDEBAR + PREVIEW ═══ -->
     <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-    <!-- SIDEBAR GAUCHE (en bas sur mobile, à gauche sur desktop) -->
-    <aside class="order-2 lg:order-1 w-full lg:w-[360px] basis-3/5 lg:basis-auto min-h-0 flex flex-col bg-white border-t lg:border-t-0 lg:border-r border-gray-200 shadow-sm z-30 flex-shrink-0">
+    <!-- SIDEBAR GAUCHE — plein écran sur mobile (mode Éditer), 360px à gauche sur desktop -->
+    <aside class="w-full lg:w-[360px] flex-1 lg:flex-none min-h-0 flex-col bg-white lg:border-r border-gray-200 shadow-sm z-30"
+           :class="mobileView === 'edit' ? 'flex' : 'hidden lg:flex'">
 
       <!-- ONGLETS -->
       <div class="flex overflow-x-auto custom-scrollbar border-b border-gray-100 bg-gray-50/50">
@@ -940,7 +999,7 @@ onUnmounted(() => {
       </div>
 
       <!-- CONTENU DES ONGLETS -->
-      <div class="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-[#FAFAFA]">
+      <div ref="editPanelScroll" class="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-[#FAFAFA]">
         
         <!-- ONGLET : CONTEXTE (auto-activé au clic sur un bloc, hors nav) -->
         <div v-if="activeTab === 'context'" class="animate-in space-y-6">
@@ -955,7 +1014,7 @@ onUnmounted(() => {
               <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
             </div>
             <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">
-              Cliquez sur un bloc<br>dans l'aperçu à droite
+              Sélectionnez un bloc<br>dans l'aperçu
             </p>
           </div>
 
@@ -1371,26 +1430,7 @@ onUnmounted(() => {
           <div class="space-y-3">
             <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Musique d'ambiance</p>
 
-            <!-- Bloc Premium requis -->
-            <div v-if="!isPremium" class="rounded-2xl overflow-hidden border border-amber-200 bg-amber-50">
-              <div class="p-5 space-y-3 text-center">
-                <div class="w-12 h-12 rounded-full bg-[#C5A059]/15 flex items-center justify-center mx-auto">
-                  <svg class="w-6 h-6 text-[#C5A059]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-xs font-black uppercase tracking-widest text-[#8B6914]">Fonctionnalité Premium</p>
-                  <p class="text-[11px] text-amber-700 mt-1">Ajoutez une musique d'ambiance à votre invitation. Disponible avec le forfait Premium.</p>
-                </div>
-                <button @click="showUpgradeModal = true" class="w-full py-2.5 bg-[#C5A059] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#b08c47] transition-colors">
-                  Passer Premium
-                </button>
-              </div>
-            </div>
-
-            <!-- Interface upload si Premium -->
-            <template v-else>
+            <!-- Upload musique — disponible sur tous les forfaits -->
               <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
                 <div class="flex items-center gap-2">
                   <div class="w-2 h-2 rounded-full bg-[#C5A059]"></div>
@@ -1425,7 +1465,6 @@ onUnmounted(() => {
 
                 <p class="text-[10px] text-gray-400 leading-relaxed">La musique est jouée en fond lors de la consultation de l'invitation par vos invités.</p>
               </div>
-            </template>
           </div>
         </div>
 
@@ -1433,11 +1472,12 @@ onUnmounted(() => {
 
     </aside>
 
-    <!-- ZONE PREVIEW -->
-    <main class="order-1 lg:order-2 basis-2/5 lg:basis-auto lg:flex-1 min-h-0 relative flex flex-col items-center justify-center p-2 sm:p-8 bg-[#F3F4F6] overflow-hidden">
+    <!-- ZONE PREVIEW — plein écran sur mobile (mode Aperçu), à droite sur desktop -->
+    <main class="flex-1 min-h-0 relative flex-col items-center justify-center p-0 lg:p-8 bg-[#F3F4F6] overflow-hidden"
+          :class="mobileView === 'preview' ? 'flex' : 'hidden lg:flex'">
 
-      <!-- Toolbar flottante Preview -->
-      <div class="absolute top-2 sm:top-6 flex items-center space-x-2 bg-white/90 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-gray-200 shadow-sm z-20">
+      <!-- Toolbar flottante Preview (desktop uniquement — sur mobile la carte occupe tout l'écran) -->
+      <div class="absolute top-6 hidden lg:flex items-center space-x-2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 shadow-sm z-20">
         <button @click="previewDevice = 'mobile'" :class="previewDevice === 'mobile' ? 'text-black' : 'text-gray-400'" class="p-1 hover:text-black transition-colors" title="Vue Mobile">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" stroke-width="2"/><path d="M12 18h.01" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
@@ -1450,18 +1490,19 @@ onUnmounted(() => {
         <button @click="zoomLevel = Math.min(150, zoomLevel + 10)" class="p-1 text-gray-400 hover:text-black">+</button>
       </div>
 
-      <!-- Container Rendu -->
+      <!-- Container Rendu — le zoom ne s'applique qu'au desktop ; sur mobile la carte remplit l'écran -->
       <div class="transition-all duration-500 ease-out origin-top flex items-center justify-center h-full w-full"
-           :style="{ transform: `scale(${zoomLevel / 100})` }">
-        
+           :style="lgUp ? { transform: `scale(${zoomLevel / 100})` } : {}">
+
         <div :class="previewDevice === 'mobile' ? 'w-[min(88vw,400px)] h-full max-h-[850px] rounded-[2.2rem] sm:rounded-[3rem] ring-8 sm:ring-[12px] ring-gray-900 shadow-2xl' : 'w-full max-w-5xl h-full max-h-[800px] rounded-xl shadow-2xl'"
-             class="bg-white overflow-hidden relative flex flex-col transition-all duration-500 border border-gray-200">
-          
-          <div v-if="previewDevice === 'mobile'" class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-2xl z-50"></div>
+             class="bg-white overflow-hidden relative flex flex-col transition-all duration-500 border border-gray-200
+                    max-lg:!w-full max-lg:!h-full max-lg:!max-h-none max-lg:!rounded-none max-lg:!ring-0 max-lg:!border-0">
+
+          <div v-if="previewDevice === 'mobile'" class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-2xl z-50 max-lg:hidden"></div>
           
           <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-white relative" @click.self="selectedBlock = null">
             <!-- INJECTION DU MOTEUR DE RENDU -->
-            <CardRenderer :config="config" :event="eventData" :subEvents="subEvents" :selectedBlock="selectedBlock" @select-block="selectedBlock = $event" />
+            <CardRenderer :config="config" :event="eventData" :subEvents="subEvents" :selectedBlock="selectedBlock" @select-block="selectBlockFromPreview" />
 
             <!-- Bouton retour carte (visible uniquement en mode préview garde) -->
             <Transition name="fade-up">

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import api from '../service/api';
+import { useToast } from '../composables/useToast';
 
+const { notifyError } = useToast();
 const loadingPlan = ref<string | null>(null);
 
 const plans = [
@@ -11,10 +13,11 @@ const plans = [
     price: '29€',
     description: 'Parfait pour un petit mariage élégant.',
     features: [
-      '3 pages personnalisées',
-      'Formulaire RSVP inclus',
+      "1 site d'invitation",
+      'Formulaire RSVP',
       'Plan de table interactif',
-      'Support par email'
+      "Musique d'ambiance",
+      'Personnalisation complète'
     ],
     buttonText: 'Choisir Classique',
     highlight: false
@@ -25,11 +28,12 @@ const plans = [
     price: '79€',
     description: 'L\'expérience ultime pour un grand événement.',
     features: [
-      'Pages illimitées',
-      'Gestion des accompagnants',
-      'Import/Export CSV',
-      'Musique de fond personnalisée',
-      'Support prioritaire 24/7'
+      'Tout le Classic',
+      "Jusqu'à 5 sites d'invitation",
+      'Tous les templates Premium',
+      'Blocs de personnalisation Premium',
+      'Typographie personnalisée',
+      'Export CSV des invités'
     ],
     buttonText: 'Passer au Premium',
     highlight: true
@@ -49,7 +53,7 @@ const handleSubscription = async (planId: string) => {
     }
   } catch (error) {
     console.error('Erreur lors de la création de la session de paiement:', error);
-    alert('Une erreur est survenue. Veuillez réessayer.');
+    notifyError(error, { fallback: 'Une erreur est survenue. Veuillez réessayer.' });
   } finally {
     loadingPlan.value = null;
   }

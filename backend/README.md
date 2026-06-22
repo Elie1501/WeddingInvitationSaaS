@@ -38,7 +38,7 @@ backend/
 └── app/
     ├── main.py                 Point d'entrée FastAPI, CORS, mount /uploads, seed_data() au démarrage
     ├── api/
-    │   ├── deps.py             Dépendances : get_current_user, is_active, check_plan_permission, require_premium
+    │   ├── deps.py             Dépendances : get_current_user (+ is_active), check_plan_permission, require_paid_plan, require_premium, require_admin
     │   ├── plans.py            PLAN_PRICES, PLAN_LIMITS, PREMIUM_SECTION_IDS, get_limits()
     │   └── api_v1/
     │       ├── api.py          Agrège tous les routers (préfixes /auth, /events, …)
@@ -61,7 +61,7 @@ backend/
     │   └── wedding.py          Tous les modèles ORM (tables)
     ├── schemas/                Schémas Pydantic (entrées/sorties d'API)
     │   ├── card.py  event.py  guest.py  table.py  token.py  user.py
-    └── tests/                  Pytest (SQLite en mémoire) — auth, cards, events, guests, tables, payments
+    └── tests/                  Pytest (SQLite en mémoire) — auth, cards, events, guests, tables, payments, admin
 ```
 
 `scripts/` contient les seeds (`seed_all.py`, `seed_users.py`, seeds de templates…).
@@ -112,8 +112,10 @@ Tokens (`core/security.py`) :
 > Les gardes du frontend sont contournables — **toute l'autorisation est ré-imposée ici.**
 
 - **Anti-IDOR** : chaque endpoint sur une carte/événement/invité/table filtre sur `Event.owner_id == current_user.id`. On ne peut pas accéder aux données d'un autre user via l'ID dans l'URL.
-- **Admin** : les routes `/users/*` d'administration vérifient `current_user.is_admin` (403 sinon).
-- **Gating forfait** : `check_plan_permission(...)` (export CSV), `_enforce_plan_features(...)` (blocs premium à la sauvegarde), limites de pages/sites, templates `required_plan`.
+- **Admin** : les routes `/users/*` d'administration passent par la dépendance **`require_admin`** (403 sinon) — contrôle centralisé, plus de check `is_admin` recopié à la main dans chaque endpoint. Un admin ne peut pas se supprimer lui-même (400).
+- **Paywall** : la création d'événement exige `require_paid_plan` (402 tant qu'aucun forfait payé).
+- **Règle métier (tables)** : un invité ne peut être affecté qu'à une table **du même événement** (`table.event_id == guest.event_id`, 400 sinon), en plus du contrôle de capacité.
+- **Gating forfait** : `check_plan_permission(...)` (export CSV, tables), `_enforce_plan_features(...)` (blocs premium à la sauvegarde), limites de pages/sites, templates `required_plan`.
 - **Paiement** : `plan` n'est modifié que par `confirm-payment` (session Stripe `paid` + `user_id` du token) ou le `webhook` signé. Garde anti double-paiement dans `create-checkout-session`, anti re-upgrade dans `create-upgrade-session`.
 
 ---
@@ -139,7 +141,8 @@ Base : `https://localhost:8000`. Documentation interactive : **`/docs`**. (🔒 
 | GET     | `/events/{id}`                 | 🔒    | Détail (ownership)                  |
 | PUT     | `/events/{id}`                 | 🔒    | Modifier                            |
 | DELETE  | `/events/{id}`                 | 🔒    | Supprimer                           |
-| GET     | `/events/public/card/{slug}`   | 🌐    | Carte publique par slug             |
+| POST    | `/events/admin/sync-cards-data`| 🔒    | Resync nom/date/lieu dans la config (ses cartes uniquement) |
+| GET     | `/events/public/card/{slug}`   | 🌐    | Carte publique par slug (DTO filtré) |
 
 ### `/cards`
 | Méthode | Route                        | Accès | Description                          |
@@ -173,7 +176,7 @@ Base : `https://localhost:8000`. Documentation interactive : **`/docs`**. (🔒 
 | POST    | `/tables/`                            | 🔒    | Créer une table          |
 | PUT     | `/tables/{id}`                        | 🔒    | Modifier                 |
 | DELETE  | `/tables/{id}`                        | 🔒    | Supprimer                |
-| POST    | `/tables/{id}/assign/{guest_id}`      | 🔒    | Asseoir un invité        |
+| POST    | `/tables/{id}/assign/{guest_id}`      | 🔒    | Asseoir un invité (même événement + capacité) |
 | POST    | `/tables/{id}/unassign/{guest_id}`    | 🔒    | Retirer un invité        |
 | GET     | `/tables/event/{id}/export/csv`       | 🔒 ⭐ | Export CSV du plan       |
 
@@ -230,4 +233,11 @@ cd backend
 DATABASE_URL="sqlite:///./test.db" python -m pytest app/tests/ -v
 ```
 
-SQLite en mémoire, aucune dépendance Docker. Couvre auth, cards, events, guests, tables, payments (dont le gating premium).
+SQLite en mémoire, aucune dépendance Docker. **47 tests** couvrant auth, cards, events, guests, tables (dont la règle même-événement), payments (gating premium) et **admin** (`test_admin.py` : accès admin, blocage user/anonyme, auto-suppression interdite).
+
+Depuis un conteneur déjà lancé :
+
+```bash
+docker exec wedding_api pip install -q pytest httpx
+docker exec -e DATABASE_URL="sqlite:////tmp/test.db" wedding_api python -m pytest app/tests/ -v
+```

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import datetime
@@ -45,6 +45,55 @@ def list_guests(
         )
 
     return query.order_by(Guest.id.asc()).all()
+
+@router.get("/event/{event_id}/export/csv")
+def export_guests_csv(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
+    _permission = Depends(deps.check_plan_permission("can_export_csv"))
+):
+    """Exporte la liste des invités d'un événement en CSV (réservé Premium)."""
+    event = db.query(Event).filter(Event.id == event_id, Event.owner_id == current_user.id).first()
+    if not event:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+
+    guests = db.query(Guest).filter(Guest.event_id == event_id).order_by(Guest.id.asc()).all()
+
+    status_labels = {
+        "confirmed": "Confirmé",
+        "declined": "Décliné",
+        "pending": "En attente",
+    }
+
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';')
+    writer.writerow([
+        "Prénom", "Nom", "Email", "Statut RSVP",
+        "Accompagnants", "Régime alimentaire", "Table(s)", "Message",
+    ])
+
+    for g in guests:
+        tables = ", ".join(t.name for t in g.assigned_tables) if g.assigned_tables else ""
+        writer.writerow([
+            g.first_name,
+            g.last_name,
+            g.email or "",
+            status_labels.get(g.rsvp_status, g.rsvp_status or ""),
+            g.plus_ones or 0,
+            g.dietary_restrictions or "",
+            tables,
+            g.message or "",
+        ])
+
+    # BOM UTF-8 pour que les accents s'affichent correctement dans Excel (FR).
+    content = '﻿'.encode('utf-8') + output.getvalue().encode('utf-8')
+
+    return Response(
+        content=content,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename=invites_{event_id}.csv"}
+    )
 
 @router.post("/", response_model=GuestResponse)
 def add_guest(

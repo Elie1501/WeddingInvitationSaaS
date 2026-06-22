@@ -4,6 +4,9 @@ import { useAuthStore } from '../stores/auth';
 import { useRouter, useRoute } from 'vue-router';
 import GoogleLoginButton from '../components/GoogleLoginButton.vue';
 import api from '../service/api';
+import { useToast } from '../composables/useToast';
+
+const { notifyError } = useToast();
 
 const email = ref('');
 const password = ref('');
@@ -35,7 +38,8 @@ const handleGoogleSuccess = async ({ isNewUser } = {}) => {
     router.push(auth.user?.is_admin ? '/admin/users' : '/dashboard');
     return;
   }
-  // Nouveau compte → sélection du plan via paiement Stripe
+  // Nouveau compte → paiement obligatoire (paywall strict). On ne donne aucun
+  // accès produit tant que Stripe n'a pas confirmé : pas de repli vers le wizard.
   try {
     const response = await api.post('/payments/create-checkout-session', {
       plan_name: selectedPlan.value
@@ -44,10 +48,12 @@ const handleGoogleSuccess = async ({ isNewUser } = {}) => {
       window.location.href = response.data.checkout_url;
       return;
     }
+    throw new Error('checkout_url manquant');
   } catch (err) {
     console.error("Erreur Stripe après Google:", err);
+    notifyError(err, { fallback: "Impossible d'ouvrir le paiement. Réessayez depuis le choix du forfait." });
+    router.push('/choose-plan');
   }
-  router.push('/onboarding');
 };
 
 const handleRegister = async () => {
@@ -61,7 +67,8 @@ const handleRegister = async () => {
     loading.value = true;
     await auth.register(email.value, password.value, selectedPlan.value);
 
-    // Déclencher le paiement Stripe après inscription (token disponible via login interne)
+    // Paywall strict : le compte n'a aucun forfait tant que Stripe n'a pas confirmé.
+    // On redirige donc systématiquement vers le paiement, sans repli vers le wizard.
     try {
       const response = await api.post('/payments/create-checkout-session', {
         plan_name: selectedPlan.value
@@ -70,11 +77,13 @@ const handleRegister = async () => {
         window.location.href = response.data.checkout_url;
         return;
       }
+      throw new Error('checkout_url manquant');
     } catch (stripeErr) {
       console.error("Erreur Stripe:", stripeErr);
+      notifyError(stripeErr, { fallback: "Compte créé, mais l'ouverture du paiement a échoué. Choisissez votre forfait pour réessayer." });
+      router.push('/choose-plan');
+      return;
     }
-
-    router.push('/onboarding');
   } catch (err) {
     const detail = err.response?.data?.detail;
     if (Array.isArray(detail)) {

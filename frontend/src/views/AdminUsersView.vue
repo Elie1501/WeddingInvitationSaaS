@@ -3,6 +3,9 @@ import { ref, onMounted } from 'vue';
 import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
+import { useToast } from '../composables/useToast';
+
+const { notifyError } = useToast();
 
 const users = ref([]);
 const loading = ref(true);
@@ -17,7 +20,7 @@ const fetchUsers = async () => {
     console.error("Erreur lors de la récupération des utilisateurs", err);
     const status = err.response?.status;
     if (status === 403) {
-      alert("Accès refusé : vous n'êtes pas administrateur.");
+      notifyError("Accès refusé : vous n'êtes pas administrateur.");
       router.push('/dashboard');
     } else if (status === 401 || status === 404) {
       auth.logout();
@@ -36,7 +39,7 @@ const toggleUserStatus = async (user) => {
     user.is_active = response.data.is_active;
   } catch (err) {
     console.error("Erreur lors de la modification du statut", err);
-    alert(err.response?.data?.detail || "Erreur lors de la modification du statut.");
+    notifyError(err, { fallback: "Erreur lors de la modification du statut." });
   }
 };
 
@@ -50,7 +53,7 @@ const deleteUser = async (userId) => {
     users.value = users.value.filter(u => u.id !== userId);
   } catch (err) {
     console.error("Erreur lors de la suppression", err);
-    alert(err.response?.data?.detail || "Erreur lors de la suppression.");
+    notifyError(err, { fallback: "Erreur lors de la suppression." });
   }
 };
 

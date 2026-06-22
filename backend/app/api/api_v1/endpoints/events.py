@@ -11,7 +11,7 @@ from app.schemas.event import EventCreate, EventResponse
 
 from app.core import storage
 
-from app.api.plans import PLAN_LIMITS, get_limits
+from app.api.plans import PLAN_LIMITS, get_limits, PREMIUM_SECTION_IDS
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ router = APIRouter()
 def create_event(
     event_in: EventCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.require_paid_plan)
 ):
     """
     Crée un nouvel événement de mariage pour l'utilisateur connecté.
@@ -55,6 +55,10 @@ def create_event(
     if template:
         manifest = json.loads(template.manifest_json)
         config_dict = manifest.get("default_config", {})
+    else:
+        # Template introuvable (ex. id par défaut obsolète) : ne pas écrire de FK
+        # fantôme dans cards.template_id, sinon INSERT échoue (ForeignKeyViolation).
+        template_id = None
     
     # Personnalisation initiale basée sur le formulaire
     config_dict["has_cover_page"] = has_cp
@@ -85,6 +89,14 @@ def create_event(
 
     if "hebrew_names" in config_dict["content"]:
         config_dict["content"]["hebrew_names"] = ""
+
+    # Un compte Classic ne doit jamais stocker de bloc Premium : on filtre les
+    # sections du template par défaut selon le forfait, sinon l'éditeur recevra
+    # une config rejetée à l'auto-save (403 « blocs réservés au forfait Premium »).
+    if current_user.plan != "premium" and isinstance(config_dict.get("sections"), list):
+        config_dict["sections"] = [
+            s for s in config_dict["sections"] if s not in PREMIUM_SECTION_IDS
+        ]
 
     new_card = Card(
         event_id=new_event.id,

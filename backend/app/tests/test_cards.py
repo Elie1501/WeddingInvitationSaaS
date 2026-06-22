@@ -6,9 +6,12 @@ client = TestClient(app)
 
 
 def signup_and_login(email: str, password: str = "password123") -> str:
+    from app.tests.conftest import activate_plan
     client.post("/auth/signup", json={"email": email, "password": password})
     resp = client.post("/auth/login", data={"username": email, "password": password})
-    return resp.json()["access_token"]
+    token = resp.json()["access_token"]
+    activate_plan(token)  # paywall strict : on active un forfait pour les tests
+    return token
 
 
 def create_user_with_card(email: str) -> tuple:

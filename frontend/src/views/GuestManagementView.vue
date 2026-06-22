@@ -4,6 +4,10 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
 import { getPlanInfo } from '../service/plans';
+import { useToast } from '../composables/useToast';
+import UpgradeModal from '../components/UpgradeModal.vue';
+
+const { notifyError } = useToast();
 
 const route = useRoute();
 const router = useRouter();
@@ -16,7 +20,32 @@ const searchQuery = ref('');
 const filterStatus = ref('all');
 
 const planInfo = computed(() => getPlanInfo(auth.user?.plan || 'classic'));
+const isPremium = computed(() => auth.user?.plan === 'premium');
 const showAddGuest = ref(false);
+const showUpgradeModal = ref(false);
+const exportingCsv = ref(false);
+
+// Export CSV de la liste d'invités — réservé au forfait Premium.
+const exportCsv = async () => {
+  if (!isPremium.value) { showUpgradeModal.value = true; return; }
+  exportingCsv.value = true;
+  try {
+    const res = await api.get(`/guests/event/${eventId}/export/csv`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'invites.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    if (err.response?.status === 403 && !isPremium.value) showUpgradeModal.value = true;
+    else notifyError(err, { fallback: "Erreur lors de l'export CSV." });
+  } finally {
+    exportingCsv.value = false;
+  }
+};
 
 const newGuest = ref({
   first_name: '',
@@ -59,7 +88,7 @@ const addGuest = async () => {
     newGuest.value = { first_name: '', last_name: '', email: '', rsvp_status: 'confirmed', plus_ones: 0, sub_guests: [], dietary_restrictions: '', message: '' };
     fetchGuests();
   } catch (err) {
-    alert(err.response?.data?.detail || "Erreur lors de l'ajout");
+    notifyError(err, { fallback: "Erreur lors de l'ajout de l'invité." });
   }
 };
 
@@ -129,7 +158,19 @@ onMounted(fetchGuests);
         </button>
         <h1 class="text-base sm:text-lg font-semibold text-gray-900 truncate">Gestion des Invités</h1>
       </div>
-      <div class="flex space-x-3 shrink-0">
+      <div class="flex space-x-2 sm:space-x-3 shrink-0">
+        <!-- Export CSV — réservé Premium -->
+        <button @click="exportCsv" :disabled="exportingCsv"
+                :class="isPremium
+                  ? 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                  : 'border-amber-200 text-amber-600 hover:bg-amber-50'"
+                class="flex items-center gap-1.5 border bg-white px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap disabled:opacity-50"
+                :title="isPremium ? 'Exporter les invités en CSV' : 'Export CSV — Forfait Premium requis'">
+          <span v-if="exportingCsv" class="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></span>
+          <svg v-else-if="isPremium" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <svg v-else class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm3 8H9V6a3 3 0 016 0v3z"/></svg>
+          <span class="hidden sm:inline">Export CSV</span>
+        </button>
         <button @click="showAddGuest = true" class="bg-primary-600 text-white px-3 sm:px-6 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 whitespace-nowrap">
           + <span class="hidden sm:inline">Ajouter un Invité / Groupe</span><span class="sm:hidden">Invité</span>
         </button>
@@ -285,5 +326,8 @@ onMounted(fetchGuests);
         </div>
       </div>
     </div>
+
+    <!-- Modale d'upgrade (export CSV réservé Premium) -->
+    <UpgradeModal v-model="showUpgradeModal" />
   </div>
 </template>

@@ -96,6 +96,83 @@ frontend/
 
 ---
 
+## Détail de chaque page (vue par vue)
+
+Pour chaque vue : son rôle, les **appels API** qu'elle déclenche et sa **logique** clé.
+
+### `/` — `LandingView.vue` (public)
+Page d'accueil commerciale. **Aucun appel API** : la galerie d'aperçu s'appuie sur `data/demoConfigs.js` (`LANDING_TEMPLATES`).
+- Hero avec **mot animé qui tourne** (`passion.`/`élégance.`/`émotion.`).
+- CTA « Créer mon invitation » → `/templates` si déjà connecté, sinon `/register`.
+- Cartes de forfaits (Classic/Premium) et vignettes de templates → `/demo/:slug`.
+
+### `/login` — `LoginView.vue` (invité)
+Connexion. Logique dans `stores/auth.js` (pas d'appel API direct dans la vue).
+- **Email/mot de passe** : `auth.login()` → `POST /auth/login`.
+- **Google** : `auth.loginWithGoogle()` (popup, repli redirect Safari/iOS) ; `finishGoogleRedirect()` au montage finalise le retour.
+- Après succès → `/admin/users` si admin, sinon `/dashboard`.
+
+### `/register` — `RegisterView.vue` (invité)
+Inscription. `auth.register()` → `POST /auth/signup` puis login automatique.
+- Accepte une query `?template=slug` (venant d'un aperçu démo) pour pré-sélectionner un design.
+- Après inscription → `/choose-plan` (**paywall strict** : un nouveau compte démarre sans forfait).
+
+### `/choose-plan` — `ChoosePlanView.vue` 🔒
+Sélection obligatoire d'un forfait avant tout accès produit.
+- `POST /payments/create-checkout-session { plan_name }` → **redirection vers Stripe Checkout**.
+- Le retour de paiement atterrit sur le dashboard (`?payment_success=true`) qui confirme la session.
+
+### `/dashboard` — `DashboardView.vue` 🔒
+Tableau de bord principal.
+- `GET /events/` — liste des événements du compte.
+- Par événement : éditer (`/cards/edit/:cardId`), publier (`POST /cards/:id/publish`), gérer invités (`/events/:id/guests`), plan de table (`/events/:id/tables`), supprimer (`DELETE /events/:id`).
+- **Upgrade** Classic→Premium : `POST /payments/create-upgrade-session` ; nouvel achat : `POST /payments/create-checkout-session`.
+- **Confirmation Stripe** au retour : `POST /payments/confirm-payment { session_id }` (lit `?payment_success` / `session_id`).
+- **Partage natif** (`navigator.share`) avec message personnalisé (noms + date).
+
+### `/templates` — `TemplateGalleryView.vue` 🔒
+Galerie filtrable par univers (Luxe Minimaliste, Classique Royal, Art & Culture, Bohème Chic).
+- `GET /templates/` — catalogue actif ; `GET /events/` — pour la limite de sites.
+- Sélection d'un template → `POST /events/` (crée l'événement **et** sa carte) → `/cards/edit/:id`.
+
+### `/cards/edit/:id` — `CardEditorView.vue` 🔒
+Cœur de l'application — éditeur visuel.
+- `GET /cards/:id` au montage ; **auto-save debouncé** `PUT /cards/:id/save` ; `POST /cards/:id/publish`.
+- `POST /events/admin/sync-cards-data` (resync nom/date/lieu dans la config — limité à ses propres cartes).
+- Onglets **Garde / Contexte / Design / Structure / Médias**, **undo/redo**, aperçu **mobile ⇄ desktop**, et sur mobile bascule **plein écran Éditer ⇄ Aperçu**.
+- Le rendu passe par `components/card/CardRenderer.vue` (voir plus bas).
+
+### `/events/:id/guests` — `GuestManagementView.vue` 🔒
+Gestion de la liste d'invités.
+- `GET /guests/event/:id` ; `POST /guests` ; `PATCH /guests/:id` (statut RSVP) ; `DELETE /guests/:id`.
+- Recherche/filtre par nom et par statut ; gestion des accompagnants (`parent_id`).
+
+### `/events/:id/tables` — `TableManagementView.vue` 🔒
+Plan de salle.
+- `GET /tables/event/:id` + `GET /guests/event/:id` ; `POST /tables` ; `DELETE /tables/:id`.
+- **Affectation glisser-déposer** : `POST /tables/:id/assign/:guestId` / `…/unassign/:guestId`.
+- **Export CSV** (⭐ premium) : `GET /tables/event/:id/export/csv` (`responseType: 'blob'`).
+
+### `/cards/:slug` · `/i/:slug` — `PublicCardView.vue` (public)
+Invitation publique partagée aux invités.
+- `GET /events/public/card/:slug` — **DTO public filtré** (aucune donnée privée du back-office).
+- Affiche la carte plein écran + le **formulaire RSVP** (qui poste sur `POST /guests/public/rsvp`).
+- Carte non publiée → 404 (sauf le propriétaire qui peut prévisualiser).
+
+### `/demo/:slug` — `DemoCardView.vue` (public)
+Aperçu d'un template sans compte (données factices via `demoConfigs.js`). CTA → `/register?template=slug`.
+
+### `/admin/users` — `AdminUsersView.vue` 🔒 👑
+- `GET /users/` ; `PATCH /users/:id/status` (activer/désactiver) ; `DELETE /users/:id`.
+
+### `/admin/stats` — `AdminStatsView.vue` 🔒 👑
+- `GET /users/stats` — KPI business (MRR, ARR, taux de conversion, churn, cartes/mois).
+
+### `/dev/templates` — `dev/TemplateQAView.vue` (DEV uniquement)
+Banc de QA visuel des templates ; `beforeEnter` redirige vers `/` hors mode développement.
+
+---
+
 ## Authentification (`stores/auth.js` + `service/api.js`)
 
 - JWT `token` + `refresh_token` stockés dans `localStorage` ; `user` hydraté de façon synchrone au chargement.

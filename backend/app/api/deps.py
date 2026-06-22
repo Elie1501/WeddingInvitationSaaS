@@ -7,7 +7,7 @@ from app.db.session import get_db
 from app.core.config import settings
 from app.models.wedding import User
 from app.schemas.token import TokenPayload
-from app.api.plans import get_limits
+from app.api.plans import get_limits, has_paid_plan
 
 from typing import Optional
 
@@ -57,11 +57,39 @@ def check_plan_permission(permission: str):
     return _check
 
 
+def require_paid_plan(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency pour toute route exigeant un forfait payé (Classic ou Premium).
+
+    Bloque les comptes fraîchement créés qui n'ont pas encore réglé leur forfait
+    (paywall strict). Renvoie 402 Payment Required.
+    """
+    if not has_paid_plan(current_user.plan):
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Veuillez choisir et régler un forfait pour accéder à cette fonctionnalité.",
+        )
+    return current_user
+
+
 def require_premium(current_user: User = Depends(get_current_user)) -> User:
     """Dependency pour toute route réservée exclusivement au forfait Premium."""
     if current_user.plan != "premium":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cette fonctionnalité est réservée au forfait Premium."
+        )
+    return current_user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency pour toute route réservée aux administrateurs.
+
+    Centralise le contrôle is_admin pour qu'aucune route admin ne puisse être
+    exposée sans protection par oubli du check inline.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vous n'avez pas les droits nécessaires pour accéder à cette ressource."
         )
     return current_user

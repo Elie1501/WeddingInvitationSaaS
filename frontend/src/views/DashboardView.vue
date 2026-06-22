@@ -4,6 +4,9 @@ import api from '../service/api';
 import { useAuthStore } from '../stores/auth';
 import { useRouter, useRoute } from 'vue-router';
 import { getPlanInfo } from '../service/plans';
+import { useToast } from '../composables/useToast';
+
+const { notifyError, notifyWarning } = useToast();
 
 const events = ref([]);
 const loading = ref(true);
@@ -33,8 +36,8 @@ const confirmDelete = async () => {
   try {
     await api.delete(`/events/${eventId}`);
     events.value = events.value.filter(e => e.id !== eventId);
-  } catch {
-    alert('Erreur lors de la suppression de l\'événement.');
+  } catch (err) {
+    notifyError(err, { fallback: 'Erreur lors de la suppression de l\'événement.' });
   }
 };
 
@@ -44,8 +47,8 @@ const togglePublish = async (cardId) => {
     const res = await api.post(`/cards/${cardId}/publish`);
     const ev = events.value.find(e => e.card?.id === cardId);
     if (ev?.card) ev.card.is_published = res.data.is_published;
-  } catch {
-    alert('Erreur lors de la mise à jour du statut de publication.');
+  } catch (err) {
+    notifyError(err, { fallback: 'Erreur lors de la mise à jour du statut de publication.' });
   }
 };
 
@@ -107,8 +110,8 @@ const handleUpdatePlan = async (newPlan) => {
     }
     const res = await api.post('/payments/create-checkout-session', { plan_name: newPlan });
     if (res.data.checkout_url) window.location.href = res.data.checkout_url;
-  } catch {
-    alert('Impossible d\'initialiser le paiement. Veuillez réessayer.');
+  } catch (err) {
+    notifyError(err, { fallback: 'Impossible d\'initialiser le paiement. Veuillez réessayer.' });
   } finally {
     planUpdateLoading.value = false;
   }
@@ -116,7 +119,7 @@ const handleUpdatePlan = async (newPlan) => {
 
 const goToTables = (eventId) => {
   if (!planInfo.value.can_use_tables) {
-    alert(`Le plan de table est réservé aux forfaits Avancé. (Votre forfait actuel : ${planInfo.value.name})`);
+    notifyWarning(`Le plan de table est réservé aux forfaits Avancé. (Votre forfait actuel : ${planInfo.value.name})`);
     return;
   }
   router.push(`/events/${eventId}/tables`);
@@ -497,8 +500,11 @@ onMounted(async () => {
               <span v-if="auth.user.plan === 'classic'" class="bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">Actuel</span>
             </div>
             <ul class="text-sm text-gray-600 space-y-2 mb-6 font-sans">
-              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Plan de table complet</li>
               <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 1 site d'invitation</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Formulaire RSVP</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Plan de table interactif</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Musique d'ambiance</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Personnalisation complète</li>
             </ul>
             <p
               v-if="auth.user.plan === 'premium'"
@@ -519,8 +525,11 @@ onMounted(async () => {
               <span v-if="auth.user.plan === 'premium'" class="bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">Actuel</span>
             </div>
             <ul class="text-sm text-gray-600 space-y-2 mb-6 font-sans">
-              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 5 sites d'invitation</li>
-              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Import/Export CSV</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Jusqu'à 5 sites d'invitation</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Tous les templates Premium</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Blocs de personnalisation Premium</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Typographie personnalisée</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Export CSV des invités</li>
             </ul>
             <button
               v-if="auth.user.plan !== 'premium'"

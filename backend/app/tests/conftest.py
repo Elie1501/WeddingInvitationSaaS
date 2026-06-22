@@ -23,6 +23,29 @@ def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 
+
+def activate_plan(token: str, plan: str = "classic") -> None:
+    """Active un forfait payé pour un compte de test.
+
+    Depuis le paywall strict, un nouveau compte démarre sans forfait ("none") et
+    ne peut donc rien créer. Les tests fonctionnels (events, cards, tables, guests)
+    appellent ce helper après l'inscription pour retrouver une base utilisable.
+    """
+    from jose import jwt
+    from app.core.config import settings
+    from app.models.wedding import User
+
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    user_id = int(payload["sub"])
+    db = TestingSessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.plan = plan
+            db.commit()
+    finally:
+        db.close()
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)

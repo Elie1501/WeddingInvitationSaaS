@@ -99,6 +99,9 @@ def assign_guest_to_table(
     if not table or not guest:
         raise HTTPException(status_code=404, detail="Table ou invité introuvable")
 
+    if table.event_id != guest.event_id:
+        raise HTTPException(status_code=400, detail="L'invité et la table doivent appartenir au même événement")
+
     if guest in table.guests:
         return table
 

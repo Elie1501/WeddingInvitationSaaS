@@ -1,5 +1,6 @@
 <template>
   <router-view />
+  <ToastHost />
 </template>
 
 <style>
@@ -12,4 +13,5 @@ body {
 }
 </style>
 <script setup>
+import ToastHost from './components/ToastHost.vue';
 </script>

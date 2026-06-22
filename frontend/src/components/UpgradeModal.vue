@@ -11,10 +11,10 @@
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
         <!-- Panel -->
-        <div class="relative z-10 w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div class="relative z-10 w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
 
           <!-- Header -->
-          <div class="bg-gradient-to-r from-primary-700 to-primary-500 px-8 py-6 text-white">
+          <div class="bg-gradient-to-r from-primary-700 to-primary-500 px-6 sm:px-8 py-6 text-white">
             <button
               class="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
               @click="$emit('update:modelValue', false)"
@@ -29,8 +29,8 @@
           </div>
 
           <!-- Comparison -->
-          <div class="px-8 py-6">
-            <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="px-6 sm:px-8 py-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
 
               <!-- Classic column -->
               <div class="rounded-2xl border border-gray-200 p-4">
@@ -128,20 +128,19 @@ const errorMsg = ref('');
 const isDev = import.meta.env.DEV;
 
 const classicFeatures = [
-  "Jusqu'à 3 pages",
-  '1 site web',
+  "1 site d'invitation",
   'Formulaire RSVP',
-  'Plan de table',
+  'Plan de table interactif',
+  "Musique d'ambiance",
   'Personnalisation complète',
 ];
 
 const blockedFeatures = [
+  "Jusqu'à 5 sites d'invitation",
   'Tous les templates Premium',
-  'Blocs : compte à rebours, programme…',
-  'Musique de fond',
+  'Blocs de personnalisation Premium',
   'Typographie personnalisée',
-  "Jusqu'à 20 pages & 5 sites",
-  'Export CSV invités',
+  'Export CSV des invités',
 ];
 
 const startUpgrade = async () => {
