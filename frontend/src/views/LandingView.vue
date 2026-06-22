@@ -181,9 +181,9 @@ onUnmounted(() => {
               L'invitation digitale de votre mariage
             </span>
 
-            <h2 class="font-serif italic text-[#2D2A26] leading-[1.05] mb-6">
+            <h2 class="font-serif italic text-[#2D2A26] leading-[1.25] md:leading-[1.05] mb-6">
               <span class="block text-5xl md:text-6xl xl:text-[72px]">Votre mariage,</span>
-              <span class="block text-5xl md:text-6xl xl:text-[72px] mt-1">
+              <span class="block text-5xl md:text-6xl xl:text-[72px] mt-3 md:mt-1">
                 votre&nbsp;<span class="inline-block overflow-hidden h-[1.1em] align-bottom">
                   <Transition name="word">
                     <span class="block text-primary-600" :key="heroWordIndex">{{ heroWords[heroWordIndex] }}.</span>

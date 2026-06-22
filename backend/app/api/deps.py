@@ -79,3 +79,17 @@ def require_premium(current_user: User = Depends(get_current_user)) -> User:
             detail="Cette fonctionnalité est réservée au forfait Premium."
         )
     return current_user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency pour toute route réservée aux administrateurs.
+
+    Centralise le contrôle is_admin pour qu'aucune route admin ne puisse être
+    exposée sans protection par oubli du check inline.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vous n'avez pas les droits nécessaires pour accéder à cette ressource."
+        )
+    return current_user

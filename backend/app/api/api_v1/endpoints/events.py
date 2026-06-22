@@ -55,6 +55,10 @@ def create_event(
     if template:
         manifest = json.loads(template.manifest_json)
         config_dict = manifest.get("default_config", {})
+    else:
+        # Template introuvable (ex. id par défaut obsolète) : ne pas écrire de FK
+        # fantôme dans cards.template_id, sinon INSERT échoue (ForeignKeyViolation).
+        template_id = None
     
     # Personnalisation initiale basée sur le formulaire
     config_dict["has_cover_page"] = has_cp

@@ -4,7 +4,7 @@ from app.db.session import get_db
 from app.models.wedding import User, Card, Event
 from app.schemas.user import UserResponse, UserUpdatePlan, UserUpdateStatus
 from app.schemas.card import CardResponse
-from app.api.deps import get_current_user
+from app.api.deps import require_admin
 import datetime
 
 from typing import List
@@ -23,17 +23,11 @@ def sign_media_urls(card: Card) -> Card:
 @router.get("/", response_model=List[UserResponse])
 def get_users(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     """
     Lister tous les utilisateurs (Réservé aux administrateurs).
     """
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=403,
-            detail="Vous n'avez pas les droits nécessaires pour accéder à cette ressource."
-        )
-    
     users = db.query(User).all()
     return users
 
@@ -42,11 +36,8 @@ PLAN_PRICES = {"classic": 29.0, "premium": 79.0}
 @router.get("/stats")
 def get_admin_stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Accès refusé.")
-
     now = datetime.datetime.utcnow()
     start_of_month = datetime.datetime(now.year, now.month, 1)
 
@@ -97,17 +88,11 @@ def get_admin_stats(
 def get_user_cards(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     """
     Lister toutes les cartes d'un utilisateur spécifique (Réservé aux administrateurs).
     """
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=403,
-            detail="Vous n'avez pas les droits nécessaires."
-        )
-    
     cards = db.query(Card).join(Event).filter(Event.owner_id == user_id).all()
     return [sign_media_urls(c) for c in cards]
 
@@ -116,17 +101,11 @@ def update_user_status(
     user_id: int,
     status_in: UserUpdateStatus,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     """
     Activer ou désactiver un compte utilisateur (Réservé aux administrateurs).
     """
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=403,
-            detail="Vous n'avez pas les droits nécessaires."
-        )
-    
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé.")
@@ -141,14 +120,11 @@ def update_user_status(
 def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     """
     Supprimer définitivement un utilisateur (Réservé aux administrateurs).
     """
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Vous n'avez pas les droits nécessaires.")
-    
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé.")

@@ -56,6 +56,28 @@ def test_assign_guest_to_table():
     assert any(g["id"] == guest_id for g in data["guests"])
 
 
+def test_assign_guest_from_other_event_rejected():
+    """Un invité ne peut être affecté qu'à une table du même événement (règle métier §4)."""
+    from app.tests.conftest import activate_plan
+    token = signup_and_login("table_cross_event@example.com")
+    activate_plan(token, "premium")  # premium autorise plusieurs événements (max_sites=5)
+    # Deux événements appartenant au même propriétaire
+    ev_a = client.post("/events/", json={"title": "Mariage A", "groom_name": "A", "bride_name": "B"},
+                       headers={"Authorization": f"Bearer {token}"}).json()["id"]
+    ev_b = client.post("/events/", json={"title": "Mariage B", "groom_name": "C", "bride_name": "D"},
+                       headers={"Authorization": f"Bearer {token}"}).json()["id"]
+
+    table_a = create_table(token, ev_a, capacity=5)      # table de l'événement A
+    guest_b = add_guest(token, ev_b, "Charlie", "Test")  # invité de l'événement B
+
+    response = client.post(
+        f"/tables/{table_a}/assign/{guest_b}",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 400
+    assert "même événement" in response.json()["detail"]
+
+
 def test_assign_guest_table_full():
     token, event_id = create_user_with_event("table_full@example.com")
     table_id = create_table(token, event_id, capacity=1)
