@@ -13,7 +13,7 @@ export const PLAN_LIMITS = {
     can_use_tables: true,
     can_customize_extensively: true,
     can_import_export: false,
-    can_upload_music: false
+    can_upload_music: true
   },
   [PlanType.PREMIUM]: {
     name: 'Premium',

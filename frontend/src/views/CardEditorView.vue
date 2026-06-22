@@ -44,18 +44,13 @@ const TEMPLATE_FIELDS = {
   ],
   'empire-abstrait':  [
     { key: 'names',        label: 'Prénoms',             type: 'text' },
-    { key: 'monogram',     label: 'Monogramme',          type: 'text' },
     { key: 'date_display', label: 'Date affichée',        type: 'text' },
     { key: 'address',      label: 'Lieu',                 type: 'text' },
-    { key: 'intro_text',   label: 'Texte d\'introduction',type: 'textarea' },
-    { key: 'divider_symbol',label: 'Symbole décoratif',   type: 'text' },
   ],
   'arch':             [
     { key: 'names',        label: 'Prénoms',             type: 'text' },
     { key: 'date_display', label: 'Date affichée',        type: 'text' },
     { key: 'address',      label: 'Lieu',                 type: 'text' },
-    { key: 'section_title',label: 'Titre de cérémonie',   type: 'text', placeholder: 'Union Sacrée' },
-    { key: 'intro_text',   label: 'Citation / intro',     type: 'textarea' },
   ],
   'split':            [
     { key: 'names',        label: 'Prénoms',             type: 'text' },
@@ -77,7 +72,6 @@ const TEMPLATE_FIELDS = {
     { key: 'names',        label: 'Prénoms',             type: 'text' },
     { key: 'date_display', label: 'Date affichée',        type: 'text' },
     { key: 'address',      label: 'Lieu',                 type: 'text' },
-    { key: 'section_title',label: 'Titre section',        type: 'text', placeholder: 'Première Mondiale' },
     { key: 'intro_text',   label: 'Citation / intro',     type: 'textarea' },
     { key: 'image_url',    label: 'Photo héro',           type: 'image' },
     { key: 'image_url_2',  label: 'Photos pellicule',     type: 'image' },
@@ -104,7 +98,6 @@ const TEMPLATE_FIELDS = {
     { key: 'names',        label: 'Prénoms',              type: 'text' },
     { key: 'date_display', label: 'Date affichée',         type: 'text' },
     { key: 'address',      label: 'Lieu',                  type: 'text' },
-    { key: 'intro_text',   label: 'Synopsis',              type: 'textarea' },
     { key: 'image_url',    label: 'Photo héro',            type: 'image' },
   ],
   'celestial': [
@@ -135,6 +128,17 @@ const TEMPLATE_FIELDS = {
     { key: 'intro_text',   label: 'Texte velours',         type: 'textarea' },
     { key: 'dress_code',   label: 'Tenue vestimentaire',   type: 'text' },
     { key: 'image_url',    label: 'Photo de couverture',   type: 'image' },
+  ],
+  // Templates épurés (prénoms / date / lieu uniquement, pas d'intro ni d'image héro)
+  'amour': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
+  ],
+  'eclipse': [
+    { key: 'names',        label: 'Prénoms',              type: 'text' },
+    { key: 'date_display', label: 'Date affichée',         type: 'text' },
+    { key: 'address',      label: 'Lieu',                  type: 'text' },
   ],
 };
 // Résoudre les alias
@@ -190,6 +194,10 @@ const quickUploadField = ref(null);
 const quickUploadInput = ref(null);
 const previewDevice = ref('mobile'); // 'mobile' | 'desktop'
 const zoomLevel = ref(100);
+const editPanelScroll = ref(null); // conteneur scrollable du panneau d'édition
+// Garde-fou : pendant une navigation programmatique (clic sur un bloc dans
+// l'aperçu) on ne veut pas que le watcher d'activeTab efface la sélection.
+let internalNav = false;
 
 // Mobile (< lg) : on n'affiche qu'un panneau à la fois en plein écran, avec une
 // bascule Éditer ↔ Aperçu. Le desktop affiche toujours les deux côte à côte.
@@ -197,10 +205,30 @@ const mobileView = ref('preview'); // 'edit' | 'preview' — ignoré en >= lg
 const lgUp = ref(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
 const onResize = () => { lgUp.value = window.innerWidth >= 1024; };
 
-// Sélection d'un bloc depuis l'aperçu → bascule en mode édition sur mobile.
+// Clic sur un bloc dans l'aperçu → on amène l'utilisateur DIRECTEMENT là où il
+// peut le modifier : onglet « Garde » pour le splash, onglet d'édition des
+// champs pour tout le reste. Sur mobile, on bascule en mode « Éditer ». Puis on
+// remonte le panneau en haut et on met le focus sur le premier champ éditable.
 const selectBlockFromPreview = (block) => {
+  internalNav = true;
   selectedBlock.value = block;
+  activeTab.value = (block === 'splash') ? 'cover' : 'context';
   if (!lgUp.value) mobileView.value = 'edit';
+  nextTick(() => {
+    internalNav = false;
+    const panel = editPanelScroll.value;
+    if (!panel) return;
+    panel.scrollTop = 0;
+    // Focus du premier champ éditable sur desktop uniquement (évite le clavier
+    // intrusif qui s'ouvrirait juste après la bascule d'onglet sur mobile).
+    // NB : le champ « Prénoms » est un <input> sans attribut type explicite, d'où
+    // l'exclusion par type plutôt qu'un ciblage sur [type="text"].
+    if (lgUp.value) {
+      panel.querySelector(
+        'input:not([type="color"]):not([type="checkbox"]):not([type="file"]):not([type="time"]), textarea'
+      )?.focus({ preventScroll: true });
+    }
+  });
 };
 
 const tabs = [
@@ -548,6 +576,9 @@ watch(selectedBlock, (newVal) => {
 
 // Onglet Garde : sync preview ↔ onglet
 watch(activeTab, (newTab, oldTab) => {
+  // Navigation programmatique (clic sur un bloc) : la sélection est déjà gérée
+  // par selectBlockFromPreview, ne pas l'écraser ici.
+  if (internalNav) return;
   if (newTab === 'cover') {
     // Entrer → montrer la garde dans la preview si activée
     selectedBlock.value = config.show_splash ? 'splash' : null;
@@ -739,16 +770,8 @@ const removeMusic = () => {
 };
 
 // ==========================================
-// 10. COMPUTED TEMPLATE FIELDS & TAILLES
+// 10. TAILLES DE TEXTE & POLICES
 // ==========================================
-const currentTemplateFields = computed(() =>
-  TEMPLATE_FIELDS[config.layout] || [
-    { key: 'names',        label: 'Prénoms',      type: 'text' },
-    { key: 'date_display', label: 'Date affichée', type: 'text' },
-    { key: 'address',      label: 'Lieu',          type: 'text' },
-  ]
-);
-
 const TEXT_SIZES = [
   { id: 'small',  label: 'Petit' },
   { id: 'medium', label: 'Moyen' },
@@ -976,7 +999,7 @@ onUnmounted(() => {
       </div>
 
       <!-- CONTENU DES ONGLETS -->
-      <div class="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-[#FAFAFA]">
+      <div ref="editPanelScroll" class="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-[#FAFAFA]">
         
         <!-- ONGLET : CONTEXTE (auto-activé au clic sur un bloc, hors nav) -->
         <div v-if="activeTab === 'context'" class="animate-in space-y-6">
@@ -1407,26 +1430,7 @@ onUnmounted(() => {
           <div class="space-y-3">
             <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Musique d'ambiance</p>
 
-            <!-- Bloc Premium requis -->
-            <div v-if="!isPremium" class="rounded-2xl overflow-hidden border border-amber-200 bg-amber-50">
-              <div class="p-5 space-y-3 text-center">
-                <div class="w-12 h-12 rounded-full bg-[#C5A059]/15 flex items-center justify-center mx-auto">
-                  <svg class="w-6 h-6 text-[#C5A059]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-xs font-black uppercase tracking-widest text-[#8B6914]">Fonctionnalité Premium</p>
-                  <p class="text-[11px] text-amber-700 mt-1">Ajoutez une musique d'ambiance à votre invitation. Disponible avec le forfait Premium.</p>
-                </div>
-                <button @click="showUpgradeModal = true" class="w-full py-2.5 bg-[#C5A059] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#b08c47] transition-colors">
-                  Passer Premium
-                </button>
-              </div>
-            </div>
-
-            <!-- Interface upload si Premium -->
-            <template v-else>
+            <!-- Upload musique — disponible sur tous les forfaits -->
               <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
                 <div class="flex items-center gap-2">
                   <div class="w-2 h-2 rounded-full bg-[#C5A059]"></div>
@@ -1461,7 +1465,6 @@ onUnmounted(() => {
 
                 <p class="text-[10px] text-gray-400 leading-relaxed">La musique est jouée en fond lors de la consultation de l'invitation par vos invités.</p>
               </div>
-            </template>
           </div>
         </div>
 

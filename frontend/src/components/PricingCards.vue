@@ -13,10 +13,11 @@ const plans = [
     price: '29€',
     description: 'Parfait pour un petit mariage élégant.',
     features: [
-      '3 pages personnalisées',
-      'Formulaire RSVP inclus',
+      "1 site d'invitation",
+      'Formulaire RSVP',
       'Plan de table interactif',
-      'Support par email'
+      "Musique d'ambiance",
+      'Personnalisation complète'
     ],
     buttonText: 'Choisir Classique',
     highlight: false
@@ -27,11 +28,12 @@ const plans = [
     price: '79€',
     description: 'L\'expérience ultime pour un grand événement.',
     features: [
-      'Pages illimitées',
-      'Gestion des accompagnants',
-      'Import/Export CSV',
-      'Musique de fond personnalisée',
-      'Support prioritaire 24/7'
+      'Tout le Classic',
+      "Jusqu'à 5 sites d'invitation",
+      'Tous les templates Premium',
+      'Blocs de personnalisation Premium',
+      'Typographie personnalisée',
+      'Export CSV des invités'
     ],
     buttonText: 'Passer au Premium',
     highlight: true

@@ -128,19 +128,19 @@ const errorMsg = ref('');
 const isDev = import.meta.env.DEV;
 
 const classicFeatures = [
-  '1 site web',
+  "1 site d'invitation",
   'Formulaire RSVP',
-  'Plan de table',
+  'Plan de table interactif',
+  "Musique d'ambiance",
   'Personnalisation complète',
 ];
 
 const blockedFeatures = [
+  "Jusqu'à 5 sites d'invitation",
   'Tous les templates Premium',
-  'Blocs : compte à rebours, programme…',
-  'Musique de fond',
+  'Blocs de personnalisation Premium',
   'Typographie personnalisée',
-  "Jusqu'à 5 sites web",
-  'Export CSV invités',
+  'Export CSV des invités',
 ];
 
 const startUpgrade = async () => {

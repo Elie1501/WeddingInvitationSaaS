@@ -43,7 +43,7 @@ PLAN_LIMITS: Dict[str, Dict[str, Any]] = {
         "can_use_tables":           True,
         "can_customize_extensively": True,
         "can_import_export":        False,
-        "can_upload_music":         False,
+        "can_upload_music":         True,
         "can_edit_typography":      False,
         "can_export_csv":           False,
     },
