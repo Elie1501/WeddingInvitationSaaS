@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import datetime
@@ -9,6 +9,8 @@ from app.api import deps
 from app.models.wedding import Guest, Event, User, Card, RSVP, guest_table_association
 from app.schemas.guest import GuestCreate, GuestResponse, GuestRSVP, GuestUpdate, RSVPResponse, PublicRSVPCreate
 from app.api.plans import get_limits
+from app.core.csv_utils import csv_safe
+from app.core.ratelimit import rate_limit
 
 router = APIRouter()
 
@@ -76,14 +78,14 @@ def export_guests_csv(
     for g in guests:
         tables = ", ".join(t.name for t in g.assigned_tables) if g.assigned_tables else ""
         writer.writerow([
-            g.first_name,
-            g.last_name,
-            g.email or "",
+            csv_safe(g.first_name),
+            csv_safe(g.last_name),
+            csv_safe(g.email or ""),
             status_labels.get(g.rsvp_status, g.rsvp_status or ""),
             g.plus_ones or 0,
-            g.dietary_restrictions or "",
-            tables,
-            g.message or "",
+            csv_safe(g.dietary_restrictions or ""),
+            csv_safe(tables),
+            csv_safe(g.message or ""),
         ])
 
     # BOM UTF-8 pour que les accents s'affichent correctement dans Excel (FR).
@@ -199,10 +201,14 @@ def delete_guest(
 
 @router.post("/public/rsvp")
 def public_rsvp(
+    request: Request,
     rsvp_data: PublicRSVPCreate,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(deps.get_current_user_optional)
 ):
+    # Anti-spam : 15 soumissions / 5 min par IP.
+    rate_limit(request, scope="rsvp", limit=15, window_seconds=300)
+
     card = db.query(Card).filter(Card.event_id == rsvp_data.event_id).first()
     if not card:
         raise HTTPException(status_code=404, detail="Invitation non trouvée")
@@ -211,12 +217,20 @@ def public_rsvp(
     if not card.is_published and not is_owner:
         raise HTTPException(status_code=403, detail="L'invitation n'est pas encore publiée. Le RSVP n'est pas autorisé.")
 
-    # Chercher ou créer l'invité principal
-    guest = db.query(Guest).filter(
+    # Chercher l'invité principal (jamais un sous-invité) par nom. Si un email est
+    # fourni, on évite d'écraser un homonyme enregistré avec un AUTRE email :
+    # on ne met à jour que l'invité au même email (ou sans email), sinon on en crée un.
+    query = db.query(Guest).filter(
         Guest.event_id == rsvp_data.event_id,
+        Guest.parent_id.is_(None),
         Guest.first_name == rsvp_data.first_name,
-        Guest.last_name == rsvp_data.last_name
-    ).first()
+        Guest.last_name == rsvp_data.last_name,
+    )
+    if rsvp_data.email:
+        query = query.filter(
+            (Guest.email == rsvp_data.email) | (Guest.email.is_(None)) | (Guest.email == "")
+        )
+    guest = query.first()
 
     if not guest:
         guest = Guest(

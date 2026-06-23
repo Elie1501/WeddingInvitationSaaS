@@ -124,7 +124,8 @@ Sélection obligatoire d'un forfait avant tout accès produit.
 
 ### `/dashboard` — `DashboardView.vue` 🔒
 Tableau de bord principal.
-- `GET /events/` — liste des événements du compte.
+- `GET /events/` — liste **tous** les événements du compte (jusqu'à `max_sites` : 1 en Classic, 5 en Premium).
+- **Créer un événement** : pose un flag `create_new_event` puis va au wizard → galerie, qui crée alors un **nouvel** événement (≠ réutiliser l'existant). À la limite du forfait : message clair (passer Premium **ou** supprimer un événement pour libérer un emplacement).
 - Par événement : éditer (`/cards/edit/:cardId`), publier (`POST /cards/:id/publish`), gérer invités (`/events/:id/guests`), plan de table (`/events/:id/tables`), supprimer (`DELETE /events/:id`).
 - **Upgrade** Classic→Premium : `POST /payments/create-upgrade-session` ; nouvel achat : `POST /payments/create-checkout-session`.
 - **Confirmation Stripe** au retour : `POST /payments/confirm-payment { session_id }` (lit `?payment_success` / `session_id`).
@@ -133,19 +134,23 @@ Tableau de bord principal.
 ### `/templates` — `TemplateGalleryView.vue` 🔒
 Galerie filtrable par univers (Luxe Minimaliste, Classique Royal, Art & Culture, Bohème Chic).
 - `GET /templates/` — catalogue actif ; `GET /events/` — pour la limite de sites.
-- Sélection d'un template → `POST /events/` (crée l'événement **et** sa carte) → `/cards/edit/:id`.
+- Sélection d'un template → si flag `create_new_event` (depuis le Dashboard) **ou** aucun événement : `POST /events/` (crée l'événement **et** sa carte) ; sinon (onboarding) réutilise le dernier événement → `/cards/edit/:id`.
 
 ### `/cards/edit/:id` — `CardEditorView.vue` 🔒
 Cœur de l'application — éditeur visuel.
 - `GET /cards/:id` au montage ; **auto-save debouncé** `PUT /cards/:id/save` ; `POST /cards/:id/publish`.
 - `POST /events/admin/sync-cards-data` (resync nom/date/lieu dans la config — limité à ses propres cartes).
 - Onglets **Garde / Contexte / Design / Structure / Médias**, **undo/redo**, aperçu **mobile ⇄ desktop**, et sur mobile bascule **plein écran Éditer ⇄ Aperçu**.
+- **Clic sur un bloc dans l'aperçu** → bascule directement vers ses champs d'édition (+ focus du 1er champ).
+- Onglet Médias → **Partage (⭐ premium)** : **QR code** (lib `qrcode`, généré côté client, téléchargeable) et **URL personnalisée** (`PATCH /cards/:id/slug`). Musique d'ambiance disponible **tous forfaits**.
 - Le rendu passe par `components/card/CardRenderer.vue` (voir plus bas).
 
 ### `/events/:id/guests` — `GuestManagementView.vue` 🔒
 Gestion de la liste d'invités.
 - `GET /guests/event/:id` ; `POST /guests` ; `PATCH /guests/:id` (statut RSVP) ; `DELETE /guests/:id`.
 - Recherche/filtre par nom et par statut ; gestion des accompagnants (`parent_id`).
+- **Tableau de bord RSVP temps réel** : confirmés / absents / total + récap des **régimes alimentaires** (agrégés depuis la liste, tous forfaits).
+- **Export CSV** (⭐ premium) : `GET /guests/event/:id/export/csv` (`responseType: 'blob'`).
 
 ### `/events/:id/tables` — `TableManagementView.vue` 🔒
 Plan de salle.
@@ -157,6 +162,8 @@ Plan de salle.
 Invitation publique partagée aux invités.
 - `GET /events/public/card/:slug` — **DTO public filtré** (aucune donnée privée du back-office).
 - Affiche la carte plein écran + le **formulaire RSVP** (qui poste sur `POST /guests/public/rsvp`).
+- **Musique d'ambiance** jouée chez l'invité (démarrée au clic « Entrer » de la page de garde, bouton flottant lecture/pause).
+- Bouton **« Ajouter au calendrier » (.ics)** généré côté client — affiché si le propriétaire est **Premium** (`owner_plan`).
 - Carte non publiée → 404 (sauf le propriétaire qui peut prévisualiser).
 
 ### `/demo/:slug` — `DemoCardView.vue` (public)
@@ -226,7 +233,7 @@ Cœur de l'affichage : reçoit un objet `config` (JSON) et rend dynamiquement le
 
 ## Éditeur (`CardEditorView.vue`)
 
-Onglets : **Garde** (splash), **Contexte** (bloc sélectionné), **Design** (couleurs/polices), **Structure** (blocs déplaçables), **Médias** (image/musique). Aperçu live (mobile/desktop), historique undo/redo, auto-save (debounce). Un compte **Classic** ne reçoit jamais de bloc premium par défaut. Sur mobile : aperçu en haut, éditeur en bas.
+Onglets : **Garde** (splash), **Contexte** (bloc sélectionné — atteint en cliquant un bloc dans l'aperçu, avec focus du 1er champ), **Design** (couleurs/polices), **Structure** (blocs déplaçables), **Médias** (image, musique d'ambiance, **Partage : QR code + URL personnalisée** ⭐). Aperçu live (mobile/desktop), historique undo/redo, auto-save (debounce). Un compte **Classic** ne reçoit jamais de bloc premium par défaut. Sur mobile : aperçu en haut, éditeur en bas.
 
 ---
 

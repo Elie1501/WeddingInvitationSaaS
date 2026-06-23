@@ -3,7 +3,7 @@
 Plateforme de création d'**invitations de mariage digitales**. Les mariés choisissent un template, personnalisent leur invitation dans un éditeur visuel, la publient sur une URL partageable, gèrent leur liste d'invités, le plan de table et suivent les réponses (RSVP) — le tout depuis une interface web.
 
 > 📖 **Pour démarrer le projet, voir [LAUNCH.md](LAUNCH.md).**
-> Docs détaillées : [backend/README.md](backend/README.md) · [frontend/README.md](frontend/README.md)
+> Docs détaillées : [backend/README.md](backend/README.md) · [frontend/README.md](frontend/README.md) · **[API_DOC.md](API_DOC.md)** (toutes les routes)
 
 ---
 
@@ -63,13 +63,14 @@ Le frontend (navigateur) parle à l'API en **HTTPS** ; l'API parle à PostgreSQL
 
 - **Galerie de templates** — 14 designs répartis en 4 univers : *Luxe Minimaliste*, *Classique Royal*, *Art & Culture*, *Bohème Chic*.
 - **Onboarding** (`MagicWizard`) — wizard en 4 étapes : prénoms → date → lieu → style.
-- **Éditeur de carte** — thème (couleurs, polices, tailles), contenu, blocs déplaçables (hero, compte à rebours, programme, RSVP, texte libre, footer), image, musique, page de garde animée. Aperçu live mobile/desktop, historique undo/redo.
-- **Page publique** — URL partageable `/cards/:slug` (et lien court `/i/:slug`), plein écran, responsive, avec aperçu de partage (Open Graph).
-- **RSVP public** — les invités répondent depuis l'invitation (présence, +1, régime, message) ; la réponse remonte dans l'espace des mariés.
-- **Gestion des invités** — ajout, statuts, accompagnants, recherche/filtre, export CSV (premium).
-- **Plan de table** — création de tables, attribution glisser-déposer (et menu tactile sur mobile), jauge de remplissage.
+- **Éditeur de carte** — thème (couleurs, polices, tailles), contenu, blocs déplaçables (hero, compte à rebours, programme, RSVP, texte libre, footer), image, **musique d'ambiance**, page de garde animée. Cliquer un bloc dans l'aperçu amène **directement** à ses champs ; aperçu live mobile/desktop, historique undo/redo.
+- **Page publique** — URL partageable `/i/:slug`, plein écran, responsive. **Musique d'ambiance** jouée chez l'invité (déclenchée à l'entrée, bouton lecture/pause) et bouton **« Ajouter au calendrier » (.ics)** (Premium).
+- **Partage (Premium)** — **QR code** téléchargeable (à imprimer sur faire-part/menus) et **URL personnalisée** `mariage-prénom-prénom`.
+- **RSVP public** — les invités répondent depuis l'invitation (présence, +1, régime, message) ; la réponse remonte dans l'espace des mariés. Anti-spam (rate-limiting).
+- **Gestion des invités** — ajout, statuts, accompagnants, recherche/filtre, **tableau de bord RSVP temps réel** (confirmés / absents / total + récap des régimes) et **export CSV** (Premium).
+- **Plan de table** — création de tables, attribution glisser-déposer (et menu tactile sur mobile), jauge de remplissage, export CSV (Premium).
 - **Compte à rebours** — décompte live jusqu'au jour J.
-- **Forfaits** — `classic` et `premium` (montée en gamme via Stripe).
+- **Forfaits** — `classic` et `premium`, **appliqués côté serveur** ; montée en gamme via Stripe (différence de prix uniquement).
 - **Espace admin** — liste des utilisateurs, statistiques, activation/désactivation de comptes.
 
 ---
@@ -105,18 +106,25 @@ CardTemplate   (catalogue global des 14 templates, indépendant des users)
 
 Définis dans [`backend/app/api/plans.py`](backend/app/api/plans.py) et **appliqués côté serveur** (pas seulement dans l'UI).
 
-| Capacité                     | `classic` (29 €) | `premium` (79 €) |
-|------------------------------|:----------------:|:----------------:|
-| Pages max                    | 3                | 20               |
-| Sites d'invitation max       | 1                | 5                |
-| Page de garde + RSVP         | ✅               | ✅               |
-| Plan de table                | ✅               | ✅               |
-| Blocs `countdown` / `program`| ❌               | ✅               |
-| Musique de fond              | ❌               | ✅               |
-| Typographie personnalisée    | ❌               | ✅               |
-| Export CSV des invités       | ❌               | ✅               |
+| Capacité                            | `classic` (29 €) | `premium` (79 €) |
+|-------------------------------------|:----------------:|:----------------:|
+| Sites d'invitation max              | 1                | 5                |
+| Pages max par invitation            | 3                | 20               |
+| Page de garde + formulaire RSVP     | ✅               | ✅               |
+| Plan de table interactif            | ✅               | ✅               |
+| **Musique d'ambiance**              | ✅               | ✅               |
+| Personnalisation (couleurs)         | ✅               | ✅               |
+| Tableau de bord RSVP temps réel     | ✅               | ✅               |
+| Templates Premium                   | ❌               | ✅               |
+| Blocs `countdown` / `program` / texte / image | ❌     | ✅               |
+| Typographie personnalisée           | ❌               | ✅               |
+| Export CSV (invités + plan de table)| ❌               | ✅               |
+| QR code + URL personnalisée         | ❌               | ✅               |
+| « Ajouter au calendrier » (.ics)    | ❌               | ✅               |
 
-La **montée en gamme** Classic → Premium ne facture que la **différence (50 €)** via `create-upgrade-session`. La rétrogradation et le re-paiement d'un forfait déjà détenu sont **refusés côté serveur**.
+> La **musique** est disponible sur **les deux** forfaits. Les drapeaux exacts (`max_sites`, `max_pages`, `can_upload_music`, `can_export_csv`, `can_custom_slug`, `can_edit_typography`…) sont dans [`plans.py`](backend/app/api/plans.py).
+
+La **montée en gamme** Classic → Premium ne facture que la **différence (50 €)** via `create-upgrade-session`. La rétrogradation et le re-paiement d'un forfait déjà détenu sont **refusés côté serveur**. Un compte non payé (plan `none`) n'a **aucun accès produit** (paywall strict).
 
 ---
 
@@ -125,11 +133,16 @@ La **montée en gamme** Classic → Premium ne facture que la **différence (50 
 - **Authentification** : tout endpoint protégé exige un JWT `Authorization: Bearer`. Un compte **désactivé** (`is_active = false`) est rejeté même avec un token encore valide.
 - **Isolation des données (anti-IDOR)** : chaque accès à une carte / événement / invité / table vérifie `owner_id == utilisateur courant`. Impossible de lire ou modifier les données d'autrui en changeant un ID dans l'URL.
 - **Routes admin** : `is_admin` est vérifié **côté serveur** (le garde de route front est cosmétique).
-- **Gating des forfaits** : blocs premium, musique, export CSV, templates premium, limites de pages — tout est ré-imposé par l'API.
+- **Gating des forfaits** : blocs premium, export CSV, URL personnalisée, typographie, templates premium, limites de pages/sites — tout est ré-imposé par l'API. (La musique d'ambiance, elle, est ouverte aux deux forfaits.)
 - **Paiement** : le `plan` n'est mis à jour que via une **session Stripe réellement payée** (ou le webhook signé). Trafiquer l'URL `?plan=premium` est sans effet. Garde anti double-paiement et anti-rejeu.
 - **Navigation** : le garde Vue Router protège les routes (y compris au bouton « retour ») et empêche un utilisateur connecté de revenir sur les pages de connexion/inscription.
+- **Upload de fichiers** : type **et** taille validés côté serveur (images ≤ 10 Mo, audio ≤ 20 Mo) ; **SVG/HTML refusés** (vecteur de XSS stocké via `/uploads`), lecture en flux plafonnée (anti-DoS).
+- **CORS** : restreint aux origines connues (jamais `*` avec credentials).
+- **Exports CSV** : valeurs neutralisées contre l'**injection de formules** (un nom/message commençant par `= + - @` ne s'exécute pas dans Excel).
+- **Rate-limiting** : `login` (anti brute-force) et **RSVP public** (anti-spam) limités par IP ; le RSVP ne peut pas écraser un homonyme enregistré avec un autre email.
+- **Paywall défensif** : un plan inconnu / non payé (`none`) ne reçoit **aucune** limite produit (pas de repli sur Classic).
 
-> ⚠️ **Production** : définir un `SECRET_KEY` fort (la valeur de dev `mdp123` est forgeable), des clés Stripe réelles, et un `authDomain` Firebase sur votre propre domaine (sinon Safari bloque le login Google — limitation navigateur, pas du code).
+> ⚠️ **Production** : définir un `SECRET_KEY` fort (la valeur de dev `mdp123` est forgeable), des clés Stripe réelles, l'origine `FRONTEND_URL`/`BACKEND_URL` sur votre vrai domaine (sinon les QR codes et médias pointent vers `localhost`), et un `authDomain` Firebase sur votre propre domaine (sinon Safari bloque le login Google — limitation navigateur, pas du code).
 
 ---
 

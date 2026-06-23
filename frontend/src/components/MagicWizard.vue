@@ -158,7 +158,7 @@ const canStep3 = computed(() => !!wizard.location.trim());
                 </div>
                 <div class="space-y-2">
                   <label class="block text-[10px] uppercase tracking-widest text-gray-400">
-                    Prénom 2 (La Marié)
+                    Prénom 2 (Le Marié)
                   </label>
                   <input
                     v-model="wizard.brideName"

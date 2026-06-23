@@ -64,9 +64,19 @@ PLAN_LIMITS: Dict[str, Dict[str, Any]] = {
 }
 
 
+# Limites d'un compte non payé (« none ») : aucun accès produit (paywall strict).
+# Construit à partir des clés de Classic : booléens → False, nombres → 0.
+NONE_LIMITS: Dict[str, Any] = {
+    k: (False if isinstance(v, bool) else 0) for k, v in PLAN_LIMITS["classic"].items()
+}
+
+
 def get_limits(plan_name: str) -> Dict[str, Any]:
-    plan_name = (plan_name or "classic").lower()
-    return PLAN_LIMITS.get(plan_name, PLAN_LIMITS["classic"])
+    key = (plan_name or "classic").lower()
+    # Un plan non payé ne doit hériter d'aucune limite produit (pas de fallback Classic).
+    if key == UNPAID_PLAN:
+        return NONE_LIMITS
+    return PLAN_LIMITS.get(key, PLAN_LIMITS["classic"])
 
 
 def get_upgrade_amount() -> int:

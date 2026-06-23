@@ -10,6 +10,11 @@ const auth   = useAuthStore();
 
 const handleCta = () => router.push(auth.user ? '/templates' : '/register');
 
+// Scroll fluide vers une section de la page (le SPA n'honore pas href="#id").
+const scrollToSection = (id) => {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 // ─── Cycling word ────────────────────────────────────────────────────────────
 const heroWordIndex = ref(0);
 const heroWords     = ['élégance', 'passion', 'émotion'];
@@ -203,9 +208,9 @@ onUnmounted(() => {
                              transform hover:-translate-y-0.5 active:scale-95">
                 Créer mon invitation
               </button>
-              <a href="#modeles"
+              <a href="#modeles" @click.prevent="scrollToSection('modeles')"
                  class="px-8 py-4 bg-white border border-neutral-200 text-[#2D2A26]/70 rounded-xl text-[11px]
-                        font-bold uppercase tracking-[0.3em] hover:bg-neutral-50 transition-all text-center">
+                        font-bold uppercase tracking-[0.3em] hover:bg-neutral-50 transition-all text-center cursor-pointer">
                 Voir les designs
               </a>
             </div>

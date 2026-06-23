@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
@@ -11,6 +11,7 @@ from app.api.plans import UNPAID_PLAN
 from app.schemas.user import UserCreate, UserResponse, GoogleLoginRequest
 from app.schemas.token import Token, TokenPayload
 from app.api.deps import get_current_user
+from app.core.ratelimit import rate_limit
 import firebase_admin
 from firebase_admin import auth as firebase_auth, credentials
 
@@ -110,10 +111,13 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login", response_model=Token)
-def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+def login(request: Request, db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
     """
     Connexion utilisateur et génération de tokens JWT.
     """
+    # Anti brute-force : 10 tentatives / 5 min par IP.
+    rate_limit(request, scope="login", limit=10, window_seconds=300)
+
     user = db.query(User).filter(User.email == form_data.username).first()
 
     if not user:
