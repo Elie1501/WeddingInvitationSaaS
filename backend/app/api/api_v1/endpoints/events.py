@@ -186,6 +186,7 @@ def get_public_card(
         "config_json": card.config_json,
         "template_id": card.template_id,
         "has_rsvp_form": limits.get("has_rsvp_form", False),
+        "owner_plan": event.owner.plan,
         "is_published": card.is_published,
         "sub_events": [{"title": se.title, "time": se.time, "location": se.location, "description": se.description} for se in card.sub_events]
     }

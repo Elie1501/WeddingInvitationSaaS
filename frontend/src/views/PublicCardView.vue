@@ -70,6 +70,41 @@ const eventObj = computed(() => ({
 const subEvents = computed(() => cardData.value?.sub_events || []);
 const themeBg   = computed(() => cfg.value.theme?.background || '#F9F7F2');
 
+// ── « Ajouter au calendrier » (.ics) — perk Premium pour les invités ──────
+const ownerPlan   = computed(() => cardData.value?.owner_plan || '');
+const canCalendar = computed(() => ownerPlan.value === 'premium' && !!eventObj.value.date);
+
+const addToCalendar = () => {
+  const ev = eventObj.value;
+  const d = new Date(ev.date);
+  if (Number.isNaN(d.getTime())) return;
+  const ymd = (x) => `${x.getFullYear()}${String(x.getMonth() + 1).padStart(2, '0')}${String(x.getDate()).padStart(2, '0')}`;
+  const next = new Date(d); next.setDate(next.getDate() + 1); // événement « journée entière »
+  const names = (ev.groom_name && ev.bride_name) ? `${ev.groom_name} & ${ev.bride_name}` : 'Notre mariage';
+  const esc = (s) => String(s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Wedding SaaS//FR', 'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:${ev.id || Date.now()}@wedding-saas`,
+    `DTSTAMP:${ymd(new Date())}T000000Z`,
+    `DTSTART;VALUE=DATE:${ymd(d)}`,
+    `DTEND;VALUE=DATE:${ymd(next)}`,
+    `SUMMARY:${esc('Mariage de ' + names)}`,
+    ev.location ? `LOCATION:${esc(ev.location)}` : '',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].filter(Boolean).join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mariage.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
 onMounted(async () => {
   try {
     const res = await api.get(`/events/public/card/${slug}`);
@@ -152,6 +187,23 @@ onMounted(async () => {
         <circle cx="18" cy="16" r="3"/>
         <line x1="3" y1="3" x2="21" y2="21" stroke-opacity="0.5"/>
       </svg>
+    </button>
+
+    <!-- Bouton « Ajouter au calendrier » — perk Premium, bas gauche -->
+    <button
+      v-if="canCalendar && showCard"
+      @click="addToCalendar"
+      class="pv-cal-btn"
+      aria-label="Ajouter la date à mon calendrier"
+      title="Ajouter la date à mon calendrier"
+    >
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="pv-cal-label">Ajouter au calendrier</span>
     </button>
   </template>
 </template>
@@ -247,5 +299,37 @@ onMounted(async () => {
 }
 @media (prefers-reduced-motion: reduce) {
   .pv-music-btn.is-playing::after { animation: none; }
+}
+
+/* ── Bouton « Ajouter au calendrier » ── */
+.pv-cal-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 2000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: rgba(20, 20, 24, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+.pv-cal-btn:hover { transform: scale(1.05); background: rgba(201, 169, 110, 0.92); }
+.pv-cal-btn:active { transform: scale(0.97); }
+/* Sur très petit écran, garder uniquement l'icône */
+@media (max-width: 420px) {
+  .pv-cal-label { display: none; }
+  .pv-cal-btn { padding: 0; width: 46px; justify-content: center; }
 }
 </style>

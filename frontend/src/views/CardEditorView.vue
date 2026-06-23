@@ -146,6 +146,7 @@ TEMPLATE_FIELDS['japonais']   = TEMPLATE_FIELDS['arch'];
 TEMPLATE_FIELDS['riviera']    = TEMPLATE_FIELDS['split'];
 TEMPLATE_FIELDS['film']       = TEMPLATE_FIELDS['typography-focus'];
 import { useRoute, useRouter } from 'vue-router';
+import QRCode from 'qrcode';
 import api from '../service/api';
 import CardRenderer from '../components/card/CardRenderer.vue';
 import UpgradeModal from '../components/UpgradeModal.vue';
@@ -714,6 +715,52 @@ const copyPublicUrl = async () => {
   await navigator.clipboard.writeText(publicUrl.value);
   showCopiedToast.value = true;
   setTimeout(() => showCopiedToast.value = false, 2000);
+};
+
+// ── Partage : QR code + URL personnalisée (Premium) ──────────────────────
+const qrDataUrl = ref('');
+watch(publicUrl, async (url) => {
+  if (!url) { qrDataUrl.value = ''; return; }
+  try {
+    qrDataUrl.value = await QRCode.toDataURL(url, {
+      width: 320, margin: 1, color: { dark: '#1A1A1A', light: '#FFFFFF' },
+    });
+  } catch { qrDataUrl.value = ''; }
+}, { immediate: true });
+
+const downloadQr = () => {
+  if (!qrDataUrl.value) return;
+  const a = document.createElement('a');
+  a.href = qrDataUrl.value;
+  a.download = 'qr-invitation.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+};
+
+const customSlug = ref('');
+const savingSlug = ref(false);
+const slugPlaceholder = computed(() => {
+  const b = (eventData.bride_name || '').trim();
+  const g = (eventData.groom_name || '').trim();
+  const raw = (b && g) ? `mariage-${b}-${g}` : 'mariage-marie-jean';
+  return raw.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+});
+
+const saveSlug = async () => {
+  const desired = (customSlug.value || slugPlaceholder.value).trim();
+  if (!desired) return;
+  savingSlug.value = true;
+  try {
+    const res = await api.patch(`/cards/${cardId}/slug`, { slug: desired });
+    cardSlug.value = res.data.slug;
+    customSlug.value = '';
+    notifyInfo('URL personnalisée enregistrée.');
+  } catch (err) {
+    notifyError(err, { fallback: "Impossible d'enregistrer cette URL personnalisée." });
+  } finally {
+    savingSlug.value = false;
+  }
 };
 
 const handleFileUpload = async (event, fieldPath) => {
@@ -1465,6 +1512,60 @@ onUnmounted(() => {
 
                 <p class="text-[10px] text-gray-400 leading-relaxed">La musique est jouée en fond lors de la consultation de l'invitation par vos invités.</p>
               </div>
+          </div>
+
+          <!-- Partage : QR code + URL personnalisée — Premium -->
+          <div class="space-y-3 pt-4 border-t border-gray-100">
+            <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Partage & QR code</p>
+
+            <!-- Premium -->
+            <div v-if="isPremium" class="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 space-y-5">
+              <!-- URL personnalisée -->
+              <div class="space-y-2">
+                <p class="text-[10px] font-black uppercase tracking-widest text-gray-700">URL personnalisée</p>
+                <div class="flex items-stretch rounded-lg border border-gray-200 overflow-hidden focus-within:border-[#C5A059] transition-colors">
+                  <span class="flex items-center px-2.5 bg-gray-100 text-[11px] text-gray-400 whitespace-nowrap shrink-0">/i/</span>
+                  <input v-model="customSlug" :placeholder="slugPlaceholder"
+                         class="flex-1 min-w-0 p-2.5 bg-white text-xs outline-none">
+                </div>
+                <button @click="saveSlug" :disabled="savingSlug"
+                        class="w-full py-2.5 bg-[#1A1A1A] text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-black transition-colors disabled:opacity-50">
+                  {{ savingSlug ? 'Enregistrement…' : "Définir l'URL" }}
+                </button>
+                <p v-if="publicUrl" class="text-[10px] text-gray-400 break-all leading-relaxed">Lien actuel : {{ publicUrl }}</p>
+              </div>
+
+              <!-- QR code -->
+              <div class="pt-1">
+                <div v-if="qrDataUrl" class="flex flex-col items-center gap-3">
+                  <img :src="qrDataUrl" alt="QR code de l'invitation" class="w-40 h-40 rounded-lg border border-gray-100">
+                  <button @click="downloadQr"
+                          class="w-full py-2.5 bg-[#C5A059] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#b08c47] transition-colors">
+                    Télécharger le QR code
+                  </button>
+                  <p class="text-[10px] text-gray-400 text-center leading-relaxed">À imprimer sur vos faire-part papier, menus ou table d'accueil.</p>
+                </div>
+                <p v-else class="text-[10px] text-gray-400 leading-relaxed">Publiez l'invitation pour générer son QR code.</p>
+              </div>
+            </div>
+
+            <!-- Classic : teaser Premium -->
+            <div v-else class="rounded-2xl overflow-hidden border border-amber-200 bg-amber-50">
+              <div class="p-5 space-y-3 text-center">
+                <div class="w-12 h-12 rounded-full bg-[#C5A059]/15 flex items-center justify-center mx-auto">
+                  <svg class="w-6 h-6 text-[#C5A059]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12-8h.01M4 4h.01M4 20h.01M4 16h4m0 0v4m4-12V4"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs font-black uppercase tracking-widest text-[#8B6914]">Fonctionnalité Premium</p>
+                  <p class="text-[11px] text-amber-700 mt-1">QR code à imprimer + URL personnalisée (mariage-prénom-prénom). Disponible avec le forfait Premium.</p>
+                </div>
+                <button @click="showUpgradeModal = true" class="w-full py-2.5 bg-[#C5A059] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#b08c47] transition-colors">
+                  Passer Premium
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
