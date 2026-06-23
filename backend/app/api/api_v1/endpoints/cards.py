@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import json
 import uuid
 import datetime
+import re
+import unicodedata
 from app.db.session import get_db
 from app.api import deps
 from app.models.wedding import Card, CardVersion, CardTemplate, Event, User, SubEvent
@@ -324,7 +327,48 @@ def publish_card(
     
     if card.is_published and not card.slug:
         card.slug = f"wedding-{uuid.uuid4().hex[:8]}"
-        
+
+    db.commit()
+    db.refresh(card)
+    return card
+
+# ── URL personnalisée (slug) — réservé Premium ────────────────────────────────
+class SlugUpdate(BaseModel):
+    slug: str
+
+def slugify(value: str) -> str:
+    """Transforme un texte en slug URL : minuscules, sans accents, tirets."""
+    value = unicodedata.normalize("NFKD", value or "").encode("ascii", "ignore").decode("ascii")
+    value = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return re.sub(r"-{2,}", "-", value)
+
+@router.patch("/{card_id}/slug", response_model=CardResponse)
+def update_card_slug(
+    card_id: int,
+    payload: SlugUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
+    _permission = Depends(deps.check_plan_permission("can_custom_slug"))
+):
+    """Définit une URL personnalisée (ex: mariage-marie-jean), réservé Premium."""
+    card = check_card_ownership(db, card_id, current_user.id)
+
+    base = slugify(payload.slug)
+    if len(base) < 3:
+        raise HTTPException(status_code=422, detail="L'URL personnalisée doit contenir au moins 3 caractères valides.")
+    base = base[:60]
+
+    # Garantir l'unicité : suffixe court si déjà pris par une AUTRE carte.
+    candidate = base
+    suffix = 1
+    while True:
+        existing = db.query(Card).filter(Card.slug == candidate, Card.id != card.id).first()
+        if not existing:
+            break
+        suffix += 1
+        candidate = f"{base}-{suffix}"
+
+    card.slug = candidate
     db.commit()
     db.refresh(card)
     return card

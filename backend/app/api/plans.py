@@ -46,6 +46,7 @@ PLAN_LIMITS: Dict[str, Dict[str, Any]] = {
         "can_upload_music":         True,
         "can_edit_typography":      False,
         "can_export_csv":           False,
+        "can_custom_slug":          False,
     },
     "premium": {
         "max_pages":                20,
@@ -58,6 +59,7 @@ PLAN_LIMITS: Dict[str, Dict[str, Any]] = {
         "can_upload_music":         True,
         "can_edit_typography":      True,
         "can_export_csv":           True,
+        "can_custom_slug":          True,
     },
 }
 

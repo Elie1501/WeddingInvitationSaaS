@@ -140,6 +140,30 @@ const stats = computed(() => {
   };
 });
 
+// ── Dashboard RSVP temps réel (disponible pour tous) ─────────────────────
+const rsvpDashboard = computed(() => {
+  const all = guests.value;
+  const main = all.filter(g => !g.parent_id);
+  const pending = main.filter(g => !g.rsvp_status || g.rsvp_status === 'pending').length;
+
+  // Récap régimes alimentaires (tous invités confondus), agrégé par valeur.
+  const diet = {};
+  all.forEach(g => {
+    const d = (g.dietary_restrictions || '').trim();
+    if (d) diet[d] = (diet[d] || 0) + 1;
+  });
+  const dietary = Object.entries(diet)
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count);
+
+  return {
+    confirmed: stats.value.confirmed,
+    declined: stats.value.declined,
+    pending,
+    dietary,
+  };
+});
+
 const statusLabel = { confirmed: 'Confirmé', declined: 'Absent' };
 const statusClass = {
   confirmed: 'bg-green-100 text-green-700',
@@ -178,19 +202,40 @@ onMounted(fetchGuests);
     </nav>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-      <!-- Stats — 3 cartes : Total réponses, Confirmés, Absents -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total de Réponses</p>
-          <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
+      <!-- ═══ Dashboard RSVP temps réel ═══ -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8">
+        <div class="flex items-center justify-between mb-4 sm:mb-5">
+          <h2 class="text-xs sm:text-sm font-black uppercase tracking-widest text-gray-700">Tableau de bord RSVP</h2>
+          <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-primary-600 bg-primary-50 px-2 sm:px-2.5 py-1 rounded-full">Temps réel</span>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p class="text-xs font-bold text-green-500 uppercase tracking-widest mb-1">Confirmés</p>
-          <p class="text-2xl font-bold text-gray-900">{{ stats.confirmed }}</p>
+
+        <!-- KPIs : 3 colonnes dès le mobile -->
+        <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
+          <div class="rounded-xl bg-green-50 border border-green-100 p-3 sm:p-4">
+            <p class="text-[9px] sm:text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1 leading-tight">Confirmés</p>
+            <p class="text-xl sm:text-2xl font-black text-green-700">{{ rsvpDashboard.confirmed }}</p>
+          </div>
+          <div class="rounded-xl bg-amber-50 border border-amber-100 p-3 sm:p-4">
+            <p class="text-[9px] sm:text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1 leading-tight">En attente</p>
+            <p class="text-xl sm:text-2xl font-black text-amber-700">{{ rsvpDashboard.pending }}</p>
+          </div>
+          <div class="rounded-xl bg-red-50 border border-red-100 p-3 sm:p-4">
+            <p class="text-[9px] sm:text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1 leading-tight">Absents</p>
+            <p class="text-xl sm:text-2xl font-black text-red-600">{{ rsvpDashboard.declined }}</p>
+          </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Absents</p>
-          <p class="text-2xl font-bold text-gray-900">{{ stats.declined }}</p>
+
+        <!-- Récap régimes alimentaires -->
+        <div>
+          <p class="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Régimes alimentaires</p>
+          <div v-if="rsvpDashboard.dietary.length" class="flex flex-wrap gap-2">
+            <span v-for="d in rsvpDashboard.dietary" :key="d.label"
+                  class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">
+              {{ d.label }}
+              <span class="inline-flex items-center justify-center min-w-5 h-5 px-1 bg-white text-gray-900 text-[10px] font-bold rounded-full">{{ d.count }}</span>
+            </span>
+          </div>
+          <p v-else class="text-xs text-gray-400 italic">Aucune contrainte alimentaire renseignée pour l'instant.</p>
         </div>
       </div>
 
