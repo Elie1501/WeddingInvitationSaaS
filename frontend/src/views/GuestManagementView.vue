@@ -143,8 +143,6 @@ const stats = computed(() => {
 // ── Dashboard RSVP temps réel (disponible pour tous) ─────────────────────
 const rsvpDashboard = computed(() => {
   const all = guests.value;
-  const main = all.filter(g => !g.parent_id);
-  const pending = main.filter(g => !g.rsvp_status || g.rsvp_status === 'pending').length;
 
   // Récap régimes alimentaires (tous invités confondus), agrégé par valeur.
   const diet = {};
@@ -159,7 +157,7 @@ const rsvpDashboard = computed(() => {
   return {
     confirmed: stats.value.confirmed,
     declined: stats.value.declined,
-    pending,
+    total: stats.value.confirmed + stats.value.declined,
     dietary,
   };
 });
@@ -215,13 +213,13 @@ onMounted(fetchGuests);
             <p class="text-[9px] sm:text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1 leading-tight">Confirmés</p>
             <p class="text-xl sm:text-2xl font-black text-green-700">{{ rsvpDashboard.confirmed }}</p>
           </div>
-          <div class="rounded-xl bg-amber-50 border border-amber-100 p-3 sm:p-4">
-            <p class="text-[9px] sm:text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1 leading-tight">En attente</p>
-            <p class="text-xl sm:text-2xl font-black text-amber-700">{{ rsvpDashboard.pending }}</p>
-          </div>
           <div class="rounded-xl bg-red-50 border border-red-100 p-3 sm:p-4">
             <p class="text-[9px] sm:text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1 leading-tight">Absents</p>
             <p class="text-xl sm:text-2xl font-black text-red-600">{{ rsvpDashboard.declined }}</p>
+          </div>
+          <div class="rounded-xl bg-gray-50 border border-gray-100 p-3 sm:p-4">
+            <p class="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 leading-tight">Total</p>
+            <p class="text-xl sm:text-2xl font-black text-gray-900">{{ rsvpDashboard.total }}</p>
           </div>
         </div>
 
