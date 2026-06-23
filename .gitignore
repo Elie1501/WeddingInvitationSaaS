@@ -55,3 +55,6 @@ backend/firebase-service-account.json
 backend/certs/
 
 frontend/certs/
+
+# Config locale Claude Code (outillage, non applicatif)
+.claude/

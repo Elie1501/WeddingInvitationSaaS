@@ -7,6 +7,7 @@ from app.db.session import get_db
 from app.api import deps
 from app.models.wedding import WeddingTable, Guest, Event, User
 from app.schemas.table import TableCreate, TableUpdate, TableResponse
+from app.core.csv_utils import csv_safe
 
 router = APIRouter()
 
@@ -163,15 +164,15 @@ def export_table_plan_csv(
         if table.guests:
             for guest in table.guests:
                 writer.writerow([
-                    table.name,
+                    csv_safe(table.name),
                     table.capacity,
                     seated,
-                    guest.first_name,
-                    guest.last_name,
-                    guest.dietary_restrictions or '',
+                    csv_safe(guest.first_name),
+                    csv_safe(guest.last_name),
+                    csv_safe(guest.dietary_restrictions or ''),
                 ])
         else:
-            writer.writerow([table.name, table.capacity, 0, '', '', ''])
+            writer.writerow([csv_safe(table.name), table.capacity, 0, '', '', ''])
 
     # UTF-8 BOM pour compatibilité Excel français (accents corrects)
     content = '﻿'.encode('utf-8') + output.getvalue().encode('utf-8')

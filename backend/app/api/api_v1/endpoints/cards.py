@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import json
+import os
 import uuid
 import datetime
 import re
@@ -432,8 +433,42 @@ async def upload_media(
             raise HTTPException(status_code=403, detail="La personnalisation de médias n'est pas disponible avec votre forfait.")
 
     card = check_card_ownership(db, card_id, current_user.id)
-    
-    file_content = await file.read()
+
+    # ── Validation type + extension (SVG/HTML exclus : vecteur XSS via /uploads) ──
+    if file_type == "music":
+        allowed_types = {"audio/mpeg", "audio/mp3", "audio/aac", "audio/ogg",
+                         "audio/wav", "audio/x-wav", "audio/mp4", "audio/x-m4a"}
+        allowed_ext = {".mp3", ".aac", ".ogg", ".wav", ".m4a"}
+        max_bytes = 20 * 1024 * 1024  # 20 Mo
+    else:
+        allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+        allowed_ext = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+        max_bytes = 10 * 1024 * 1024  # 10 Mo
+
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if (file.content_type or "") not in allowed_types or ext not in allowed_ext:
+        raise HTTPException(
+            status_code=415,
+            detail="Type de fichier non autorisé. " +
+                   ("Formats audio acceptés : MP3, AAC, OGG, WAV, M4A." if file_type == "music"
+                    else "Formats image acceptés : JPG, PNG, WEBP, GIF."),
+        )
+
+    # ── Lecture en flux avec plafond de taille (évite de charger un énorme fichier) ──
+    chunks, size = [], 0
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        size += len(chunk)
+        if size > max_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Fichier trop volumineux (max {max_bytes // (1024 * 1024)} Mo).",
+            )
+        chunks.append(chunk)
+    file_content = b"".join(chunks)
+
     s3_key = await storage.upload_file_to_s3(
         file_content=file_content,
         folder=f"cards/{card_id}",

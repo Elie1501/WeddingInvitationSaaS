@@ -84,29 +84,38 @@ const selectTemplate = async (template) => {
   try {
     loading.value = true;
     
-    // 1. Vérifier si l'utilisateur a déjà un événement
+    // Intention « créer un NOUVEL événement » (posée par le Dashboard). Sans ce
+    // flag (onboarding), on réutilise l'événement existant pour ne pas gaspiller
+    // de site. Avec le flag, on force la création d'un nouveau site (forfait
+    // multi-cartes), dans la limite du forfait (le backend renvoie 403 sinon).
+    const createNew = localStorage.getItem('create_new_event') === '1';
+    localStorage.removeItem('create_new_event');
+
+    // 1. Réutiliser l'événement existant — uniquement hors « créer nouveau »
     let eventId = null;
     let cardId = null;
-    
-    try {
-      const myEvents = await api.get('/events/');
-      if (myEvents.data && myEvents.data.length > 0) {
-        const existingEvent = myEvents.data[myEvents.data.length - 1];
-        eventId = existingEvent.id;
 
-        // N'écraser les noms que si le wizard en a de vrais — sinon garder ceux de l'event existant
-        const finalGroom = wizardData.value.groomName || existingEvent.groom_name || '';
-        const finalBride = wizardData.value.brideName || existingEvent.bride_name || '';
-        await api.put(`/events/${eventId}`, {
-          title: `Mariage de ${finalGroom} & ${finalBride}`,
-          date: wizardData.value.date || existingEvent.date,
-          location: wizardData.value.location || existingEvent.location,
-          groom_name: finalGroom,
-          bride_name: finalBride
-        });
+    if (!createNew) {
+      try {
+        const myEvents = await api.get('/events/');
+        if (myEvents.data && myEvents.data.length > 0) {
+          const existingEvent = myEvents.data[myEvents.data.length - 1];
+          eventId = existingEvent.id;
+
+          // N'écraser les noms que si le wizard en a de vrais — sinon garder ceux de l'event existant
+          const finalGroom = wizardData.value.groomName || existingEvent.groom_name || '';
+          const finalBride = wizardData.value.brideName || existingEvent.bride_name || '';
+          await api.put(`/events/${eventId}`, {
+            title: `Mariage de ${finalGroom} & ${finalBride}`,
+            date: wizardData.value.date || existingEvent.date,
+            location: wizardData.value.location || existingEvent.location,
+            groom_name: finalGroom,
+            bride_name: finalBride
+          });
+        }
+      } catch (e) {
+        console.log("Aucun événement existant trouvé ou erreur lors de la recherche.");
       }
-    } catch (e) {
-      console.log("Aucun événement existant trouvé ou erreur lors de la recherche.");
     }
 
     // 2. Si pas d'événement, en créer un
@@ -230,7 +239,7 @@ onMounted(async () => {
     <nav class="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
       <div class="flex justify-between items-center gap-3">
         <div class="flex items-center gap-3 min-w-0">
-          <span class="text-lg sm:text-2xl font-bold tracking-tighter uppercase whitespace-nowrap">Saas Wedding</span>
+          <router-link to="/" class="text-lg sm:text-2xl font-bold tracking-tighter uppercase whitespace-nowrap hover:opacity-70 transition-opacity cursor-pointer" title="Retour à l'accueil">Saas Wedding</router-link>
           <div class="hidden sm:block h-4 w-[1px] bg-gray-200"></div>
           <span class="hidden sm:block text-xs uppercase tracking-widest text-[#C5A059] truncate">
             Pour {{ wizardData.groomName }} & {{ wizardData.brideName }}

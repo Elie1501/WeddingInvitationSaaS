@@ -7,6 +7,7 @@ from app.db.session import engine, Base, SessionLocal
 from app.api.api_v1.api import api_router
 from app.models.wedding import CardTemplate, User
 from app.core import security
+from app.core.config import settings
 
 # Création des tables
 Base.metadata.create_all(bind=engine)
@@ -91,7 +92,21 @@ def seed_data():
 seed_data()
 
 app = FastAPI(title="API Mariage", version="1.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+# CORS : origines explicites (jamais "*" avec allow_credentials). On autorise le
+# front configuré + les origines de dev local (Vite 5173 / preview 5199).
+_allowed_origins = list(dict.fromkeys([
+    settings.FRONTEND_URL,
+    "https://localhost:5173", "http://localhost:5173",
+    "https://localhost:5199", "http://localhost:5199",
+]))
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(api_router)
 
 if not os.path.exists("uploads"): os.makedirs("uploads")

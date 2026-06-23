@@ -54,7 +54,19 @@ const togglePublish = async (cardId) => {
 
 // ─── Misc ──────────────────────────────────────────────────────────────────
 const handleCreateEvent = () => {
-  if (!canCreateEvent.value) { showPlanModal.value = true; return; }
+  if (!canCreateEvent.value) {
+    // Limite du forfait atteinte : on propose de passer Premium, ou de
+    // supprimer un événement existant pour libérer un emplacement (Classic).
+    notifyWarning?.(
+      auth.user?.plan === 'premium'
+        ? `Limite atteinte : ${planInfo.value.max_sites} sites maximum. Supprimez un événement pour en créer un autre.`
+        : `Le forfait Classic est limité à 1 site. Passez Premium, ou supprimez votre événement pour en créer un autre.`
+    );
+    showPlanModal.value = true;
+    return;
+  }
+  // Intention explicite : créer un NOUVEL événement (≠ réutiliser l'existant).
+  localStorage.setItem('create_new_event', '1');
   router.push('/events/create');
 };
 
@@ -166,7 +178,7 @@ onMounted(async () => {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16 sm:h-20 gap-2">
 
-          <h1 class="text-xl sm:text-2xl text-primary-800 truncate">Saas Wedding</h1>
+          <router-link to="/" class="text-xl sm:text-2xl text-primary-800 truncate hover:opacity-80 transition-opacity cursor-pointer" title="Retour à l'accueil">Saas Wedding</router-link>
 
           <div class="flex items-center gap-2 sm:gap-3 shrink-0">
             <button

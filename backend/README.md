@@ -39,7 +39,7 @@ backend/
     ├── main.py                 Point d'entrée FastAPI, CORS, mount /uploads, seed_data() au démarrage
     ├── api/
     │   ├── deps.py             Dépendances : get_current_user (+ is_active), check_plan_permission, require_paid_plan, require_premium, require_admin
-    │   ├── plans.py            PLAN_PRICES, PLAN_LIMITS, PREMIUM_SECTION_IDS, get_limits()
+    │   ├── plans.py            PLAN_PRICES, PLAN_LIMITS (max_sites/pages, can_upload_music, can_export_csv, can_custom_slug, can_edit_typography…), NONE_LIMITS, PREMIUM_SECTION_IDS, get_limits()
     │   └── api_v1/
     │       ├── api.py          Agrège tous les routers (préfixes /auth, /events, …)
     │       └── endpoints/
@@ -54,6 +54,8 @@ backend/
     ├── core/
     │   ├── config.py           Settings via pydantic-settings (.env) — URLs, secrets, Stripe, S3
     │   ├── security.py         Création/validation JWT (access + refresh), hash mots de passe
+    │   ├── csv_utils.py        csv_safe() — anti-injection de formules dans les exports CSV
+    │   ├── ratelimit.py        rate_limit() — limiteur en mémoire par IP (login, RSVP public)
     │   └── storage.py          Upload S3 OU local (/uploads) + génération d'URL
     ├── db/
     │   └── session.py          Engine SQLAlchemy + SessionLocal + get_db()
@@ -115,7 +117,11 @@ Tokens (`core/security.py`) :
 - **Admin** : les routes `/users/*` d'administration passent par la dépendance **`require_admin`** (403 sinon) — contrôle centralisé, plus de check `is_admin` recopié à la main dans chaque endpoint. Un admin ne peut pas se supprimer lui-même (400).
 - **Paywall** : la création d'événement exige `require_paid_plan` (402 tant qu'aucun forfait payé).
 - **Règle métier (tables)** : un invité ne peut être affecté qu'à une table **du même événement** (`table.event_id == guest.event_id`, 400 sinon), en plus du contrôle de capacité.
-- **Gating forfait** : `check_plan_permission(...)` (export CSV, tables), `_enforce_plan_features(...)` (blocs premium à la sauvegarde), limites de pages/sites, templates `required_plan`.
+- **Gating forfait** : `check_plan_permission(...)` (export CSV, URL personnalisée, tables), `_enforce_plan_features(...)` (blocs premium à la sauvegarde), limites de pages/sites, templates `required_plan`. `get_limits("none")` renvoie **un jeu tout verrouillé** (paywall défensif — pas de repli sur Classic).
+- **Upload** (`/cards/{id}/upload`) : type **et** extension validés (allowlist), **SVG/HTML refusés** (XSS stocké via `/uploads`), lecture **en flux plafonnée** (image ≤ 10 Mo, audio ≤ 20 Mo → 413/415 sinon).
+- **CORS** (`main.py`) : liste d'origines explicites (`FRONTEND_URL` + dev) — jamais `*` avec `allow_credentials`.
+- **Exports CSV** (`core/csv_utils.py`) : neutralisation de l'**injection de formules** (préfixe `'` sur les valeurs commençant par `= + - @`).
+- **Rate-limiting** (`core/ratelimit.py`, en mémoire/IP) : `login` (10/5 min, anti brute-force) et `public/rsvp` (15/5 min, anti-spam). Le RSVP public ne cible que les invités principaux et n'écrase pas un homonyme ayant un autre email.
 - **Paiement** : `plan` n'est modifié que par `confirm-payment` (session Stripe `paid` + `user_id` du token) ou le `webhook` signé. Garde anti double-paiement dans `create-checkout-session`, anti re-upgrade dans `create-upgrade-session`.
 
 ---
@@ -152,7 +158,8 @@ Base : `https://localhost:8000`. Documentation interactive : **`/docs`**. (🔒 
 | GET     | `/cards/{id}`                | 🔒    | Détail                               |
 | PUT     | `/cards/{id}/save`           | 🔒    | Auto-save config (gating premium)    |
 | POST    | `/cards/{id}/publish`        | 🔒    | Publier / dépublier (génère le slug) |
-| POST    | `/cards/{id}/upload`         | 🔒    | Upload image / musique (⭐ musique)   |
+| PATCH   | `/cards/{id}/slug`           | 🔒 ⭐ | URL personnalisée (slugify + unicité) |
+| POST    | `/cards/{id}/upload`         | 🔒    | Upload image / musique — type + taille validés (musique : **tous forfaits**) |
 | GET     | `/cards/{id}/export`         | 🔒    | Export JSON de la carte              |
 | POST    | `/cards/{id}/import`         | 🔒    | Import JSON (⭐)                       |
 | GET     | `/cards/{id}/versions`       | 🔒    | Historique                           |
@@ -167,7 +174,8 @@ Base : `https://localhost:8000`. Documentation interactive : **`/docs`**. (🔒 
 | PATCH   | `/guests/{id}`               | 🔒    | Modifier                          |
 | DELETE  | `/guests/{id}`               | 🔒    | Supprimer                         |
 | GET     | `/guests/event/{id}/rsvps`   | 🔒    | Réponses RSVP                     |
-| POST    | `/guests/public/rsvp`        | 🌐    | Réponse RSVP d'un invité          |
+| GET     | `/guests/event/{id}/export/csv` | 🔒 ⭐ | Export CSV des invités          |
+| POST    | `/guests/public/rsvp`        | 🌐    | Réponse RSVP d'un invité (rate-limité) |
 
 ### `/tables`
 | Méthode | Route                                 | Accès | Description              |
