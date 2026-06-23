@@ -46,6 +46,18 @@ def activate_plan(token: str, plan: str = "classic") -> None:
     finally:
         db.close()
 
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Vide le limiteur de débit (en mémoire, par process) avant chaque test.
+
+    Sans ça, tous les tests partagent le même bucket "login:testclient" et,
+    passé 10 logins cumulés, reçoivent un 429 -> KeyError 'access_token'.
+    """
+    from app.core.ratelimit import _hits
+    _hits.clear()
+    yield
+
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
