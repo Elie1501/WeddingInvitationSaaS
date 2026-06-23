@@ -58,3 +58,7 @@ frontend/certs/
 
 # Config locale Claude Code (outillage, non applicatif)
 .claude/
+
+# Médias uploadés en local (données runtime, pas du code source).
+# Les fichiers déjà versionnés restent suivis ; ceci empêche les nouveaux.
+backend/uploads/
