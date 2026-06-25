@@ -262,3 +262,18 @@ npm run dev      # dev server (HTTPS si certs présents)
 npm run build    # build de production (dist/)
 npm run preview  # prévisualiser le build
 ```
+
+---
+
+## Tests / qualité
+
+Le frontend n'a **pas de suite de tests unitaires** (pas de Vitest/Jest). Le garde-fou qualité est le **build** : la compilation Vue/Vite échoue sur toute erreur de syntaxe ou d'import, ce qui suffit à bloquer un code cassé.
+
+```bash
+cd frontend
+npm run build    # doit réussir — c'est le gate de la CI
+```
+
+C'est exactement ce que joue le job **`frontend-ci`** (`.github/workflows/main.yml`) : si `npm run build` échoue, la PR ne peut pas être mergée. À lancer systématiquement avant de pousser.
+
+> Astuce : `npm run preview` après un build sert à vérifier le rendu réel du bundle de production.

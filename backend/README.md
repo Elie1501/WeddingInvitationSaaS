@@ -236,14 +236,47 @@ Base : `https://localhost:8000`. Documentation interactive : **`/docs`**. (🔒 
 
 ## Tests
 
+**Suite : 47 tests** répartis en 8 fichiers (`app/tests/`) :
+
+| Fichier                  | Couvre                                                        |
+|--------------------------|---------------------------------------------------------------|
+| `test_auth.py`           | Inscription, connexion, JWT                                   |
+| `test_login_extended.py` | Cas limites de connexion / refresh                            |
+| `test_cards.py`          | Création/édition/publication des cartes                       |
+| `test_events.py`         | Événements + limite `max_sites` par forfait                   |
+| `test_guests.py`         | Invités, RSVP, export CSV                                     |
+| `test_tables.py`         | Plan de table + règle « même événement »                      |
+| `test_payments.py`       | Stripe, gating premium, garde anti double-paiement            |
+| `test_admin.py`          | Accès admin, blocage user/anonyme, auto-suppression interdite |
+
+### Lancer en local (SQLite, sans Docker)
+
 ```bash
 cd backend
 DATABASE_URL="sqlite:///./test.db" python -m pytest app/tests/ -v
 ```
 
-SQLite en mémoire, aucune dépendance Docker. **47 tests** couvrant auth, cards, events, guests, tables (dont la règle même-événement), payments (gating premium) et **admin** (`test_admin.py` : accès admin, blocage user/anonyme, auto-suppression interdite).
+### Reproduire la CI à l'identique (Postgres)
 
-Depuis un conteneur déjà lancé :
+C'est exactement ce que joue le job **`backend-ci`** (`.github/workflows/main.yml`) — à faire tourner avant de pousser :
+
+```bash
+cd backend
+export PYTHONPATH=$PYTHONPATH:.
+DATABASE_URL="postgresql://user:password@localhost:5432/wedding_db" \
+  SECRET_KEY=test_secret_key ALGORITHM=HS256 \
+  STRIPE_SECRET_KEY=sk_test_dummy STRIPE_WEBHOOK_SECRET=whsec_dummy \
+  pytest app/tests/ -v
+```
+
+### Lancer un fichier ou un test ciblé
+
+```bash
+DATABASE_URL="sqlite:///./test.db" python -m pytest app/tests/test_payments.py -v          # un fichier
+DATABASE_URL="sqlite:///./test.db" python -m pytest app/tests/test_payments.py::test_xxx    # un seul test
+```
+
+### Depuis un conteneur déjà lancé
 
 ```bash
 docker exec wedding_api pip install -q pytest httpx
