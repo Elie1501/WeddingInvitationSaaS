@@ -15,6 +15,7 @@ Plateforme de création d'**invitations de mariage digitales**. Les mariés choi
 - [Forfaits (plans)](#forfaits-plans)
 - [Sécurité](#sécurité)
 - [HTTPS en développement local](#https-en-développement-local-important)
+- [Tests](#tests)
 - [URLs & comptes de test](#urls-locales)
 
 ---
@@ -157,6 +158,20 @@ Le backend **et** le frontend sont servis en **HTTPS** (certificats mkcert). Con
 | `FRONTEND_URL`  | `https://localhost:5173` | Redirections de retour Stripe                    |
 
 Ces valeurs ont des défauts corrects et sont injectées par `docker-compose.yaml`. Voir [LAUNCH.md](LAUNCH.md) pour la génération des certificats.
+
+---
+
+## Tests
+
+Les deux jobs de CI (`.github/workflows/main.yml`) doivent passer pour merger sur `main`.
+
+| Périmètre | Commande (avant de pousser)                                        | Gate CI         |
+|-----------|--------------------------------------------------------------------|-----------------|
+| Backend   | `cd backend && DATABASE_URL="sqlite:///./test.db" python -m pytest app/tests/ -v` | `backend-ci` (47 tests) |
+| Frontend  | `cd frontend && npm run build`                                     | `frontend-ci` (build) |
+
+> Le frontend n'a pas de tests unitaires : le **build** sert de garde-fou (il échoue sur tout code cassé).
+> Détails : [backend/README.md](backend/README.md#tests) · [frontend/README.md](frontend/README.md#tests--qualité).
 
 ---
 
