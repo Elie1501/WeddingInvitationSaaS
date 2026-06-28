@@ -18,7 +18,10 @@ cp frontend/.env.example frontend/.env
 # 3. Lancer tous les services
 docker compose up -d --build
 
-# 4. Vérifier que les 4 services tournent
+# 4. Initialiser les données (templates + comptes de test) — OBLIGATOIRE au 1er lancement
+docker exec wedding_api python scripts/seed_all.py
+
+# 5. Vérifier que les 4 services tournent
 docker compose ps
 ```
 ## Tests backend
