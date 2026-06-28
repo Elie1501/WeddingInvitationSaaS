@@ -150,7 +150,7 @@ const canStep3 = computed(() => !!wizard.location.trim());
                   <input
                     v-model="wizard.groomName"
                     type="text"
-                    placeholder="Ex : Alexandre"
+                    placeholder="Ex : Marie"
                     autocomplete="off"
                     class="w-full bg-transparent border-b-2 border-gray-200 py-3 text-2xl
                            focus:border-[#C5A059] outline-none transition-colors text-center"
@@ -163,7 +163,7 @@ const canStep3 = computed(() => !!wizard.location.trim());
                   <input
                     v-model="wizard.brideName"
                     type="text"
-                    placeholder="Ex : Éléonore"
+                    placeholder="Ex : Alexandre"
                     autocomplete="off"
                     class="w-full bg-transparent border-b-2 border-gray-200 py-3 text-2xl
                            focus:border-[#C5A059] outline-none transition-colors text-center"
